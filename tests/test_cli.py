@@ -10,9 +10,9 @@ class CliTest(unittest.TestCase):
         output = StringIO()
 
         with redirect_stdout(output):
-            main()
+            main({"TELEGRAM_BOT_TOKEN": "test-token"})
 
-        self.assertEqual(output.getvalue(), "greetings-bot\n")
+        self.assertEqual(output.getvalue(), "greetings-bot is configured\n")
 
 
 if __name__ == "__main__":
