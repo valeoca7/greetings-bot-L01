@@ -14,6 +14,11 @@ class AppTest(unittest.TestCase):
     def test_handles_start_command(self):
         self.assertEqual(handle_update(text_update("/start")), "Hello, Mira!")
 
+    def test_handles_help_command(self):
+        message = handle_update(text_update("/help"))
+
+        self.assertEqual(message, "Send /start to get a greeting.")
+
     def test_ignores_other_messages(self):
         self.assertIsNone(handle_update(text_update("hello")))
 

@@ -7,6 +7,8 @@ from greetings_bot.telegram import Update
 def handle_update(update: Update) -> Optional[str]:
     if update.message is None:
         return None
+    if update.message.text == "/help":
+        return "Send /start to get a greeting."
     if update.message.text != "/start":
         return None
     return format_greeting(update.message.sender)
