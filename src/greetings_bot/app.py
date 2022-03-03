@@ -13,6 +13,6 @@ def handle_update(update: Update) -> Optional[str]:
         return None
     if command.name == "help":
         return "Send /start to get a greeting."
-    if command.name != "start":
-        return None
-    return format_greeting(update.message.sender)
+    if command.name == "start":
+        return format_greeting(update.message.sender)
+    return "I don't know that command. Try /help."

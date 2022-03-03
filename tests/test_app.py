@@ -22,6 +22,11 @@ class AppTest(unittest.TestCase):
     def test_ignores_other_messages(self):
         self.assertIsNone(handle_update(text_update("hello")))
 
+    def test_replies_to_unknown_commands(self):
+        message = handle_update(text_update("/weather"))
+
+        self.assertEqual(message, "I don't know that command. Try /help.")
+
     def test_ignores_updates_without_messages(self):
         self.assertIsNone(handle_update(Update(id=1002)))
 
