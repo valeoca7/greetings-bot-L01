@@ -2,7 +2,7 @@ import json
 import unittest
 from pathlib import Path
 
-from greetings_bot.update_parser import parse_update
+from greetings_bot.update_parser import UpdateParseError, parse_update
 
 
 class UpdateParserTest(unittest.TestCase):
@@ -21,6 +21,19 @@ class UpdateParserTest(unittest.TestCase):
         update = parse_update({"update_id": 1002})
 
         self.assertIsNone(update.message)
+
+    def test_rejects_a_message_without_an_id(self):
+        payload = {
+            "update_id": 1003,
+            "message": {
+                "from": {"id": 42, "first_name": "Mira"},
+                "chat": {"id": 42},
+                "text": "/start",
+            },
+        }
+
+        with self.assertRaisesRegex(UpdateParseError, "invalid update payload"):
+            parse_update(payload)
 
 
 if __name__ == "__main__":
