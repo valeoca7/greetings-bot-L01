@@ -35,6 +35,16 @@ class UpdateParserTest(unittest.TestCase):
         with self.assertRaisesRegex(UpdateParseError, "invalid update payload"):
             parse_update(payload)
 
+    def test_ignores_an_unsupported_update_type(self):
+        payload = {
+            "update_id": 1004,
+            "callback_query": {"id": "callback-1", "data": "unused"},
+        }
+
+        update = parse_update(payload)
+
+        self.assertIsNone(update.message)
+
 
 if __name__ == "__main__":
     unittest.main()
