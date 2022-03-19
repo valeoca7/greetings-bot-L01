@@ -2,6 +2,7 @@ import unittest
 
 from greetings_bot.app import handle_update
 from greetings_bot.telegram import Message, TelegramUser, Update
+from greetings_bot.users import InMemoryUserRepository
 
 
 def text_update(text):
@@ -26,6 +27,14 @@ class AppTest(unittest.TestCase):
         message = handle_update(text_update("/weather"))
 
         self.assertEqual(message, "I don't know that command. Try /help.")
+
+    def test_registers_user_on_start(self):
+        users = InMemoryUserRepository()
+
+        handle_update(text_update("/start"), users)
+
+        self.assertEqual(users.get(42).first_name, "Mira")
+        self.assertEqual(users.get(42).chat_id, 42)
 
     def test_ignores_updates_without_messages(self):
         self.assertIsNone(handle_update(Update(id=1002)))
