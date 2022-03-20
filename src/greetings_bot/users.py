@@ -18,3 +18,6 @@ class InMemoryUserRepository:
 
     def get(self, telegram_id: int) -> Optional[User]:
         return self._users.get(telegram_id)
+
+    def count(self) -> int:
+        return len(self._users)

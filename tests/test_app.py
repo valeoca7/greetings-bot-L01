@@ -36,6 +36,14 @@ class AppTest(unittest.TestCase):
         self.assertEqual(users.get(42).first_name, "Mira")
         self.assertEqual(users.get(42).chat_id, 42)
 
+    def test_does_not_duplicate_an_existing_user(self):
+        users = InMemoryUserRepository()
+
+        handle_update(text_update("/start"), users)
+        handle_update(text_update("/start"), users)
+
+        self.assertEqual(users.count(), 1)
+
     def test_ignores_updates_without_messages(self):
         self.assertIsNone(handle_update(Update(id=1002)))
 

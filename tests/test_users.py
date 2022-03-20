@@ -20,6 +20,7 @@ class InMemoryUserRepositoryTest(unittest.TestCase):
         repository.save(user)
 
         self.assertEqual(repository.get(42), user)
+        self.assertEqual(repository.count(), 1)
 
     def test_returns_none_for_an_unknown_user(self):
         repository = InMemoryUserRepository()
