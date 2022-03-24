@@ -20,3 +20,9 @@ class Message:
 class Update:
     id: int
     message: Optional[Message] = None
+
+
+@dataclass(frozen=True)
+class Reply:
+    chat_id: int
+    text: str

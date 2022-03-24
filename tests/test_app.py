@@ -1,7 +1,7 @@
 import unittest
 
 from greetings_bot.app import handle_update
-from greetings_bot.telegram import Message, TelegramUser, Update
+from greetings_bot.telegram import Message, Reply, TelegramUser, Update
 from greetings_bot.users import InMemoryUserRepository
 
 
@@ -13,20 +13,23 @@ def text_update(text):
 
 class AppTest(unittest.TestCase):
     def test_handles_start_command(self):
-        self.assertEqual(handle_update(text_update("/start")), "Hello, Mira!")
+        reply = handle_update(text_update("/start"))
+
+        self.assertEqual(reply, Reply(chat_id=42, text="Hello, Mira!"))
 
     def test_handles_help_command(self):
-        message = handle_update(text_update("/help"))
+        reply = handle_update(text_update("/help"))
 
-        self.assertEqual(message, "Send /start to get a greeting.")
+        self.assertEqual(reply.text, "Send /start to get a greeting.")
+        self.assertEqual(reply.chat_id, 42)
 
     def test_ignores_other_messages(self):
         self.assertIsNone(handle_update(text_update("hello")))
 
     def test_replies_to_unknown_commands(self):
-        message = handle_update(text_update("/weather"))
+        reply = handle_update(text_update("/weather"))
 
-        self.assertEqual(message, "I don't know that command. Try /help.")
+        self.assertEqual(reply.text, "I don't know that command. Try /help.")
 
     def test_registers_user_on_start(self):
         users = InMemoryUserRepository()
