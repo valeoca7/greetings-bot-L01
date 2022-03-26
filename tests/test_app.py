@@ -47,6 +47,13 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(users.count(), 1)
 
+    def test_logs_command_without_its_arguments(self):
+        with self.assertLogs("greetings_bot.app", level="INFO") as logs:
+            handle_update(text_update("/start private-text"))
+
+        self.assertIn("start command from user 42", logs.output[0])
+        self.assertNotIn("private-text", logs.output[0])
+
     def test_ignores_updates_without_messages(self):
         self.assertIsNone(handle_update(Update(id=1002)))
 
