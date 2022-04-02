@@ -2,10 +2,18 @@ import json
 import unittest
 from pathlib import Path
 
-from greetings_bot.update_parser import UpdateParseError, parse_update
+from greetings_bot.update_parser import UpdateParseError, load_update, parse_update
 
 
 class UpdateParserTest(unittest.TestCase):
+    def test_loads_an_update_file(self):
+        fixture = Path(__file__).parent / "fixtures" / "start_update.json"
+
+        update = load_update(fixture)
+
+        self.assertEqual(update.id, 1001)
+        self.assertEqual(update.message.text, "/start")
+
     def test_parses_a_text_message(self):
         fixture = Path(__file__).parent / "fixtures" / "start_update.json"
         payload = json.loads(fixture.read_text())

@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import Any, Mapping
 
 from greetings_bot.telegram import Message, TelegramUser, Update
@@ -5,6 +7,11 @@ from greetings_bot.telegram import Message, TelegramUser, Update
 
 class UpdateParseError(ValueError):
     pass
+
+
+def load_update(path: Path) -> Update:
+    with path.open() as update_file:
+        return parse_update(json.load(update_file))
 
 
 def parse_update(payload: Mapping[str, Any]) -> Update:
