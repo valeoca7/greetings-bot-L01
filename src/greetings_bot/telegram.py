@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, Optional, Union
 
 
 @dataclass(frozen=True)
@@ -26,3 +26,7 @@ class Update:
 class Reply:
     chat_id: int
     text: str
+
+
+def reply_payload(reply: Reply) -> Dict[str, Union[int, str]]:
+    return {"chat_id": reply.chat_id, "text": reply.text}

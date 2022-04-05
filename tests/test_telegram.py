@@ -1,6 +1,6 @@
 import unittest
 
-from greetings_bot.telegram import Message, TelegramUser, Update
+from greetings_bot.telegram import Message, Reply, TelegramUser, Update, reply_payload
 
 
 class TelegramModelTest(unittest.TestCase):
@@ -15,6 +15,14 @@ class TelegramModelTest(unittest.TestCase):
 
     def test_allows_an_update_without_a_message(self):
         self.assertIsNone(Update(id=1002).message)
+
+    def test_builds_a_send_message_payload(self):
+        reply = Reply(chat_id=42, text="Hello, Mira!")
+
+        self.assertEqual(
+            reply_payload(reply),
+            {"chat_id": 42, "text": "Hello, Mira!"},
+        )
 
 
 if __name__ == "__main__":
