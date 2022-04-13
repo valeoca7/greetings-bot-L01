@@ -23,6 +23,14 @@ make run
 The application currently checks its configuration and handles saved Telegram update
 payloads. It does not contact Telegram yet.
 
+To process the sample update locally:
+
+```sh
+greetings-bot --update tests/fixtures/start_update.json
+```
+
+The command prints the Telegram `sendMessage` payload that would be sent.
+
 Run the tests with:
 
 ```sh
