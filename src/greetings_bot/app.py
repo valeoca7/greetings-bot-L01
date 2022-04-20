@@ -4,14 +4,14 @@ from typing import Optional
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
 from greetings_bot.telegram import Reply, Update
-from greetings_bot.users import InMemoryUserRepository, User
+from greetings_bot.users import User, UserRepository
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 def handle_update(
-    update: Update, users: Optional[InMemoryUserRepository] = None
+    update: Update, users: Optional[UserRepository] = None
 ) -> Optional[Reply]:
     if update.message is None:
         return None

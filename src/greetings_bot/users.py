@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, Protocol
 
 
 @dataclass(frozen=True)
@@ -7,6 +7,17 @@ class User:
     telegram_id: int
     chat_id: int
     first_name: str
+
+
+class UserRepository(Protocol):
+    def save(self, user: User) -> None:
+        ...
+
+    def get(self, telegram_id: int) -> Optional[User]:
+        ...
+
+    def count(self) -> int:
+        ...
 
 
 class InMemoryUserRepository:
