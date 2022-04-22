@@ -1,6 +1,6 @@
 import unittest
 
-from greetings_bot.app import handle_update
+from greetings_bot.app import Application, handle_update
 from greetings_bot.telegram import Message, Reply, TelegramUser, Update
 from greetings_bot.users import InMemoryUserRepository
 
@@ -12,6 +12,15 @@ def text_update(text):
 
 
 class AppTest(unittest.TestCase):
+    def test_application_keeps_its_user_repository(self):
+        users = InMemoryUserRepository()
+        application = Application(users)
+
+        application.handle(text_update("/start"))
+
+        self.assertIs(application.users, users)
+        self.assertEqual(application.users.count(), 1)
+
     def test_handles_start_command(self):
         reply = handle_update(text_update("/start"))
 
