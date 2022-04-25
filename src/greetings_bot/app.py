@@ -27,7 +27,7 @@ class Application:
         )
         if command.name == "help":
             return Reply(update.message.chat_id, "Send /start to get a greeting.")
-        if command.name == "start":
+        if command.name in ("start", "register"):
             self.users.save(
                 User(
                     telegram_id=update.message.sender.id,
