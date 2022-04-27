@@ -53,7 +53,7 @@ class AppTest(unittest.TestCase):
 
         reply = handle_update(text_update("/register"), users)
 
-        self.assertEqual(reply.text, "Hello, Mira!")
+        self.assertEqual(reply.text, "Thanks, Mira. You are registered.")
         self.assertIsNotNone(users.get(42))
 
     def test_does_not_duplicate_an_existing_user(self):

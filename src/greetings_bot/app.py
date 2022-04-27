@@ -35,6 +35,13 @@ class Application:
                     first_name=update.message.sender.first_name,
                 )
             )
+            if command.name == "register":
+                return Reply(
+                    update.message.chat_id,
+                    "Thanks, {}. You are registered.".format(
+                        update.message.sender.first_name
+                    ),
+                )
             return Reply(
                 update.message.chat_id,
                 format_greeting(update.message.sender),
