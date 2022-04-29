@@ -26,7 +26,10 @@ class Application:
             update.message.sender.id,
         )
         if command.name == "help":
-            return Reply(update.message.chat_id, "Send /start to get a greeting.")
+            return Reply(
+                update.message.chat_id,
+                "Send /start for a greeting or /register to register.",
+            )
         if command.name in ("start", "register"):
             self.users.save(
                 User(

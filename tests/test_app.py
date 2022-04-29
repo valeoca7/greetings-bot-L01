@@ -29,7 +29,10 @@ class AppTest(unittest.TestCase):
     def test_handles_help_command(self):
         reply = handle_update(text_update("/help"))
 
-        self.assertEqual(reply.text, "Send /start to get a greeting.")
+        self.assertEqual(
+            reply.text,
+            "Send /start for a greeting or /register to register.",
+        )
         self.assertEqual(reply.chat_id, 42)
 
     def test_ignores_other_messages(self):
