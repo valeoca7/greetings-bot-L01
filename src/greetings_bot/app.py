@@ -31,6 +31,14 @@ class Application:
                 "Send /start for a greeting or /register to register.",
             )
         if command.name in ("start", "register"):
+            existing_user = self.users.get(update.message.sender.id)
+            if command.name == "register" and existing_user is not None:
+                return Reply(
+                    update.message.chat_id,
+                    "You are already registered, {}.".format(
+                        existing_user.first_name
+                    ),
+                )
             self.users.save(
                 User(
                     telegram_id=update.message.sender.id,
