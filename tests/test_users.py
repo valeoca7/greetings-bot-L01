@@ -1,6 +1,6 @@
 import unittest
 
-from greetings_bot.users import InMemoryUserRepository, User
+from greetings_bot.users import InMemoryUserRepository, User, normalize_first_name
 
 
 class UserTest(unittest.TestCase):
@@ -10,6 +10,12 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.telegram_id, 42)
         self.assertEqual(user.chat_id, 84)
         self.assertEqual(user.first_name, "Mira")
+
+    def test_normalizes_first_name(self):
+        self.assertEqual(normalize_first_name("  Mira "), "Mira")
+
+    def test_uses_fallback_for_a_blank_name(self):
+        self.assertEqual(normalize_first_name("  "), "friend")
 
 
 class InMemoryUserRepositoryTest(unittest.TestCase):

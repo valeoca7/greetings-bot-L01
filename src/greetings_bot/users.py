@@ -9,6 +9,10 @@ class User:
     first_name: str
 
 
+def normalize_first_name(first_name: str) -> str:
+    return first_name.strip() or "friend"
+
+
 class UserRepository(Protocol):
     def save(self, user: User) -> None:
         ...

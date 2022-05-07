@@ -4,7 +4,12 @@ from typing import Optional
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
 from greetings_bot.telegram import Reply, Update
-from greetings_bot.users import InMemoryUserRepository, User, UserRepository
+from greetings_bot.users import (
+    InMemoryUserRepository,
+    User,
+    UserRepository,
+    normalize_first_name,
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -39,18 +44,19 @@ class Application:
                         existing_user.first_name
                     ),
                 )
+            first_name = normalize_first_name(update.message.sender.first_name)
             self.users.save(
                 User(
                     telegram_id=update.message.sender.id,
                     chat_id=update.message.chat_id,
-                    first_name=update.message.sender.first_name,
+                    first_name=first_name,
                 )
             )
             if command.name == "register":
                 return Reply(
                     update.message.chat_id,
                     "Thanks, {}. You are registered.".format(
-                        update.message.sender.first_name
+                        first_name
                     ),
                 )
             return Reply(
