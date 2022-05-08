@@ -10,6 +10,7 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.telegram_id, 42)
         self.assertEqual(user.chat_id, 84)
         self.assertEqual(user.first_name, "Mira")
+        self.assertTrue(user.enabled)
 
     def test_normalizes_first_name(self):
         self.assertEqual(normalize_first_name("  Mira "), "Mira")

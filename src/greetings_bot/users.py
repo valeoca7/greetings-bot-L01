@@ -7,6 +7,7 @@ class User:
     telegram_id: int
     chat_id: int
     first_name: str
+    enabled: bool = True
 
 
 def normalize_first_name(first_name: str) -> str:
