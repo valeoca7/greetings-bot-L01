@@ -76,6 +76,14 @@ class AppTest(unittest.TestCase):
         self.assertEqual(reply.text, "You are already registered, Mira.")
         self.assertEqual(users.count(), 1)
 
+    def test_shows_current_user(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/me"), users)
+
+        self.assertEqual(reply.text, "Mira (42)")
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))

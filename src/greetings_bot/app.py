@@ -35,6 +35,13 @@ class Application:
                 update.message.chat_id,
                 "Send /start for a greeting or /register to register.",
             )
+        if command.name == "me":
+            user = self.users.get(update.message.sender.id)
+            if user is not None:
+                return Reply(
+                    update.message.chat_id,
+                    "{} ({})".format(user.first_name, user.telegram_id),
+                )
         if command.name in ("start", "register"):
             existing_user = self.users.get(update.message.sender.id)
             if command.name == "register" and existing_user is not None:
