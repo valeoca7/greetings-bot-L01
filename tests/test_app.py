@@ -82,7 +82,10 @@ class AppTest(unittest.TestCase):
 
         reply = handle_update(text_update("/me"), users)
 
-        self.assertEqual(reply.text, "Mira (42)")
+        self.assertEqual(
+            reply.text,
+            "Name: Mira\nTelegram ID: 42\nGreetings: on",
+        )
 
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:

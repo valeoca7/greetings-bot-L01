@@ -3,6 +3,7 @@ from typing import Optional
 
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
+from greetings_bot.profiles import format_profile
 from greetings_bot.telegram import Reply, Update
 from greetings_bot.users import (
     InMemoryUserRepository,
@@ -40,7 +41,7 @@ class Application:
             if user is not None:
                 return Reply(
                     update.message.chat_id,
-                    "{} ({})".format(user.first_name, user.telegram_id),
+                    format_profile(user),
                 )
         if command.name in ("start", "register"):
             existing_user = self.users.get(update.message.sender.id)
