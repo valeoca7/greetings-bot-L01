@@ -38,11 +38,12 @@ class Application:
             )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
-            if user is not None:
+            if user is None:
                 return Reply(
                     update.message.chat_id,
-                    format_profile(user),
+                    "You are not registered. Send /register first.",
                 )
+            return Reply(update.message.chat_id, format_profile(user))
         if command.name in ("start", "register"):
             existing_user = self.users.get(update.message.sender.id)
             if command.name == "register" and existing_user is not None:

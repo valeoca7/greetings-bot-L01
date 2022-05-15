@@ -87,6 +87,14 @@ class AppTest(unittest.TestCase):
             "Name: Mira\nTelegram ID: 42\nGreetings: on",
         )
 
+    def test_reports_missing_profile(self):
+        reply = handle_update(text_update("/me"), InMemoryUserRepository())
+
+        self.assertEqual(
+            reply.text,
+            "You are not registered. Send /register first.",
+        )
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))
