@@ -31,6 +31,13 @@ greetings-bot --update tests/fixtures/start_update.json
 
 The command prints the Telegram `sendMessage` payload that would be sent.
 
+## Commands
+
+- `/start` registers the user and returns a greeting
+- `/register` creates a user profile
+- `/me` shows the current profile
+- `/help` lists the available actions
+
 Run the tests with:
 
 ```sh
