@@ -7,6 +7,7 @@ class User:
     telegram_id: int
     chat_id: int
     first_name: str
+    locale: str = "en"
     enabled: bool = True
 
 
