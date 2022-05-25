@@ -23,6 +23,7 @@ class UpdateParserTest(unittest.TestCase):
         self.assertEqual(update.id, 1001)
         self.assertEqual(update.message.chat_id, 42)
         self.assertEqual(update.message.sender.first_name, "Mira")
+        self.assertEqual(update.message.sender.language_code, "en")
         self.assertEqual(update.message.text, "/start")
 
     def test_parses_an_update_without_a_message(self):

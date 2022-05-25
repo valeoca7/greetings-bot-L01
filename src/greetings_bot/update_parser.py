@@ -25,6 +25,7 @@ def parse_update(payload: Mapping[str, Any]) -> Update:
         sender = TelegramUser(
             id=int(sender_payload["id"]),
             first_name=str(sender_payload["first_name"]),
+            language_code=sender_payload.get("language_code"),
         )
         message = Message(
             id=int(message_payload["message_id"]),

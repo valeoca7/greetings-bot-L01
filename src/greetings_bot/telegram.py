@@ -6,6 +6,7 @@ from typing import Dict, Optional, Union
 class TelegramUser:
     id: int
     first_name: str
+    language_code: Optional[str] = None
 
 
 @dataclass(frozen=True)
