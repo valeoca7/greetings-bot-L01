@@ -59,6 +59,7 @@ class Application:
                     telegram_id=update.message.sender.id,
                     chat_id=update.message.chat_id,
                     first_name=first_name,
+                    locale=update.message.sender.language_code or "en",
                 )
             )
             if command.name == "register":

@@ -5,8 +5,12 @@ from greetings_bot.telegram import Message, Reply, TelegramUser, Update
 from greetings_bot.users import InMemoryUserRepository
 
 
-def text_update(text):
-    sender = TelegramUser(id=42, first_name="Mira")
+def text_update(text, language_code=None):
+    sender = TelegramUser(
+        id=42,
+        first_name="Mira",
+        language_code=language_code,
+    )
     message = Message(id=7, chat_id=42, sender=sender, text=text)
     return Update(id=1001, message=message)
 
@@ -50,6 +54,13 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(users.get(42).first_name, "Mira")
         self.assertEqual(users.get(42).chat_id, 42)
+
+    def test_uses_telegram_language_during_registration(self):
+        users = InMemoryUserRepository()
+
+        handle_update(text_update("/register", "uk"), users)
+
+        self.assertEqual(users.get(42).locale, "uk")
 
     def test_handles_register_command(self):
         users = InMemoryUserRepository()
