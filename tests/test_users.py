@@ -1,6 +1,11 @@
 import unittest
 
-from greetings_bot.users import InMemoryUserRepository, User, normalize_first_name
+from greetings_bot.users import (
+    InMemoryUserRepository,
+    User,
+    normalize_first_name,
+    normalize_locale,
+)
 
 
 class UserTest(unittest.TestCase):
@@ -18,6 +23,13 @@ class UserTest(unittest.TestCase):
 
     def test_uses_fallback_for_a_blank_name(self):
         self.assertEqual(normalize_first_name("  "), "friend")
+
+    def test_normalizes_locale(self):
+        self.assertEqual(normalize_locale("pt-BR"), "pt")
+        self.assertEqual(normalize_locale("UK"), "uk")
+
+    def test_defaults_missing_locale(self):
+        self.assertEqual(normalize_locale(None), "en")
 
 
 class InMemoryUserRepositoryTest(unittest.TestCase):

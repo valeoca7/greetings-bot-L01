@@ -10,6 +10,7 @@ from greetings_bot.users import (
     User,
     UserRepository,
     normalize_first_name,
+    normalize_locale,
 )
 
 
@@ -59,7 +60,7 @@ class Application:
                     telegram_id=update.message.sender.id,
                     chat_id=update.message.chat_id,
                     first_name=first_name,
-                    locale=update.message.sender.language_code or "en",
+                    locale=normalize_locale(update.message.sender.language_code),
                 )
             )
             if command.name == "register":

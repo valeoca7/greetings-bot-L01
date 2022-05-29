@@ -15,6 +15,12 @@ def normalize_first_name(first_name: str) -> str:
     return first_name.strip() or "friend"
 
 
+def normalize_locale(locale: Optional[str]) -> str:
+    if not locale:
+        return "en"
+    return locale.replace("_", "-").split("-", 1)[0].lower()
+
+
 class UserRepository(Protocol):
     def save(self, user: User) -> None:
         ...
