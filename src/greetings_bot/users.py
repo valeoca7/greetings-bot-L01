@@ -8,6 +8,7 @@ class User:
     chat_id: int
     first_name: str
     locale: str = "en"
+    greeting_time: str = "09:00"
     enabled: bool = True
 
 

@@ -16,6 +16,7 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.chat_id, 84)
         self.assertEqual(user.first_name, "Mira")
         self.assertEqual(user.locale, "en")
+        self.assertEqual(user.greeting_time, "09:00")
         self.assertTrue(user.enabled)
 
     def test_normalizes_first_name(self):
