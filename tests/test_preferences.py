@@ -1,6 +1,7 @@
 import unittest
 
-from greetings_bot.preferences import validate_greeting_time
+from greetings_bot.preferences import set_greeting_time, validate_greeting_time
+from greetings_bot.users import User
 
 
 class GreetingTimeTest(unittest.TestCase):
@@ -13,6 +14,14 @@ class GreetingTimeTest(unittest.TestCase):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     validate_greeting_time(value)
+
+    def test_updates_an_immutable_user(self):
+        user = User(telegram_id=42, chat_id=42, first_name="Mira")
+
+        updated = set_greeting_time(user, "18:30")
+
+        self.assertEqual(updated.greeting_time, "18:30")
+        self.assertEqual(user.greeting_time, "09:00")
 
 
 if __name__ == "__main__":
