@@ -54,7 +54,13 @@ class Application:
                     "You are not registered. Send /register first.",
                 )
             if command.arguments:
-                user = set_greeting_time(user, command.arguments[0])
+                try:
+                    user = set_greeting_time(user, command.arguments[0])
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Use time in HH:MM format, for example 08:30.",
+                    )
                 self.users.save(user)
                 return Reply(
                     update.message.chat_id,
