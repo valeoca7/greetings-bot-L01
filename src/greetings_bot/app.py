@@ -36,7 +36,11 @@ class Application:
         if command.name == "help":
             return Reply(
                 update.message.chat_id,
-                "Send /start for a greeting or /register to register.",
+                "Available commands:\n"
+                "/start - get a greeting\n"
+                "/register - create a profile\n"
+                "/me - show your profile\n"
+                "/time [HH:MM] - show or change greeting time",
             )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)

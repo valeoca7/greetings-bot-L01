@@ -35,7 +35,11 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(
             reply.text,
-            "Send /start for a greeting or /register to register.",
+            "Available commands:\n"
+            "/start - get a greeting\n"
+            "/register - create a profile\n"
+            "/me - show your profile\n"
+            "/time [HH:MM] - show or change greeting time",
         )
         self.assertEqual(reply.chat_id, 42)
 
