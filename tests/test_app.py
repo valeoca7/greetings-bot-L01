@@ -139,6 +139,14 @@ class AppTest(unittest.TestCase):
         )
         self.assertEqual(users.get(42).greeting_time, "09:00")
 
+    def test_shows_greeting_name(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/name"), users)
+
+        self.assertEqual(reply.text, "Your greeting name is Mira.")
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))

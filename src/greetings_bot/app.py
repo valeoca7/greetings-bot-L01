@@ -74,6 +74,17 @@ class Application:
                 update.message.chat_id,
                 "Your greeting time is {}.".format(user.greeting_time),
             )
+        if command.name == "name":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return Reply(
+                    update.message.chat_id,
+                    "You are not registered. Send /register first.",
+                )
+            return Reply(
+                update.message.chat_id,
+                "Your greeting name is {}.".format(user.first_name),
+            )
         if command.name in ("start", "register"):
             existing_user = self.users.get(update.message.sender.id)
             if command.name == "register" and existing_user is not None:
