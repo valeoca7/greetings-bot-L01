@@ -3,7 +3,7 @@ from typing import Optional
 
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
-from greetings_bot.preferences import set_greeting_time
+from greetings_bot.preferences import set_first_name, set_greeting_time
 from greetings_bot.profiles import format_profile
 from greetings_bot.telegram import Reply, Update
 from greetings_bot.users import (
@@ -80,6 +80,13 @@ class Application:
                 return Reply(
                     update.message.chat_id,
                     "You are not registered. Send /register first.",
+                )
+            if command.arguments:
+                user = set_first_name(user, " ".join(command.arguments))
+                self.users.save(user)
+                return Reply(
+                    update.message.chat_id,
+                    "Greeting name changed to {}.".format(user.first_name),
                 )
             return Reply(
                 update.message.chat_id,
