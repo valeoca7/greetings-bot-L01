@@ -82,7 +82,13 @@ class Application:
                     "You are not registered. Send /register first.",
                 )
             if command.arguments:
-                user = set_first_name(user, " ".join(command.arguments))
+                try:
+                    user = set_first_name(user, " ".join(command.arguments))
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Greeting name must be 40 characters or shorter.",
+                    )
                 self.users.save(user)
                 return Reply(
                     update.message.chat_id,

@@ -5,6 +5,7 @@ from greetings_bot.users import User, normalize_first_name
 
 
 TIME_PATTERN = re.compile(r"^(?:[01][0-9]|2[0-3]):[0-5][0-9]$")
+MAX_NAME_LENGTH = 40
 
 
 def validate_greeting_time(value: str) -> str:
@@ -19,4 +20,7 @@ def set_greeting_time(user: User, value: str) -> User:
 
 
 def set_first_name(user: User, value: str) -> User:
-    return replace(user, first_name=normalize_first_name(value))
+    first_name = normalize_first_name(value)
+    if len(first_name) > MAX_NAME_LENGTH:
+        raise ValueError("name is too long")
+    return replace(user, first_name=first_name)

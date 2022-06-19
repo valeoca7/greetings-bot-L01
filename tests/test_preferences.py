@@ -34,6 +34,12 @@ class GreetingTimeTest(unittest.TestCase):
 
         self.assertEqual(updated.first_name, "Mira Jane")
 
+    def test_rejects_long_greeting_name(self):
+        user = User(telegram_id=42, chat_id=42, first_name="Mira")
+
+        with self.assertRaisesRegex(ValueError, "too long"):
+            set_first_name(user, "x" * 41)
+
 
 if __name__ == "__main__":
     unittest.main()
