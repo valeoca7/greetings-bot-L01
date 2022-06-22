@@ -40,7 +40,8 @@ class Application:
                 "/start - get a greeting\n"
                 "/register - create a profile\n"
                 "/me - show your profile\n"
-                "/time [HH:MM] - show or change greeting time",
+                "/time [HH:MM] - show or change greeting time\n"
+                "/name [name] - show or change greeting name",
             )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
