@@ -18,6 +18,10 @@ from greetings_bot.users import (
 LOGGER = logging.getLogger(__name__)
 
 
+def registration_required(chat_id: int) -> Reply:
+    return Reply(chat_id, "You are not registered. Send /register first.")
+
+
 class Application:
     def __init__(self, users: Optional[UserRepository] = None) -> None:
         self.users = users if users is not None else InMemoryUserRepository()
@@ -46,18 +50,12 @@ class Application:
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return Reply(
-                    update.message.chat_id,
-                    "You are not registered. Send /register first.",
-                )
+                return registration_required(update.message.chat_id)
             return Reply(update.message.chat_id, format_profile(user))
         if command.name == "time":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return Reply(
-                    update.message.chat_id,
-                    "You are not registered. Send /register first.",
-                )
+                return registration_required(update.message.chat_id)
             if command.arguments:
                 try:
                     user = set_greeting_time(user, command.arguments[0])
@@ -78,10 +76,7 @@ class Application:
         if command.name == "name":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return Reply(
-                    update.message.chat_id,
-                    "You are not registered. Send /register first.",
-                )
+                return registration_required(update.message.chat_id)
             if command.arguments:
                 try:
                     user = set_first_name(user, " ".join(command.arguments))
