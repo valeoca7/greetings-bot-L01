@@ -5,6 +5,7 @@ from greetings_bot.users import (
     User,
     normalize_first_name,
     normalize_locale,
+    user_to_dict,
 )
 
 
@@ -31,6 +32,15 @@ class UserTest(unittest.TestCase):
 
     def test_defaults_missing_locale(self):
         self.assertEqual(normalize_locale(None), "en")
+
+    def test_converts_user_to_dict(self):
+        user = User(telegram_id=42, chat_id=84, first_name="Mira")
+
+        data = user_to_dict(user)
+
+        self.assertEqual(data["telegram_id"], 42)
+        self.assertEqual(data["first_name"], "Mira")
+        self.assertEqual(data["greeting_time"], "09:00")
 
 
 class InMemoryUserRepositoryTest(unittest.TestCase):

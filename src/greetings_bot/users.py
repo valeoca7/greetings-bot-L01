@@ -12,6 +12,17 @@ class User:
     enabled: bool = True
 
 
+def user_to_dict(user: User) -> Dict[str, object]:
+    return {
+        "telegram_id": user.telegram_id,
+        "chat_id": user.chat_id,
+        "first_name": user.first_name,
+        "locale": user.locale,
+        "greeting_time": user.greeting_time,
+        "enabled": user.enabled,
+    }
+
+
 def normalize_first_name(first_name: str) -> str:
     return first_name.strip() or "friend"
 
