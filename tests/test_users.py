@@ -5,6 +5,7 @@ from greetings_bot.users import (
     User,
     normalize_first_name,
     normalize_locale,
+    user_from_dict,
     user_to_dict,
 )
 
@@ -41,6 +42,13 @@ class UserTest(unittest.TestCase):
         self.assertEqual(data["telegram_id"], 42)
         self.assertEqual(data["first_name"], "Mira")
         self.assertEqual(data["greeting_time"], "09:00")
+
+    def test_restores_user_from_dict(self):
+        original = User(telegram_id=42, chat_id=84, first_name="Mira")
+
+        restored = user_from_dict(user_to_dict(original))
+
+        self.assertEqual(restored, original)
 
 
 class InMemoryUserRepositoryTest(unittest.TestCase):

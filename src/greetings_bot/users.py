@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Protocol
+from typing import Any, Dict, Mapping, Optional, Protocol
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,17 @@ def user_to_dict(user: User) -> Dict[str, object]:
         "greeting_time": user.greeting_time,
         "enabled": user.enabled,
     }
+
+
+def user_from_dict(data: Mapping[str, Any]) -> User:
+    return User(
+        telegram_id=int(data["telegram_id"]),
+        chat_id=int(data["chat_id"]),
+        first_name=str(data["first_name"]),
+        locale=str(data.get("locale", "en")),
+        greeting_time=str(data.get("greeting_time", "09:00")),
+        enabled=bool(data.get("enabled", True)),
+    )
 
 
 def normalize_first_name(first_name: str) -> str:
