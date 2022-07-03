@@ -19,6 +19,17 @@ class FileUserRepositoryTest(unittest.TestCase):
             self.assertEqual(values[0]["telegram_id"], 42)
             self.assertEqual(values[0]["first_name"], "Mira")
 
+    def test_loads_saved_user(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "users.json"
+            FileUserRepository(path).save(
+                User(telegram_id=42, chat_id=42, first_name="Mira")
+            )
+
+            repository = FileUserRepository(path)
+
+            self.assertEqual(repository.get(42).first_name, "Mira")
+
 
 if __name__ == "__main__":
     unittest.main()
