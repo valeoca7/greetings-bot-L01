@@ -8,6 +8,15 @@ from greetings_bot.users import User
 
 
 class FileUserRepositoryTest(unittest.TestCase):
+    def test_starts_empty_when_file_is_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "users.json"
+
+            repository = FileUserRepository(path)
+
+            self.assertEqual(repository.count(), 0)
+            self.assertIsNone(repository.get(42))
+
     def test_writes_user_to_file(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "users.json"
