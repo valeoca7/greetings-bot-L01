@@ -39,6 +39,23 @@ class FileUserRepositoryTest(unittest.TestCase):
 
             self.assertEqual(repository.get(42).first_name, "Mira")
 
+    def test_preserves_multiple_users(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "users.json"
+            repository = FileUserRepository(path)
+            repository.save(
+                User(telegram_id=42, chat_id=42, first_name="Mira")
+            )
+            repository.save(
+                User(telegram_id=77, chat_id=77, first_name="Lee")
+            )
+
+            restored = FileUserRepository(path)
+
+            self.assertEqual(restored.count(), 2)
+            self.assertEqual(restored.get(42).first_name, "Mira")
+            self.assertEqual(restored.get(77).first_name, "Lee")
+
 
 if __name__ == "__main__":
     unittest.main()
