@@ -19,7 +19,9 @@ class FileUserRepository:
     def save(self, user: User) -> None:
         self._users[user.telegram_id] = user
         values = [user_to_dict(item) for item in self._users.values()]
-        self.path.write_text(json.dumps(values, indent=2) + "\n")
+        temporary_path = self.path.with_suffix(self.path.suffix + ".tmp")
+        temporary_path.write_text(json.dumps(values, indent=2) + "\n")
+        temporary_path.replace(self.path)
 
     def get(self, telegram_id: int) -> Optional[User]:
         return self._users.get(telegram_id)

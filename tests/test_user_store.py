@@ -27,6 +27,7 @@ class FileUserRepositoryTest(unittest.TestCase):
             values = json.loads(path.read_text())
             self.assertEqual(values[0]["telegram_id"], 42)
             self.assertEqual(values[0]["first_name"], "Mira")
+            self.assertFalse((Path(str(path) + ".tmp")).exists())
 
     def test_loads_saved_user(self):
         with tempfile.TemporaryDirectory() as directory:
