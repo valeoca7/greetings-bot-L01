@@ -5,16 +5,23 @@ from typing import Dict, Optional
 from greetings_bot.users import User, user_from_dict, user_to_dict
 
 
+class UserStoreError(ValueError):
+    pass
+
+
 class FileUserRepository:
     def __init__(self, path: Path) -> None:
         self.path = path
         self._users: Dict[int, User] = {}
         if self.path.exists():
-            values = json.loads(self.path.read_text())
-            self._users = {
-                user.telegram_id: user
-                for user in (user_from_dict(item) for item in values)
-            }
+            try:
+                values = json.loads(self.path.read_text())
+                self._users = {
+                    user.telegram_id: user
+                    for user in (user_from_dict(item) for item in values)
+                }
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+                raise UserStoreError("invalid user store") from error
 
     def save(self, user: User) -> None:
         self._users[user.telegram_id] = user

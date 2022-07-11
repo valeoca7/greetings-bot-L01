@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from greetings_bot.user_store import FileUserRepository
+from greetings_bot.user_store import FileUserRepository, UserStoreError
 from greetings_bot.users import User
 
 
@@ -56,6 +56,14 @@ class FileUserRepositoryTest(unittest.TestCase):
             self.assertEqual(restored.count(), 2)
             self.assertEqual(restored.get(42).first_name, "Mira")
             self.assertEqual(restored.get(77).first_name, "Lee")
+
+    def test_reports_invalid_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "users.json"
+            path.write_text("not json")
+
+            with self.assertRaisesRegex(UserStoreError, "invalid user store"):
+                FileUserRepository(path)
 
 
 if __name__ == "__main__":
