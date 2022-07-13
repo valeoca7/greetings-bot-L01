@@ -65,6 +65,15 @@ class FileUserRepositoryTest(unittest.TestCase):
             with self.assertRaisesRegex(UserStoreError, "invalid user store"):
                 FileUserRepository(path)
 
+    def test_creates_parent_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "data" / "users.json"
+            repository = FileUserRepository(path)
+
+            repository.save(User(telegram_id=42, chat_id=42, first_name="Mira"))
+
+            self.assertTrue(path.exists())
+
 
 if __name__ == "__main__":
     unittest.main()
