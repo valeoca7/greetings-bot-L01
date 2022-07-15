@@ -2,6 +2,7 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from greetings_bot.cli import main
 
@@ -20,11 +21,18 @@ class CliTest(unittest.TestCase):
         fixture = Path(__file__).parent / "fixtures" / "start_update.json"
         output = StringIO()
 
-        with redirect_stdout(output):
-            main(
-                {"TELEGRAM_BOT_TOKEN": "test-token"},
-                ["--update", str(fixture)],
-            )
+        with TemporaryDirectory() as directory:
+            store_path = Path(directory) / "users.json"
+            with redirect_stdout(output):
+                main(
+                    {
+                        "TELEGRAM_BOT_TOKEN": "test-token",
+                        "USER_STORE_PATH": str(store_path),
+                    },
+                    ["--update", str(fixture)],
+                )
+
+            self.assertTrue(store_path.exists())
 
         self.assertEqual(
             output.getvalue(),

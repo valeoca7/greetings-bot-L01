@@ -7,20 +7,22 @@ from typing import Mapping, Optional, Sequence
 from greetings_bot.runtime import process_payload
 from greetings_bot.settings import Settings
 from greetings_bot.update_parser import UpdateParseError
+from greetings_bot.user_store import FileUserRepository
 
 
 def main(
     environ: Optional[Mapping[str, str]] = None,
     args: Optional[Sequence[str]] = None,
 ) -> int:
-    Settings.from_env(environ)
+    settings = Settings.from_env(environ)
     parser = argparse.ArgumentParser()
     parser.add_argument("--update", type=Path)
     options = parser.parse_args(args)
     if options.update is not None:
         try:
             payload = json.loads(options.update.read_text())
-            reply = process_payload(payload)
+            users = FileUserRepository(settings.user_store_path)
+            reply = process_payload(payload, users)
         except (OSError, json.JSONDecodeError, UpdateParseError):
             print("error: unable to process update", file=sys.stderr)
             return 1
