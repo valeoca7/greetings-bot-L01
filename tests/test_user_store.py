@@ -57,6 +57,21 @@ class FileUserRepositoryTest(unittest.TestCase):
             self.assertEqual(restored.get(42).first_name, "Mira")
             self.assertEqual(restored.get(77).first_name, "Lee")
 
+    def test_writes_users_in_id_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "users.json"
+            repository = FileUserRepository(path)
+            repository.save(
+                User(telegram_id=77, chat_id=77, first_name="Lee")
+            )
+            repository.save(
+                User(telegram_id=42, chat_id=42, first_name="Mira")
+            )
+
+            values = json.loads(path.read_text())
+
+            self.assertEqual([item["telegram_id"] for item in values], [42, 77])
+
     def test_reports_invalid_json(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "users.json"
