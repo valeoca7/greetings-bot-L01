@@ -66,6 +66,15 @@ class InMemoryUserRepositoryTest(unittest.TestCase):
 
         self.assertIsNone(repository.get(99))
 
+    def test_lists_users_in_id_order(self):
+        repository = InMemoryUserRepository()
+        repository.save(User(telegram_id=77, chat_id=77, first_name="Lee"))
+        repository.save(User(telegram_id=42, chat_id=42, first_name="Mira"))
+
+        users = repository.all()
+
+        self.assertEqual([user.telegram_id for user in users], [42, 77])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Optional, Protocol
+from typing import Any, Dict, Mapping, Optional, Protocol, Sequence
 
 
 @dataclass(frozen=True)
@@ -54,6 +54,9 @@ class UserRepository(Protocol):
     def count(self) -> int:
         ...
 
+    def all(self) -> Sequence[User]:
+        ...
+
 
 class InMemoryUserRepository:
     def __init__(self) -> None:
@@ -67,3 +70,6 @@ class InMemoryUserRepository:
 
     def count(self) -> int:
         return len(self._users)
+
+    def all(self) -> Sequence[User]:
+        return [self._users[user_id] for user_id in sorted(self._users)]
