@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence
 
 from greetings_bot.users import User, user_from_dict, user_to_dict
 
@@ -39,3 +39,6 @@ class FileUserRepository:
 
     def count(self) -> int:
         return len(self._users)
+
+    def all(self) -> Sequence[User]:
+        return [self._users[user_id] for user_id in sorted(self._users)]

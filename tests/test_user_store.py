@@ -56,6 +56,10 @@ class FileUserRepositoryTest(unittest.TestCase):
             self.assertEqual(restored.count(), 2)
             self.assertEqual(restored.get(42).first_name, "Mira")
             self.assertEqual(restored.get(77).first_name, "Lee")
+            self.assertEqual(
+                [user.telegram_id for user in restored.all()],
+                [42, 77],
+            )
 
     def test_writes_users_in_id_order(self):
         with tempfile.TemporaryDirectory() as directory:
