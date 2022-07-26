@@ -67,6 +67,22 @@ class CliTest(unittest.TestCase):
         self.assertIn("Hello, Mira!", output.getvalue())
         self.assertIn("Name: Mira", output.getvalue())
 
+    def test_keeps_profile_changes_between_runs(self):
+        fixtures = Path(__file__).parent / "fixtures"
+        output = StringIO()
+
+        with TemporaryDirectory() as directory:
+            environment = {
+                "TELEGRAM_BOT_TOKEN": "test-token",
+                "USER_STORE_PATH": str(Path(directory) / "users.json"),
+            }
+            with redirect_stdout(output):
+                main(environment, ["--update", str(fixtures / "start_update.json")])
+                main(environment, ["--update", str(fixtures / "time_update.json")])
+                main(environment, ["--update", str(fixtures / "me_update.json")])
+
+        self.assertIn("Greeting time: 18:30", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

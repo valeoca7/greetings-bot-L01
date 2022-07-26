@@ -1,0 +1,16 @@
+{
+  "update_id": 1003,
+  "message": {
+    "message_id": 9,
+    "from": {
+      "id": 42,
+      "first_name": "Mira",
+      "language_code": "en"
+    },
+    "chat": {
+      "id": 42,
+      "type": "private"
+    },
+    "text": "/time 18:30"
+  }
+}
