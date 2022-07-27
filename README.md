@@ -20,6 +20,13 @@ export TELEGRAM_BOT_TOKEN=replace-me
 make run
 ```
 
+Profiles are stored in `data/users.json` by default. Set `USER_STORE_PATH` to use a
+different local file:
+
+```sh
+export USER_STORE_PATH=var/greetings/users.json
+```
+
 The application currently checks its configuration and handles saved Telegram update
 payloads. It does not contact Telegram yet.
 
