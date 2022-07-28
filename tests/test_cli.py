@@ -83,6 +83,25 @@ class CliTest(unittest.TestCase):
 
         self.assertIn("Greeting time: 18:30", output.getvalue())
 
+    def test_reports_a_broken_user_store(self):
+        fixture = Path(__file__).parent / "fixtures" / "start_update.json"
+        errors = StringIO()
+
+        with TemporaryDirectory() as directory:
+            store_path = Path(directory) / "users.json"
+            store_path.write_text("broken")
+            with redirect_stderr(errors):
+                status = main(
+                    {
+                        "TELEGRAM_BOT_TOKEN": "test-token",
+                        "USER_STORE_PATH": str(store_path),
+                    },
+                    ["--update", str(fixture)],
+                )
+
+        self.assertEqual(status, 1)
+        self.assertEqual(errors.getvalue(), "error: unable to process update\n")
+
 
 if __name__ == "__main__":
     unittest.main()

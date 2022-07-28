@@ -7,7 +7,7 @@ from typing import Mapping, Optional, Sequence
 from greetings_bot.runtime import process_payload
 from greetings_bot.settings import Settings
 from greetings_bot.update_parser import UpdateParseError
-from greetings_bot.user_store import FileUserRepository
+from greetings_bot.user_store import FileUserRepository, UserStoreError
 
 
 def main(
@@ -23,7 +23,7 @@ def main(
             payload = json.loads(options.update.read_text())
             users = FileUserRepository(settings.user_store_path)
             reply = process_payload(payload, users)
-        except (OSError, json.JSONDecodeError, UpdateParseError):
+        except (OSError, json.JSONDecodeError, UpdateParseError, UserStoreError):
             print("error: unable to process update", file=sys.stderr)
             return 1
         if reply is not None:
