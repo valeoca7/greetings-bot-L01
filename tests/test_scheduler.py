@@ -23,6 +23,17 @@ class GreetingScheduleTest(unittest.TestCase):
 
         self.assertEqual([late], due_users([early, late], datetime(2022, 8, 3, 18, 30)))
 
+    def test_skips_disabled_users(self):
+        user = User(
+            telegram_id=3,
+            chat_id=3,
+            first_name="Lee",
+            greeting_time="09:00",
+            enabled=False,
+        )
+
+        self.assertEqual([], due_users([user], datetime(2022, 8, 5, 9, 0)))
+
 
 if __name__ == "__main__":
     unittest.main()

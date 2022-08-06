@@ -10,4 +10,8 @@ def is_greeting_due(user: User, current_time: datetime) -> bool:
 
 
 def due_users(users: Iterable[User], current_time: datetime) -> List[User]:
-    return [user for user in users if is_greeting_due(user, current_time)]
+    return [
+        user
+        for user in users
+        if user.enabled and is_greeting_due(user, current_time)
+    ]
