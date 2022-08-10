@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from greetings_bot.clock import SystemClock
+from greetings_bot.clock import FixedClock, SystemClock
 
 
 class SystemClockTest(unittest.TestCase):
@@ -12,6 +12,11 @@ class SystemClockTest(unittest.TestCase):
 
         self.assertLessEqual(before, current)
         self.assertLessEqual(current, after)
+
+    def test_fixed_clock_keeps_supplied_time(self):
+        current = datetime(2022, 8, 9, 20, 15)
+
+        self.assertEqual(current, FixedClock(current).now())
 
 
 if __name__ == "__main__":
