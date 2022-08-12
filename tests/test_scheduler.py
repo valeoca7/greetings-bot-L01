@@ -1,7 +1,8 @@
 import unittest
 from datetime import datetime
 
-from greetings_bot.scheduler import due_users, is_greeting_due
+from greetings_bot.scheduler import build_greeting_replies, due_users, is_greeting_due
+from greetings_bot.telegram import Reply
 from greetings_bot.users import User
 
 
@@ -33,6 +34,14 @@ class GreetingScheduleTest(unittest.TestCase):
         )
 
         self.assertEqual([], due_users([user], datetime(2022, 8, 5, 9, 0)))
+
+    def test_builds_replies_for_due_users(self):
+        user = User(telegram_id=4, chat_id=40, first_name="Jo")
+
+        self.assertEqual(
+            [Reply(chat_id=40, text="Hello!")],
+            build_greeting_replies([user]),
+        )
 
 
 if __name__ == "__main__":
