@@ -2,6 +2,7 @@ from datetime import datetime
 
 from typing import Iterable, List
 
+from greetings_bot.greetings import format_scheduled_greeting
 from greetings_bot.telegram import Reply
 from greetings_bot.users import User
 
@@ -19,4 +20,7 @@ def due_users(users: Iterable[User], current_time: datetime) -> List[User]:
 
 
 def build_greeting_replies(users: Iterable[User]) -> List[Reply]:
-    return [Reply(chat_id=user.chat_id, text="Hello!") for user in users]
+    return [
+        Reply(chat_id=user.chat_id, text=format_scheduled_greeting(user))
+        for user in users
+    ]

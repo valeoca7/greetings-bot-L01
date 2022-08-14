@@ -39,7 +39,7 @@ class GreetingScheduleTest(unittest.TestCase):
         user = User(telegram_id=4, chat_id=40, first_name="Jo")
 
         self.assertEqual(
-            [Reply(chat_id=40, text="Hello!")],
+            [Reply(chat_id=40, text="Good day, Jo!")],
             build_greeting_replies([user]),
         )
 
