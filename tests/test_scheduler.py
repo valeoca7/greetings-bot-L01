@@ -1,9 +1,15 @@
 import unittest
 from datetime import datetime
 
-from greetings_bot.scheduler import build_greeting_replies, due_users, is_greeting_due
+from greetings_bot.clock import FixedClock
+from greetings_bot.scheduler import (
+    GreetingDispatcher,
+    build_greeting_replies,
+    due_users,
+    is_greeting_due,
+)
 from greetings_bot.telegram import Reply
-from greetings_bot.users import User
+from greetings_bot.users import InMemoryUserRepository, User
 
 
 class GreetingScheduleTest(unittest.TestCase):
@@ -42,6 +48,15 @@ class GreetingScheduleTest(unittest.TestCase):
             [Reply(chat_id=40, text="Good day, Jo!")],
             build_greeting_replies([user]),
         )
+
+    def test_dispatches_due_users_from_repository(self):
+        users = InMemoryUserRepository()
+        users.save(User(telegram_id=5, chat_id=50, first_name="Kim", greeting_time="07:15"))
+        clock = FixedClock(datetime(2022, 8, 17, 7, 15))
+
+        replies = GreetingDispatcher(users, clock).dispatch()
+
+        self.assertEqual([Reply(chat_id=50, text="Good day, Kim!")], replies)
 
 
 if __name__ == "__main__":

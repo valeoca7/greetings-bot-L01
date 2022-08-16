@@ -3,8 +3,9 @@ from datetime import datetime
 from typing import Iterable, List
 
 from greetings_bot.greetings import format_scheduled_greeting
+from greetings_bot.clock import Clock
 from greetings_bot.telegram import Reply
-from greetings_bot.users import User
+from greetings_bot.users import User, UserRepository
 
 
 def is_greeting_due(user: User, current_time: datetime) -> bool:
@@ -24,3 +25,13 @@ def build_greeting_replies(users: Iterable[User]) -> List[Reply]:
         Reply(chat_id=user.chat_id, text=format_scheduled_greeting(user))
         for user in users
     ]
+
+
+class GreetingDispatcher:
+    def __init__(self, users: UserRepository, clock: Clock) -> None:
+        self.users = users
+        self.clock = clock
+
+    def dispatch(self) -> List[Reply]:
+        users = due_users(self.users.all(), self.clock.now())
+        return build_greeting_replies(users)
