@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+from typing import Dict, Iterable, List, Optional, Union
 
 
 @dataclass(frozen=True)
@@ -31,3 +31,7 @@ class Reply:
 
 def reply_payload(reply: Reply) -> Dict[str, Union[int, str]]:
     return {"chat_id": reply.chat_id, "text": reply.text}
+
+
+def reply_batch(replies: Iterable[Reply]) -> List[Dict[str, Union[int, str]]]:
+    return [reply_payload(reply) for reply in replies]

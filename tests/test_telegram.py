@@ -1,6 +1,13 @@
 import unittest
 
-from greetings_bot.telegram import Message, Reply, TelegramUser, Update, reply_payload
+from greetings_bot.telegram import (
+    Message,
+    Reply,
+    TelegramUser,
+    Update,
+    reply_batch,
+    reply_payload,
+)
 
 
 class TelegramModelTest(unittest.TestCase):
@@ -22,6 +29,14 @@ class TelegramModelTest(unittest.TestCase):
         self.assertEqual(
             reply_payload(reply),
             {"chat_id": 42, "text": "Hello, Mira!"},
+        )
+
+    def test_builds_a_reply_batch(self):
+        replies = [Reply(chat_id=1, text="One"), Reply(chat_id=2, text="Two")]
+
+        self.assertEqual(
+            [{"chat_id": 1, "text": "One"}, {"chat_id": 2, "text": "Two"}],
+            reply_batch(replies),
         )
 
 
