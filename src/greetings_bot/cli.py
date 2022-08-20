@@ -1,11 +1,15 @@
 import argparse
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
 from greetings_bot.runtime import process_payload
+from greetings_bot.clock import FixedClock
+from greetings_bot.scheduler import GreetingDispatcher
 from greetings_bot.settings import Settings
+from greetings_bot.telegram import reply_batch
 from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.user_store import FileUserRepository, UserStoreError
 
@@ -17,6 +21,7 @@ def main(
     settings = Settings.from_env(environ)
     parser = argparse.ArgumentParser()
     parser.add_argument("--update", type=Path)
+    parser.add_argument("--dispatch-at")
     options = parser.parse_args(args)
     if options.update is not None:
         try:
@@ -28,6 +33,12 @@ def main(
             return 1
         if reply is not None:
             print(json.dumps(reply))
+        return 0
+    if options.dispatch_at is not None:
+        users = FileUserRepository(settings.user_store_path)
+        current_time = datetime.fromisoformat(options.dispatch_at)
+        replies = GreetingDispatcher(users, FixedClock(current_time)).dispatch()
+        print(json.dumps(reply_batch(replies)))
         return 0
     print("greetings-bot is configured")
     return 0

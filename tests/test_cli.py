@@ -5,6 +5,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from greetings_bot.cli import main
+from greetings_bot.user_store import FileUserRepository
+from greetings_bot.users import User
 
 
 class CliTest(unittest.TestCase):
@@ -101,6 +103,23 @@ class CliTest(unittest.TestCase):
 
         self.assertEqual(status, 1)
         self.assertEqual(errors.getvalue(), "error: unable to process update\n")
+
+    def test_dispatches_greetings_at_a_local_time(self):
+        output = StringIO()
+
+        with TemporaryDirectory() as directory:
+            store_path = Path(directory) / "users.json"
+            users = FileUserRepository(store_path)
+            users.save(User(1, 10, "Mira", greeting_time="18:30"))
+            environment = {
+                "TELEGRAM_BOT_TOKEN": "test-token",
+                "USER_STORE_PATH": str(store_path),
+            }
+            with redirect_stdout(output):
+                status = main(environment, ["--dispatch-at", "2022-08-19T18:30:00"])
+
+        self.assertEqual(0, status)
+        self.assertEqual('[{"chat_id": 10, "text": "Good day, Mira!"}]\n', output.getvalue())
 
 
 if __name__ == "__main__":
