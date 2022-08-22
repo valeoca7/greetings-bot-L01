@@ -1,3 +1,4 @@
+import json
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
@@ -120,6 +121,24 @@ class CliTest(unittest.TestCase):
 
         self.assertEqual(0, status)
         self.assertEqual('[{"chat_id": 10, "text": "Good day, Mira!"}]\n', output.getvalue())
+
+    def test_dispatches_more_than_one_greeting(self):
+        output = StringIO()
+
+        with TemporaryDirectory() as directory:
+            store_path = Path(directory) / "users.json"
+            users = FileUserRepository(store_path)
+            users.save(User(1, 10, "Mira", greeting_time="09:00"))
+            users.save(User(2, 20, "Sam", greeting_time="09:00"))
+            environment = {
+                "TELEGRAM_BOT_TOKEN": "test-token",
+                "USER_STORE_PATH": str(store_path),
+            }
+            with redirect_stdout(output):
+                main(environment, ["--dispatch-at", "2022-08-21T09:00:00"])
+
+        payload = json.loads(output.getvalue())
+        self.assertEqual([10, 20], [item["chat_id"] for item in payload])
 
 
 if __name__ == "__main__":
