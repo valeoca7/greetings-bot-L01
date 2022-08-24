@@ -35,9 +35,13 @@ def main(
             print(json.dumps(reply))
         return 0
     if options.dispatch_at is not None:
-        users = FileUserRepository(settings.user_store_path)
-        current_time = datetime.fromisoformat(options.dispatch_at)
-        replies = GreetingDispatcher(users, FixedClock(current_time)).dispatch()
+        try:
+            users = FileUserRepository(settings.user_store_path)
+            current_time = datetime.fromisoformat(options.dispatch_at)
+            replies = GreetingDispatcher(users, FixedClock(current_time)).dispatch()
+        except (ValueError, UserStoreError):
+            print("error: unable to dispatch greetings", file=sys.stderr)
+            return 1
         print(json.dumps(reply_batch(replies)))
         return 0
     print("greetings-bot is configured")

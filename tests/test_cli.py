@@ -140,6 +140,18 @@ class CliTest(unittest.TestCase):
         payload = json.loads(output.getvalue())
         self.assertEqual([10, 20], [item["chat_id"] for item in payload])
 
+    def test_rejects_an_invalid_dispatch_time(self):
+        errors = StringIO()
+
+        with redirect_stderr(errors):
+            status = main(
+                {"TELEGRAM_BOT_TOKEN": "test-token"},
+                ["--dispatch-at", "later"],
+            )
+
+        self.assertEqual(1, status)
+        self.assertEqual("error: unable to dispatch greetings\n", errors.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
