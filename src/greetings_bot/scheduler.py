@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from typing import Iterable, List
@@ -6,6 +7,9 @@ from greetings_bot.greetings import format_scheduled_greeting
 from greetings_bot.clock import Clock
 from greetings_bot.telegram import Reply
 from greetings_bot.users import User, UserRepository
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def is_greeting_due(user: User, current_time: datetime) -> bool:
@@ -34,4 +38,5 @@ class GreetingDispatcher:
 
     def dispatch(self) -> List[Reply]:
         users = due_users(self.users.all(), self.clock.now())
+        LOGGER.info("dispatching %d scheduled greetings", len(users))
         return build_greeting_replies(users)

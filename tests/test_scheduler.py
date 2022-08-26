@@ -58,6 +58,15 @@ class GreetingScheduleTest(unittest.TestCase):
 
         self.assertEqual([Reply(chat_id=50, text="Good day, Kim!")], replies)
 
+    def test_logs_number_of_due_greetings(self):
+        users = InMemoryUserRepository()
+        clock = FixedClock(datetime(2022, 8, 25, 7, 15))
+
+        with self.assertLogs("greetings_bot.scheduler", level="INFO") as logs:
+            GreetingDispatcher(users, clock).dispatch()
+
+        self.assertIn("dispatching 0 scheduled greetings", logs.output[0])
+
 
 if __name__ == "__main__":
     unittest.main()
