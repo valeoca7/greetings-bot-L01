@@ -5,6 +5,7 @@ from typing import Iterable, List
 
 from greetings_bot.greetings import format_scheduled_greeting
 from greetings_bot.clock import Clock
+from greetings_bot.deliveries import Delivery, DeliveryLedger, InMemoryDeliveryLedger
 from greetings_bot.telegram import Reply
 from greetings_bot.users import User, UserRepository
 
@@ -32,11 +33,25 @@ def build_greeting_replies(users: Iterable[User]) -> List[Reply]:
 
 
 class GreetingDispatcher:
-    def __init__(self, users: UserRepository, clock: Clock) -> None:
+    def __init__(
+        self,
+        users: UserRepository,
+        clock: Clock,
+        deliveries: DeliveryLedger = None,
+    ) -> None:
         self.users = users
         self.clock = clock
+        self.deliveries = deliveries or InMemoryDeliveryLedger()
 
     def dispatch(self) -> List[Reply]:
-        users = due_users(self.users.all(), self.clock.now())
+        current_time = self.clock.now()
+        users = [
+            user
+            for user in due_users(self.users.all(), current_time)
+            if not self.deliveries.contains(Delivery(user.telegram_id, current_time.date()))
+        ]
         LOGGER.info("dispatching %d scheduled greetings", len(users))
-        return build_greeting_replies(users)
+        replies = build_greeting_replies(users)
+        for user in users:
+            self.deliveries.record(Delivery(user.telegram_id, current_time.date()))
+        return replies

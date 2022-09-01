@@ -67,6 +67,17 @@ class GreetingScheduleTest(unittest.TestCase):
 
         self.assertIn("dispatching 0 scheduled greetings", logs.output[0])
 
+    def test_does_not_dispatch_twice_on_the_same_day(self):
+        users = InMemoryUserRepository()
+        users.save(User(telegram_id=6, chat_id=60, first_name="Ari", greeting_time="08:00"))
+        dispatcher = GreetingDispatcher(
+            users,
+            FixedClock(datetime(2022, 8, 31, 8, 0)),
+        )
+
+        self.assertEqual(1, len(dispatcher.dispatch()))
+        self.assertEqual([], dispatcher.dispatch())
+
 
 if __name__ == "__main__":
     unittest.main()
