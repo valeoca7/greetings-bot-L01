@@ -78,6 +78,17 @@ class GreetingScheduleTest(unittest.TestCase):
         self.assertEqual(1, len(dispatcher.dispatch()))
         self.assertEqual([], dispatcher.dispatch())
 
+    def test_dispatches_again_on_the_next_day(self):
+        users = InMemoryUserRepository()
+        users.save(User(telegram_id=7, chat_id=70, first_name="Noa", greeting_time="08:00"))
+        clock = FixedClock(datetime(2022, 9, 1, 8, 0))
+        dispatcher = GreetingDispatcher(users, clock)
+
+        self.assertEqual(1, len(dispatcher.dispatch()))
+        clock.current_time = datetime(2022, 9, 2, 8, 0)
+
+        self.assertEqual(1, len(dispatcher.dispatch()))
+
 
 if __name__ == "__main__":
     unittest.main()
