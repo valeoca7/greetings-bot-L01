@@ -152,6 +152,20 @@ class CliTest(unittest.TestCase):
         self.assertEqual(1, status)
         self.assertEqual("error: unable to dispatch greetings\n", errors.getvalue())
 
+    def test_prints_empty_batch_when_nothing_is_due(self):
+        output = StringIO()
+
+        with TemporaryDirectory() as directory:
+            environment = {
+                "TELEGRAM_BOT_TOKEN": "test-token",
+                "USER_STORE_PATH": str(Path(directory) / "users.json"),
+            }
+            with redirect_stdout(output):
+                status = main(environment, ["--dispatch-at", "2022-09-04T18:00:00"])
+
+        self.assertEqual(0, status)
+        self.assertEqual("[]\n", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
