@@ -38,6 +38,15 @@ greetings-bot --update tests/fixtures/start_update.json
 
 The command prints the Telegram `sendMessage` payload that would be sent.
 
+To preview greetings due at a particular local time:
+
+```sh
+greetings-bot --dispatch-at 2022-09-06T18:30:00
+```
+
+The result is a JSON list of messages. This local command only prepares payloads; it
+does not send them to Telegram.
+
 ## Commands
 
 - `/start` registers the user and returns a greeting
