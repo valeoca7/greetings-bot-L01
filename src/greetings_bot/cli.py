@@ -20,8 +20,9 @@ def main(
 ) -> int:
     settings = Settings.from_env(environ)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--update", type=Path)
-    parser.add_argument("--dispatch-at")
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument("--update", type=Path)
+    action.add_argument("--dispatch-at")
     options = parser.parse_args(args)
     if options.update is not None:
         try:

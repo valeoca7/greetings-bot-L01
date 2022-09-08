@@ -166,6 +166,17 @@ class CliTest(unittest.TestCase):
         self.assertEqual(0, status)
         self.assertEqual("[]\n", output.getvalue())
 
+    def test_accepts_only_one_local_action(self):
+        fixture = Path(__file__).parent / "fixtures" / "start_update.json"
+
+        with self.assertRaises(SystemExit) as error:
+            main(
+                {"TELEGRAM_BOT_TOKEN": "test-token"},
+                ["--update", str(fixture), "--dispatch-at", "2022-09-07T18:00:00"],
+            )
+
+        self.assertEqual(2, error.exception.code)
+
 
 if __name__ == "__main__":
     unittest.main()

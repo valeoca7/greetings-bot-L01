@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 from greetings_bot.greetings import format_scheduled_greeting
 from greetings_bot.clock import Clock
@@ -37,7 +37,7 @@ class GreetingDispatcher:
         self,
         users: UserRepository,
         clock: Clock,
-        deliveries: DeliveryLedger = None,
+        deliveries: Optional[DeliveryLedger] = None,
     ) -> None:
         self.users = users
         self.clock = clock
