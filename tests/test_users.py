@@ -20,6 +20,7 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.locale, "en")
         self.assertEqual(user.greeting_time, "09:00")
         self.assertTrue(user.enabled)
+        self.assertEqual(user.timezone, "UTC")
 
     def test_normalizes_first_name(self):
         self.assertEqual(normalize_first_name("  Mira "), "Mira")
@@ -42,6 +43,12 @@ class UserTest(unittest.TestCase):
         self.assertEqual(data["telegram_id"], 42)
         self.assertEqual(data["first_name"], "Mira")
         self.assertEqual(data["greeting_time"], "09:00")
+        self.assertEqual(data["timezone"], "UTC")
+
+    def test_defaults_timezone_in_old_records(self):
+        user = user_from_dict({"telegram_id": 1, "chat_id": 1, "first_name": "Jo"})
+
+        self.assertEqual("UTC", user.timezone)
 
     def test_restores_user_from_dict(self):
         original = User(telegram_id=42, chat_id=84, first_name="Mira")

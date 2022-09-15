@@ -10,6 +10,7 @@ class User:
     locale: str = "en"
     greeting_time: str = "09:00"
     enabled: bool = True
+    timezone: str = "UTC"
 
 
 def user_to_dict(user: User) -> Dict[str, object]:
@@ -20,6 +21,7 @@ def user_to_dict(user: User) -> Dict[str, object]:
         "locale": user.locale,
         "greeting_time": user.greeting_time,
         "enabled": user.enabled,
+        "timezone": user.timezone,
     }
 
 
@@ -31,6 +33,7 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
         locale=str(data.get("locale", "en")),
         greeting_time=str(data.get("greeting_time", "09:00")),
         enabled=bool(data.get("enabled", True)),
+        timezone=str(data.get("timezone", "UTC")),
     )
 
 
