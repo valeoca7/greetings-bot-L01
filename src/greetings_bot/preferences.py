@@ -1,6 +1,7 @@
 import re
 from dataclasses import replace
 
+from greetings_bot.timezones import validate_timezone
 from greetings_bot.users import User, normalize_first_name
 
 
@@ -24,3 +25,7 @@ def set_first_name(user: User, value: str) -> User:
     if len(first_name) > MAX_NAME_LENGTH:
         raise ValueError("name is too long")
     return replace(user, first_name=first_name)
+
+
+def set_timezone(user: User, value: str) -> User:
+    return replace(user, timezone=validate_timezone(value))

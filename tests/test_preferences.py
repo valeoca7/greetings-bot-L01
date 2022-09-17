@@ -3,6 +3,7 @@ import unittest
 from greetings_bot.preferences import (
     set_first_name,
     set_greeting_time,
+    set_timezone,
     validate_greeting_time,
 )
 from greetings_bot.users import User
@@ -39,6 +40,13 @@ class GreetingTimeTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "too long"):
             set_first_name(user, "x" * 41)
+
+    def test_updates_timezone(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        updated = set_timezone(user, "America/Toronto")
+
+        self.assertEqual("America/Toronto", updated.timezone)
 
 
 if __name__ == "__main__":
