@@ -3,7 +3,7 @@ from typing import Optional
 
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
-from greetings_bot.preferences import set_first_name, set_greeting_time
+from greetings_bot.preferences import set_first_name, set_greeting_time, set_timezone
 from greetings_bot.profiles import format_profile
 from greetings_bot.telegram import Reply, Update
 from greetings_bot.users import (
@@ -72,6 +72,14 @@ class Application:
             return Reply(
                 update.message.chat_id,
                 "Your greeting time is {}.".format(user.greeting_time),
+            )
+        if command.name == "timezone":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            return Reply(
+                update.message.chat_id,
+                "Your timezone is {}.".format(user.timezone),
             )
         if command.name == "name":
             user = self.users.get(update.message.sender.id)

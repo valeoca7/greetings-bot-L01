@@ -141,6 +141,14 @@ class AppTest(unittest.TestCase):
         )
         self.assertEqual(users.get(42).greeting_time, "09:00")
 
+    def test_shows_timezone(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/timezone"), users)
+
+        self.assertEqual("Your timezone is UTC.", reply.text)
+
     def test_shows_greeting_name(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)
