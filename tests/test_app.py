@@ -149,6 +149,23 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual("Your timezone is UTC.", reply.text)
 
+    def test_changes_timezone(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/timezone America/Vancouver"), users)
+
+        self.assertEqual("Timezone changed to America/Vancouver.", reply.text)
+        self.assertEqual("America/Vancouver", users.get(42).timezone)
+
+    def test_rejects_unknown_timezone(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/timezone Mars/Base"), users)
+
+        self.assertEqual("Use an IANA timezone such as America/Vancouver.", reply.text)
+
     def test_shows_greeting_name(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)

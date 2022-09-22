@@ -77,6 +77,19 @@ class Application:
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return registration_required(update.message.chat_id)
+            if command.arguments:
+                try:
+                    user = set_timezone(user, command.arguments[0])
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Use an IANA timezone such as America/Vancouver.",
+                    )
+                self.users.save(user)
+                return Reply(
+                    update.message.chat_id,
+                    "Timezone changed to {}.".format(user.timezone),
+                )
             return Reply(
                 update.message.chat_id,
                 "Your timezone is {}.".format(user.timezone),
