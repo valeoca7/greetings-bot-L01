@@ -52,6 +52,7 @@ does not send them to Telegram.
 - `/start` registers the user and returns a greeting
 - `/register` creates a user profile
 - `/me` shows the current profile
+- `/timezone [area/name]` shows or changes the user's timezone
 - `/help` lists the available actions
 
 Run the tests with:

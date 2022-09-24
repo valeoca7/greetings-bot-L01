@@ -40,6 +40,7 @@ class AppTest(unittest.TestCase):
             "/register - create a profile\n"
             "/me - show your profile\n"
             "/time [HH:MM] - show or change greeting time\n"
+            "/timezone [area/name] - show or change timezone\n"
             "/name [name] - show or change greeting name",
         )
         self.assertEqual(reply.chat_id, 42)
