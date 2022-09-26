@@ -102,7 +102,7 @@ class AppTest(unittest.TestCase):
         self.assertEqual(
             reply.text,
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
-            "Greeting time: 09:00\nGreetings: on",
+            "Greeting time: 09:00\nTimezone: UTC\nGreetings: on",
         )
 
     def test_reports_missing_profile(self):
