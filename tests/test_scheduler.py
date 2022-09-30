@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 
 from greetings_bot.clock import FixedClock
 from greetings_bot.scheduler import (
@@ -29,6 +29,13 @@ class GreetingScheduleTest(unittest.TestCase):
         late = User(telegram_id=2, chat_id=2, first_name="Sam", greeting_time="18:30")
 
         self.assertEqual([late], due_users([early, late], datetime(2022, 8, 3, 18, 30)))
+
+    def test_matches_each_users_local_time(self):
+        west = User(8, 8, "West", greeting_time="09:00", timezone="America/Vancouver")
+        east = User(9, 9, "East", greeting_time="12:00", timezone="America/Toronto")
+        current = datetime(2022, 9, 29, 16, 0, tzinfo=timezone.utc)
+
+        self.assertEqual([west, east], due_users([west, east], current))
 
     def test_skips_disabled_users(self):
         user = User(

@@ -14,4 +14,6 @@ def validate_timezone(name: str) -> str:
 
 
 def user_local_time(user: User, current_time: datetime) -> datetime:
+    if current_time.tzinfo is None:
+        return current_time
     return current_time.astimezone(ZoneInfo(user.timezone))

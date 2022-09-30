@@ -7,6 +7,7 @@ from greetings_bot.greetings import format_scheduled_greeting
 from greetings_bot.clock import Clock
 from greetings_bot.deliveries import Delivery, DeliveryLedger, InMemoryDeliveryLedger
 from greetings_bot.telegram import Reply
+from greetings_bot.timezones import user_local_time
 from greetings_bot.users import User, UserRepository
 
 
@@ -14,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def is_greeting_due(user: User, current_time: datetime) -> bool:
-    return user.greeting_time == current_time.strftime("%H:%M")
+    return user.greeting_time == user_local_time(user, current_time).strftime("%H:%M")
 
 
 def due_users(users: Iterable[User], current_time: datetime) -> List[User]:
