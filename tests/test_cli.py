@@ -177,6 +177,24 @@ class CliTest(unittest.TestCase):
 
         self.assertEqual(2, error.exception.code)
 
+    def test_dispatches_from_an_aware_timestamp(self):
+        output = StringIO()
+
+        with TemporaryDirectory() as directory:
+            store_path = Path(directory) / "users.json"
+            users = FileUserRepository(store_path)
+            users.save(
+                User(1, 10, "Mira", greeting_time="09:00", timezone="America/Vancouver")
+            )
+            environment = {
+                "TELEGRAM_BOT_TOKEN": "test-token",
+                "USER_STORE_PATH": str(store_path),
+            }
+            with redirect_stdout(output):
+                main(environment, ["--dispatch-at", "2022-10-01T16:00:00+00:00"])
+
+        self.assertIn("Good day, Mira!", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()
