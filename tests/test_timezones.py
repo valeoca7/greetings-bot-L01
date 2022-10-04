@@ -19,6 +19,14 @@ class TimezoneTest(unittest.TestCase):
 
         self.assertEqual("09:00", user_local_time(user, current).strftime("%H:%M"))
 
+    def test_uses_daylight_offset_after_spring_change(self):
+        user = User(1, 1, "Mira", timezone="America/Vancouver")
+        before = datetime(2022, 3, 13, 9, 30, tzinfo=timezone.utc)
+        after = datetime(2022, 3, 13, 10, 30, tzinfo=timezone.utc)
+
+        self.assertEqual("01:30", user_local_time(user, before).strftime("%H:%M"))
+        self.assertEqual("03:30", user_local_time(user, after).strftime("%H:%M"))
+
 
 if __name__ == "__main__":
     unittest.main()
