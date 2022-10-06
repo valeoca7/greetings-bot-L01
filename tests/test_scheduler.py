@@ -96,6 +96,25 @@ class GreetingScheduleTest(unittest.TestCase):
 
         self.assertEqual(1, len(dispatcher.dispatch()))
 
+    def test_does_not_repeat_during_fall_clock_change(self):
+        users = InMemoryUserRepository()
+        users.save(
+            User(
+                telegram_id=10,
+                chat_id=10,
+                first_name="Mira",
+                greeting_time="01:30",
+                timezone="America/Vancouver",
+            )
+        )
+        clock = FixedClock(datetime(2022, 11, 6, 8, 30, tzinfo=timezone.utc))
+        dispatcher = GreetingDispatcher(users, clock)
+
+        self.assertEqual(1, len(dispatcher.dispatch()))
+        clock.current_time = datetime(2022, 11, 6, 9, 30, tzinfo=timezone.utc)
+
+        self.assertEqual([], dispatcher.dispatch())
+
 
 if __name__ == "__main__":
     unittest.main()
