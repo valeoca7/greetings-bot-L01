@@ -21,6 +21,8 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.greeting_time, "09:00")
         self.assertTrue(user.enabled)
         self.assertEqual(user.timezone, "UTC")
+        self.assertIsNone(user.quiet_start)
+        self.assertIsNone(user.quiet_end)
 
     def test_normalizes_first_name(self):
         self.assertEqual(normalize_first_name("  Mira "), "Mira")
@@ -44,6 +46,7 @@ class UserTest(unittest.TestCase):
         self.assertEqual(data["first_name"], "Mira")
         self.assertEqual(data["greeting_time"], "09:00")
         self.assertEqual(data["timezone"], "UTC")
+        self.assertIsNone(data["quiet_start"])
 
     def test_defaults_timezone_in_old_records(self):
         user = user_from_dict({"telegram_id": 1, "chat_id": 1, "first_name": "Jo"})

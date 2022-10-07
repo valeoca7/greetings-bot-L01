@@ -11,6 +11,8 @@ class User:
     greeting_time: str = "09:00"
     enabled: bool = True
     timezone: str = "UTC"
+    quiet_start: Optional[str] = None
+    quiet_end: Optional[str] = None
 
 
 def user_to_dict(user: User) -> Dict[str, object]:
@@ -22,6 +24,8 @@ def user_to_dict(user: User) -> Dict[str, object]:
         "greeting_time": user.greeting_time,
         "enabled": user.enabled,
         "timezone": user.timezone,
+        "quiet_start": user.quiet_start,
+        "quiet_end": user.quiet_end,
     }
 
 
@@ -34,6 +38,8 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
         greeting_time=str(data.get("greeting_time", "09:00")),
         enabled=bool(data.get("enabled", True)),
         timezone=str(data.get("timezone", "UTC")),
+        quiet_start=data.get("quiet_start"),
+        quiet_end=data.get("quiet_end"),
     )
 
 
