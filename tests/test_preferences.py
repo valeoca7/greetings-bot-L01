@@ -3,6 +3,7 @@ import unittest
 from greetings_bot.preferences import (
     set_first_name,
     set_greeting_time,
+    set_quiet_hours,
     set_timezone,
     validate_greeting_time,
 )
@@ -47,6 +48,20 @@ class GreetingTimeTest(unittest.TestCase):
         updated = set_timezone(user, "America/Toronto")
 
         self.assertEqual("America/Toronto", updated.timezone)
+
+    def test_sets_quiet_hours(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        updated = set_quiet_hours(user, "22:00", "07:00")
+
+        self.assertEqual("22:00", updated.quiet_start)
+        self.assertEqual("07:00", updated.quiet_end)
+
+    def test_rejects_empty_quiet_window(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        with self.assertRaises(ValueError):
+            set_quiet_hours(user, "08:00", "08:00")
 
 
 if __name__ == "__main__":

@@ -29,3 +29,11 @@ def set_first_name(user: User, value: str) -> User:
 
 def set_timezone(user: User, value: str) -> User:
     return replace(user, timezone=validate_timezone(value))
+
+
+def set_quiet_hours(user: User, start: str, end: str) -> User:
+    quiet_start = validate_greeting_time(start)
+    quiet_end = validate_greeting_time(end)
+    if quiet_start == quiet_end:
+        raise ValueError("quiet hours must have different bounds")
+    return replace(user, quiet_start=quiet_start, quiet_end=quiet_end)
