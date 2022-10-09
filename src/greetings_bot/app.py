@@ -3,7 +3,12 @@ from typing import Optional
 
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
-from greetings_bot.preferences import set_first_name, set_greeting_time, set_timezone
+from greetings_bot.preferences import (
+    set_first_name,
+    set_greeting_time,
+    set_quiet_hours,
+    set_timezone,
+)
 from greetings_bot.profiles import format_profile
 from greetings_bot.telegram import Reply, Update
 from greetings_bot.users import (
@@ -94,6 +99,26 @@ class Application:
             return Reply(
                 update.message.chat_id,
                 "Your timezone is {}.".format(user.timezone),
+            )
+        if command.name == "quiet":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if len(command.arguments) == 2:
+                try:
+                    user = set_quiet_hours(user, *command.arguments)
+                except ValueError:
+                    return Reply(update.message.chat_id, "Use /quiet HH:MM HH:MM.")
+                self.users.save(user)
+                return Reply(
+                    update.message.chat_id,
+                    "Quiet hours changed to {}-{}.".format(user.quiet_start, user.quiet_end),
+                )
+            if user.quiet_start is None:
+                return Reply(update.message.chat_id, "Quiet hours are off.")
+            return Reply(
+                update.message.chat_id,
+                "Quiet hours are {}-{}.".format(user.quiet_start, user.quiet_end),
             )
         if command.name == "name":
             user = self.users.get(update.message.sender.id)

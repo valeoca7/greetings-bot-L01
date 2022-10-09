@@ -167,6 +167,22 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual("Use an IANA timezone such as America/Vancouver.", reply.text)
 
+    def test_sets_quiet_hours(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/quiet 22:00 07:00"), users)
+
+        self.assertEqual("Quiet hours changed to 22:00-07:00.", reply.text)
+
+    def test_shows_disabled_quiet_hours(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/quiet"), users)
+
+        self.assertEqual("Quiet hours are off.", reply.text)
+
     def test_shows_greeting_name(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)
