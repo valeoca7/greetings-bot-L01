@@ -4,6 +4,7 @@ from typing import Optional
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
 from greetings_bot.preferences import (
+    clear_quiet_hours,
     set_first_name,
     set_greeting_time,
     set_quiet_hours,
@@ -114,6 +115,9 @@ class Application:
                     update.message.chat_id,
                     "Quiet hours changed to {}-{}.".format(user.quiet_start, user.quiet_end),
                 )
+            if command.arguments == ("off",):
+                self.users.save(clear_quiet_hours(user))
+                return Reply(update.message.chat_id, "Quiet hours turned off.")
             if user.quiet_start is None:
                 return Reply(update.message.chat_id, "Quiet hours are off.")
             return Reply(

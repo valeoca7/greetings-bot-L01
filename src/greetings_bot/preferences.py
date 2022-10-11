@@ -37,3 +37,7 @@ def set_quiet_hours(user: User, start: str, end: str) -> User:
     if quiet_start == quiet_end:
         raise ValueError("quiet hours must have different bounds")
     return replace(user, quiet_start=quiet_start, quiet_end=quiet_end)
+
+
+def clear_quiet_hours(user: User) -> User:
+    return replace(user, quiet_start=None, quiet_end=None)

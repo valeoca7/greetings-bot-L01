@@ -183,6 +183,16 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual("Quiet hours are off.", reply.text)
 
+    def test_turns_off_quiet_hours(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        handle_update(text_update("/quiet 22:00 07:00"), users)
+
+        reply = handle_update(text_update("/quiet off"), users)
+
+        self.assertEqual("Quiet hours turned off.", reply.text)
+        self.assertIsNone(users.get(42).quiet_start)
+
     def test_shows_greeting_name(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)
