@@ -52,6 +52,7 @@ class Application:
                 "/me - show your profile\n"
                 "/time [HH:MM] - show or change greeting time\n"
                 "/timezone [area/name] - show or change timezone\n"
+                "/quiet [start end|off] - manage quiet hours\n"
                 "/name [name] - show or change greeting name",
             )
         if command.name == "me":
