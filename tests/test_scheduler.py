@@ -7,6 +7,7 @@ from greetings_bot.scheduler import (
     build_greeting_replies,
     due_users,
     is_greeting_due,
+    is_quiet_time,
 )
 from greetings_bot.telegram import Reply
 from greetings_bot.users import InMemoryUserRepository, User
@@ -47,6 +48,25 @@ class GreetingScheduleTest(unittest.TestCase):
         )
 
         self.assertEqual([], due_users([user], datetime(2022, 8, 5, 9, 0)))
+
+    def test_detects_overnight_quiet_hours(self):
+        user = User(3, 3, "Lee", quiet_start="22:00", quiet_end="07:00")
+
+        self.assertTrue(is_quiet_time(user, datetime(2022, 10, 12, 23, 0)))
+        self.assertTrue(is_quiet_time(user, datetime(2022, 10, 13, 6, 59)))
+        self.assertFalse(is_quiet_time(user, datetime(2022, 10, 13, 7, 0)))
+
+    def test_skips_a_greeting_during_quiet_hours(self):
+        user = User(
+            3,
+            3,
+            "Lee",
+            greeting_time="06:30",
+            quiet_start="22:00",
+            quiet_end="07:00",
+        )
+
+        self.assertEqual([], due_users([user], datetime(2022, 10, 12, 6, 30)))
 
     def test_builds_replies_for_due_users(self):
         user = User(telegram_id=4, chat_id=40, first_name="Jo")
