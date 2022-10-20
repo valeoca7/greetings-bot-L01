@@ -14,6 +14,13 @@ class ApiGatewayRequestTest(unittest.TestCase):
 
         self.assertIsNone(request.body)
 
+    def test_decodes_base64_body(self):
+        request = ApiGatewayRequest.from_event(
+            {"body": "aGVsbG8=", "isBase64Encoded": True}
+        )
+
+        self.assertEqual(request.body, "hello")
+
 
 if __name__ == "__main__":
     unittest.main()
