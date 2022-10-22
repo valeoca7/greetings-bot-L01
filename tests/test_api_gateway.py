@@ -1,6 +1,6 @@
 import unittest
 
-from greetings_bot.api_gateway import ApiGatewayRequest
+from greetings_bot.api_gateway import ApiGatewayRequest, ApiGatewayRequestError
 
 
 class ApiGatewayRequestTest(unittest.TestCase):
@@ -20,6 +20,17 @@ class ApiGatewayRequestTest(unittest.TestCase):
         )
 
         self.assertEqual(request.body, "hello")
+
+    def test_reads_json_body(self):
+        request = ApiGatewayRequest.from_event({"body": '{"update_id": 1}'})
+
+        self.assertEqual(request.json_body(), {"update_id": 1})
+
+    def test_rejects_invalid_json(self):
+        request = ApiGatewayRequest.from_event({"body": "{"})
+
+        with self.assertRaisesRegex(ApiGatewayRequestError, "must be JSON"):
+            request.json_body()
 
 
 if __name__ == "__main__":

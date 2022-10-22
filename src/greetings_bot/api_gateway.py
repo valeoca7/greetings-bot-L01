@@ -1,6 +1,12 @@
 import base64
+import binascii
+import json
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional
+
+
+class ApiGatewayRequestError(ValueError):
+    pass
 
 
 @dataclass(frozen=True)
@@ -11,5 +17,19 @@ class ApiGatewayRequest:
     def from_event(cls, event: Mapping[str, Any]) -> "ApiGatewayRequest":
         body = event.get("body")
         if isinstance(body, str) and event.get("isBase64Encoded") is True:
-            body = base64.b64decode(body).decode("utf-8")
+            try:
+                body = base64.b64decode(body, validate=True).decode("utf-8")
+            except (binascii.Error, UnicodeDecodeError) as error:
+                raise ApiGatewayRequestError("invalid encoded body") from error
         return cls(body=body if isinstance(body, str) else None)
+
+    def json_body(self) -> Mapping[str, Any]:
+        if self.body is None:
+            raise ApiGatewayRequestError("request body is required")
+        try:
+            payload = json.loads(self.body)
+        except json.JSONDecodeError as error:
+            raise ApiGatewayRequestError("request body must be JSON") from error
+        if not isinstance(payload, dict):
+            raise ApiGatewayRequestError("request body must be an object")
+        return payload
