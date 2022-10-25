@@ -1,6 +1,10 @@
 import unittest
 
-from greetings_bot.api_gateway import ApiGatewayRequest, ApiGatewayRequestError
+from greetings_bot.api_gateway import (
+    ApiGatewayRequest,
+    ApiGatewayRequestError,
+    ApiGatewayResponse,
+)
 
 
 class ApiGatewayRequestTest(unittest.TestCase):
@@ -31,6 +35,13 @@ class ApiGatewayRequestTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ApiGatewayRequestError, "must be JSON"):
             request.json_body()
+
+
+class ApiGatewayResponseTest(unittest.TestCase):
+    def test_maps_response_fields(self):
+        response = ApiGatewayResponse(200, "ok")
+
+        self.assertEqual(response.to_dict(), {"statusCode": 200, "body": "ok"})
 
 
 if __name__ == "__main__":

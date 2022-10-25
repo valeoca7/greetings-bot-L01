@@ -2,11 +2,20 @@ import base64
 import binascii
 import json
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional, Union
 
 
 class ApiGatewayRequestError(ValueError):
     pass
+
+
+@dataclass(frozen=True)
+class ApiGatewayResponse:
+    status_code: int
+    body: str = ""
+
+    def to_dict(self) -> Dict[str, Union[int, str]]:
+        return {"statusCode": self.status_code, "body": self.body}
 
 
 @dataclass(frozen=True)
