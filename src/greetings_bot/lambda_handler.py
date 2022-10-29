@@ -1,7 +1,11 @@
 import json
 from typing import Any, Dict, Mapping, Union
 
-from greetings_bot.api_gateway import ApiGatewayRequest, ApiGatewayResponse
+from greetings_bot.api_gateway import (
+    ApiGatewayRequest,
+    ApiGatewayRequestError,
+    ApiGatewayResponse,
+)
 from greetings_bot.runtime import process_payload
 from greetings_bot.users import InMemoryUserRepository, UserRepository
 
@@ -14,8 +18,12 @@ class WebhookHandler:
         self.users = users
 
     def handle(self, event: Mapping[str, Any]) -> LambdaResponse:
-        request = ApiGatewayRequest.from_event(event)
-        reply = process_payload(request.json_body(), self.users)
+        try:
+            request = ApiGatewayRequest.from_event(event)
+            payload = request.json_body()
+        except ApiGatewayRequestError as error:
+            return ApiGatewayResponse(400, str(error)).to_dict()
+        reply = process_payload(payload, self.users)
         body = "" if reply is None else json.dumps(reply)
         return ApiGatewayResponse(200, body).to_dict()
 

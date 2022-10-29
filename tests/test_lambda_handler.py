@@ -23,6 +23,12 @@ class LambdaHandlerTest(unittest.TestCase):
         self.assertEqual(response["statusCode"], 200)
         self.assertIn("Hello, Mira!", response["body"])
 
+    def test_rejects_event_without_body(self):
+        response = WebhookHandler(InMemoryUserRepository()).handle({})
+
+        self.assertEqual(response["statusCode"], 400)
+        self.assertEqual(response["body"], "request body is required")
+
 
 if __name__ == "__main__":
     unittest.main()
