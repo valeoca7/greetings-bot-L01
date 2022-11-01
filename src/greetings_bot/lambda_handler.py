@@ -7,6 +7,7 @@ from greetings_bot.api_gateway import (
     ApiGatewayResponse,
 )
 from greetings_bot.runtime import process_payload
+from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
 
 
@@ -23,7 +24,10 @@ class WebhookHandler:
             payload = request.json_body()
         except ApiGatewayRequestError as error:
             return ApiGatewayResponse(400, str(error)).to_dict()
-        reply = process_payload(payload, self.users)
+        try:
+            reply = process_payload(payload, self.users)
+        except UpdateParseError:
+            return ApiGatewayResponse(400, "invalid update payload").to_dict()
         body = "" if reply is None else json.dumps(reply)
         return ApiGatewayResponse(200, body).to_dict()
 

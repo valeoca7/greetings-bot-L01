@@ -29,6 +29,14 @@ class LambdaHandlerTest(unittest.TestCase):
         self.assertEqual(response["statusCode"], 400)
         self.assertEqual(response["body"], "request body is required")
 
+    def test_rejects_incomplete_telegram_update(self):
+        response = WebhookHandler(InMemoryUserRepository()).handle(
+            {"body": '{"message": {}}'}
+        )
+
+        self.assertEqual(response["statusCode"], 400)
+        self.assertEqual(response["body"], "invalid update payload")
+
 
 if __name__ == "__main__":
     unittest.main()
