@@ -41,7 +41,14 @@ class ApiGatewayResponseTest(unittest.TestCase):
     def test_maps_response_fields(self):
         response = ApiGatewayResponse(200, "ok")
 
-        self.assertEqual(response.to_dict(), {"statusCode": 200, "body": "ok"})
+        self.assertEqual(
+            response.to_dict(),
+            {
+                "statusCode": 200,
+                "headers": {"content-type": "application/json"},
+                "body": "ok",
+            },
+        )
 
 
 if __name__ == "__main__":

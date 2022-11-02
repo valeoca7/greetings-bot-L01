@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Mapping, Union
+from typing import Any, Dict, Mapping
 
 from greetings_bot.api_gateway import (
     ApiGatewayRequest,
@@ -11,7 +11,7 @@ from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
 
 
-LambdaResponse = Dict[str, Union[int, str]]
+LambdaResponse = Dict[str, object]
 
 
 class WebhookHandler:

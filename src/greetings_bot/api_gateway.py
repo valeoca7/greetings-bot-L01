@@ -2,7 +2,7 @@ import base64
 import binascii
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Optional, Union
+from typing import Any, Dict, Mapping, Optional
 
 
 class ApiGatewayRequestError(ValueError):
@@ -14,8 +14,12 @@ class ApiGatewayResponse:
     status_code: int
     body: str = ""
 
-    def to_dict(self) -> Dict[str, Union[int, str]]:
-        return {"statusCode": self.status_code, "body": self.body}
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "statusCode": self.status_code,
+            "headers": {"content-type": "application/json"},
+            "body": self.body,
+        }
 
 
 @dataclass(frozen=True)

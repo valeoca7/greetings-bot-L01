@@ -8,7 +8,9 @@ class LambdaHandlerTest(unittest.TestCase):
     def test_acknowledges_gateway_event(self):
         response = handle_event({"body": '{"update_id": 1}'})
 
-        self.assertEqual(response, {"statusCode": 200, "body": ""})
+        self.assertEqual(response["statusCode"], 200)
+        self.assertEqual(response["body"], "")
+        self.assertEqual(response["headers"]["content-type"], "application/json")
 
     def test_processes_telegram_command(self):
         handler = WebhookHandler(InMemoryUserRepository())
