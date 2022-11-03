@@ -1,4 +1,5 @@
 import unittest
+from types import SimpleNamespace
 
 from greetings_bot.lambda_handler import WebhookHandler, handle_event
 from greetings_bot.users import InMemoryUserRepository
@@ -6,11 +7,16 @@ from greetings_bot.users import InMemoryUserRepository
 
 class LambdaHandlerTest(unittest.TestCase):
     def test_acknowledges_gateway_event(self):
-        response = handle_event({"body": '{"update_id": 1}'})
+        with self.assertLogs("greetings_bot.lambda_handler", level="INFO") as logs:
+            response = handle_event(
+                {"body": '{"update_id": 1}'},
+                SimpleNamespace(aws_request_id="request-123"),
+            )
 
         self.assertEqual(response["statusCode"], 200)
         self.assertEqual(response["body"], "")
         self.assertEqual(response["headers"]["content-type"], "application/json")
+        self.assertIn("request-123", logs.output[0])
 
     def test_processes_telegram_command(self):
         handler = WebhookHandler(InMemoryUserRepository())

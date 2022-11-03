@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any, Dict, Mapping
 
 from greetings_bot.api_gateway import (
@@ -12,6 +13,7 @@ from greetings_bot.users import InMemoryUserRepository, UserRepository
 
 
 LambdaResponse = Dict[str, object]
+LOGGER = logging.getLogger(__name__)
 
 
 class WebhookHandler:
@@ -39,4 +41,6 @@ _handler = WebhookHandler(_users)
 def handle_event(
     event: Mapping[str, Any], context: object = None
 ) -> LambdaResponse:
+    request_id = getattr(context, "aws_request_id", "local")
+    LOGGER.info("handling webhook request %s", request_id)
     return _handler.handle(event)
