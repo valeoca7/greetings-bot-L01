@@ -1,4 +1,6 @@
+import json
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 
 from greetings_bot.lambda_handler import WebhookHandler, handle_event
@@ -44,6 +46,14 @@ class LambdaHandlerTest(unittest.TestCase):
 
         self.assertEqual(response["statusCode"], 400)
         self.assertEqual(response["body"], "invalid update payload")
+
+    def test_handles_sample_gateway_event(self):
+        event = json.loads(Path("events/webhook.json").read_text())
+
+        response = WebhookHandler(InMemoryUserRepository()).handle(event)
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertIn("Hello, Mira!", response["body"])
 
 
 if __name__ == "__main__":
