@@ -61,3 +61,15 @@ Run the tests with:
 ```sh
 make test
 ```
+
+## Lambda webhook
+
+`template.yaml` contains the first SAM definition for the webhook function. A saved
+API Gateway event is available for local invocation:
+
+```sh
+sam local invoke WebhookFunction --event events/webhook.json
+```
+
+The template and handler can be tested offline. Nothing in this repository creates
+AWS resources or registers the webhook with Telegram.
