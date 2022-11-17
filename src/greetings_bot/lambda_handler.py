@@ -25,13 +25,17 @@ class WebhookHandler:
             request = ApiGatewayRequest.from_event(event)
             payload = request.json_body()
         except ApiGatewayRequestError as error:
-            return ApiGatewayResponse(400, str(error)).to_dict()
+            return self._error_response(str(error))
         try:
             reply = process_payload(payload, self.users)
         except UpdateParseError:
-            return ApiGatewayResponse(400, "invalid update payload").to_dict()
+            return self._error_response("invalid update payload")
         body = "" if reply is None else json.dumps(reply)
         return ApiGatewayResponse(200, body).to_dict()
+
+    @staticmethod
+    def _error_response(message: str) -> LambdaResponse:
+        return ApiGatewayResponse(400, json.dumps({"error": message})).to_dict()
 
 
 _users = InMemoryUserRepository()

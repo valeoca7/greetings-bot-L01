@@ -37,7 +37,9 @@ class LambdaHandlerTest(unittest.TestCase):
         response = WebhookHandler(InMemoryUserRepository()).handle({})
 
         self.assertEqual(response["statusCode"], 400)
-        self.assertEqual(response["body"], "request body is required")
+        self.assertEqual(
+            json.loads(response["body"]), {"error": "request body is required"}
+        )
 
     def test_rejects_incomplete_telegram_update(self):
         response = WebhookHandler(InMemoryUserRepository()).handle(
@@ -45,7 +47,9 @@ class LambdaHandlerTest(unittest.TestCase):
         )
 
         self.assertEqual(response["statusCode"], 400)
-        self.assertEqual(response["body"], "invalid update payload")
+        self.assertEqual(
+            json.loads(response["body"]), {"error": "invalid update payload"}
+        )
 
     def test_handles_sample_gateway_event(self):
         event = json.loads(Path("events/webhook.json").read_text())
