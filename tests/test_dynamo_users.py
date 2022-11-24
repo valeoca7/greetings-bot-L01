@@ -1,6 +1,6 @@
 import unittest
 
-from greetings_bot.dynamo_users import user_item, user_key
+from greetings_bot.dynamo_users import user_from_item, user_item, user_key
 from greetings_bot.users import User
 
 
@@ -18,6 +18,13 @@ class UserKeyTest(unittest.TestCase):
         self.assertEqual(item["sk"], "PROFILE")
         self.assertEqual(item["entity"], "user")
         self.assertEqual(item["first_name"], "Mira")
+
+    def test_restores_user_from_an_item(self):
+        original = User(42, 84, "Mira", timezone="America/Vancouver")
+
+        restored = user_from_item(user_item(original))
+
+        self.assertEqual(restored, original)
 
 
 if __name__ == "__main__":
