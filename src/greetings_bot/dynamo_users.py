@@ -1,6 +1,11 @@
-from typing import Dict
+from typing import Dict, Mapping, Protocol
 
 from greetings_bot.users import User, user_from_dict, user_to_dict
+
+
+class DynamoTable(Protocol):
+    def put_item(self, *, Item: Mapping[str, object]) -> Mapping[str, object]:
+        ...
 
 
 def user_key(telegram_id: int) -> Dict[str, object]:
@@ -19,3 +24,11 @@ def user_item(user: User) -> Dict[str, object]:
 
 def user_from_item(item: Dict[str, object]) -> User:
     return user_from_dict(item)
+
+
+class DynamoUserRepository:
+    def __init__(self, table: DynamoTable) -> None:
+        self.table = table
+
+    def save(self, user: User) -> None:
+        self.table.put_item(Item=user_item(user))
