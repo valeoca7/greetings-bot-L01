@@ -1,10 +1,13 @@
-from typing import Dict, Mapping, Protocol
+from typing import Dict, Mapping, Optional, Protocol
 
 from greetings_bot.users import User, user_from_dict, user_to_dict
 
 
 class DynamoTable(Protocol):
     def put_item(self, *, Item: Mapping[str, object]) -> Mapping[str, object]:
+        ...
+
+    def get_item(self, *, Key: Mapping[str, object]) -> Mapping[str, object]:
         ...
 
 
@@ -32,3 +35,10 @@ class DynamoUserRepository:
 
     def save(self, user: User) -> None:
         self.table.put_item(Item=user_item(user))
+
+    def get(self, telegram_id: int) -> Optional[User]:
+        result = self.table.get_item(Key=user_key(telegram_id))
+        item = result.get("Item")
+        if not isinstance(item, dict):
+            return None
+        return user_from_item(item)

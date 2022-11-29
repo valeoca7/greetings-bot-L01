@@ -17,6 +17,10 @@ class FakeTable:
         self.items[(Item["pk"], Item["sk"])] = dict(Item)
         return {}
 
+    def get_item(self, *, Key):
+        item = self.items.get((Key["pk"], Key["sk"]))
+        return {} if item is None else {"Item": item}
+
 
 class UserKeyTest(unittest.TestCase):
     def test_builds_user_profile_key(self):
@@ -49,6 +53,17 @@ class DynamoUserRepositoryTest(unittest.TestCase):
         users.save(User(42, 84, "Mira"))
 
         self.assertEqual(table.items[("USER#42", "PROFILE")]["first_name"], "Mira")
+
+    def test_gets_user_by_telegram_id(self):
+        users = DynamoUserRepository(FakeTable())
+        users.save(User(42, 84, "Mira"))
+
+        self.assertEqual(users.get(42), User(42, 84, "Mira"))
+
+    def test_returns_none_for_missing_user(self):
+        users = DynamoUserRepository(FakeTable())
+
+        self.assertIsNone(users.get(404))
 
 
 if __name__ == "__main__":
