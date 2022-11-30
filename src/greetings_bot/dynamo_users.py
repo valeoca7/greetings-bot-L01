@@ -1,4 +1,4 @@
-from typing import Dict, Mapping, Optional, Protocol
+from typing import Dict, Mapping, Optional, Protocol, Sequence
 
 from greetings_bot.users import User, user_from_dict, user_to_dict
 
@@ -8,6 +8,9 @@ class DynamoTable(Protocol):
         ...
 
     def get_item(self, *, Key: Mapping[str, object]) -> Mapping[str, object]:
+        ...
+
+    def scan(self, **kwargs: object) -> Mapping[str, object]:
         ...
 
 
@@ -42,3 +45,8 @@ class DynamoUserRepository:
         if not isinstance(item, dict):
             return None
         return user_from_item(item)
+
+    def all(self) -> Sequence[User]:
+        result = self.table.scan()
+        items = result.get("Items", [])
+        return [user_from_item(item) for item in items if isinstance(item, dict)]

@@ -21,6 +21,9 @@ class FakeTable:
         item = self.items.get((Key["pk"], Key["sk"]))
         return {} if item is None else {"Item": item}
 
+    def scan(self, **kwargs):
+        return {"Items": list(self.items.values())}
+
 
 class UserKeyTest(unittest.TestCase):
     def test_builds_user_profile_key(self):
@@ -64,6 +67,13 @@ class DynamoUserRepositoryTest(unittest.TestCase):
         users = DynamoUserRepository(FakeTable())
 
         self.assertIsNone(users.get(404))
+
+    def test_lists_stored_users(self):
+        users = DynamoUserRepository(FakeTable())
+        users.save(User(42, 84, "Mira"))
+        users.save(User(7, 14, "Leo"))
+
+        self.assertEqual({user.telegram_id for user in users.all()}, {7, 42})
 
 
 if __name__ == "__main__":
