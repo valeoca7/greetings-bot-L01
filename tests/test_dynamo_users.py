@@ -73,7 +73,7 @@ class DynamoUserRepositoryTest(unittest.TestCase):
         users.save(User(42, 84, "Mira"))
         users.save(User(7, 14, "Leo"))
 
-        self.assertEqual({user.telegram_id for user in users.all()}, {7, 42})
+        self.assertEqual([user.telegram_id for user in users.all()], [7, 42])
 
 
 if __name__ == "__main__":

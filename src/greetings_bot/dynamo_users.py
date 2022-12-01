@@ -49,4 +49,5 @@ class DynamoUserRepository:
     def all(self) -> Sequence[User]:
         result = self.table.scan()
         items = result.get("Items", [])
-        return [user_from_item(item) for item in items if isinstance(item, dict)]
+        users = [user_from_item(item) for item in items if isinstance(item, dict)]
+        return sorted(users, key=lambda user: user.telegram_id)
