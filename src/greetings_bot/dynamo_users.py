@@ -51,3 +51,6 @@ class DynamoUserRepository:
         items = result.get("Items", [])
         users = [user_from_item(item) for item in items if isinstance(item, dict)]
         return sorted(users, key=lambda user: user.telegram_id)
+
+    def count(self) -> int:
+        return len(self.all())

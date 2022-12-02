@@ -75,6 +75,12 @@ class DynamoUserRepositoryTest(unittest.TestCase):
 
         self.assertEqual([user.telegram_id for user in users.all()], [7, 42])
 
+    def test_counts_stored_users(self):
+        users = DynamoUserRepository(FakeTable())
+        users.save(User(42, 84, "Mira"))
+
+        self.assertEqual(users.count(), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
