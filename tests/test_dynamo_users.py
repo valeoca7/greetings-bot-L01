@@ -81,6 +81,17 @@ class DynamoUserRepositoryTest(unittest.TestCase):
 
         self.assertEqual(users.count(), 1)
 
+    def test_ignores_other_table_entities(self):
+        table = FakeTable()
+        table.items[("CONFIG#bot", "CURRENT")] = {
+            "pk": "CONFIG#bot",
+            "sk": "CURRENT",
+            "entity": "config",
+        }
+        users = DynamoUserRepository(table)
+
+        self.assertEqual(users.all(), [])
+
 
 if __name__ == "__main__":
     unittest.main()
