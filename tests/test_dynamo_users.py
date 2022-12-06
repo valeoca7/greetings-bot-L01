@@ -12,6 +12,7 @@ from greetings_bot.users import User
 class FakeTable:
     def __init__(self):
         self.items = {}
+        self.pages = None
 
     def put_item(self, *, Item):
         self.items[(Item["pk"], Item["sk"])] = dict(Item)
@@ -22,6 +23,12 @@ class FakeTable:
         return {} if item is None else {"Item": item}
 
     def scan(self, **kwargs):
+        if self.pages is not None:
+            page = 0 if "ExclusiveStartKey" not in kwargs else 1
+            result = {"Items": self.pages[page]}
+            if page == 0:
+                result["LastEvaluatedKey"] = {"pk": "next", "sk": "next"}
+            return result
         return {"Items": list(self.items.values())}
 
 
@@ -91,6 +98,17 @@ class DynamoUserRepositoryTest(unittest.TestCase):
         users = DynamoUserRepository(table)
 
         self.assertEqual(users.all(), [])
+
+    def test_reads_all_scan_pages(self):
+        table = FakeTable()
+        table.pages = [
+            [user_item(User(42, 84, "Mira"))],
+            [user_item(User(7, 14, "Leo"))],
+        ]
+
+        users = DynamoUserRepository(table).all()
+
+        self.assertEqual([user.telegram_id for user in users], [7, 42])
 
 
 if __name__ == "__main__":

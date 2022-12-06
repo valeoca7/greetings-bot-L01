@@ -47,8 +47,15 @@ class DynamoUserRepository:
         return user_from_item(item)
 
     def all(self) -> Sequence[User]:
-        result = self.table.scan()
-        items = result.get("Items", [])
+        items = []
+        scan_args = {}
+        while True:
+            result = self.table.scan(**scan_args)
+            items.extend(result.get("Items", []))
+            last_key = result.get("LastEvaluatedKey")
+            if not isinstance(last_key, dict):
+                break
+            scan_args["ExclusiveStartKey"] = last_key
         users = [
             user_from_item(item)
             for item in items
