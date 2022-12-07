@@ -12,6 +12,7 @@ class SettingsError(ValueError):
 class Settings:
     telegram_token: str
     user_store_path: Path = Path("data/users.json")
+    user_table_name: Optional[str] = None
 
     @classmethod
     def from_env(cls, environ: Optional[Mapping[str, str]] = None) -> "Settings":
@@ -20,4 +21,9 @@ class Settings:
         if not token:
             raise SettingsError("TELEGRAM_BOT_TOKEN is required")
         store_path = Path(values.get("USER_STORE_PATH", "data/users.json"))
-        return cls(telegram_token=token, user_store_path=store_path)
+        table_name = values.get("USER_TABLE_NAME") or None
+        return cls(
+            telegram_token=token,
+            user_store_path=store_path,
+            user_table_name=table_name,
+        )
