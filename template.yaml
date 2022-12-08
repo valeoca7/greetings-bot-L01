@@ -8,6 +8,21 @@ Parameters:
     NoEcho: true
 
 Resources:
+  DataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+
   WebhookFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -19,6 +34,7 @@ Resources:
       Environment:
         Variables:
           TELEGRAM_BOT_TOKEN: !Ref TelegramBotToken
+          USER_TABLE_NAME: !Ref DataTable
       Events:
         Webhook:
           Type: Api
