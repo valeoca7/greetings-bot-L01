@@ -16,6 +16,12 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Path: /telegram/webhook", self.template)
         self.assertIn("Method: post", self.template)
 
+    def test_defines_encrypted_on_demand_table(self):
+        self.assertIn("Type: AWS::DynamoDB::Table", self.template)
+        self.assertIn("BillingMode: PAY_PER_REQUEST", self.template)
+        self.assertIn("SSEEnabled: true", self.template)
+        self.assertIn("USER_TABLE_NAME: !Ref DataTable", self.template)
+
 
 if __name__ == "__main__":
     unittest.main()
