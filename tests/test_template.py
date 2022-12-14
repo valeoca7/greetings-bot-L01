@@ -22,6 +22,12 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("SSEEnabled: true", self.template)
         self.assertIn("USER_TABLE_NAME: !Ref DataTable", self.template)
 
+    def test_limits_webhook_table_permissions(self):
+        self.assertIn("dynamodb:GetItem", self.template)
+        self.assertIn("dynamodb:PutItem", self.template)
+        self.assertIn("dynamodb:Scan", self.template)
+        self.assertNotIn("dynamodb:*", self.template)
+
 
 if __name__ == "__main__":
     unittest.main()
