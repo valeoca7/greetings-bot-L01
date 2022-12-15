@@ -7,15 +7,15 @@ class DynamoTable(Protocol):
     def put_item(self, *, Item: Mapping[str, object]) -> Mapping[str, object]:
         ...
 
-
-class DynamoResource(Protocol):
-    def Table(self, name: str) -> DynamoTable:
-        ...
-
     def get_item(self, *, Key: Mapping[str, object]) -> Mapping[str, object]:
         ...
 
     def scan(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
+
+class DynamoResource(Protocol):
+    def Table(self, name: str) -> DynamoTable:
         ...
 
 
