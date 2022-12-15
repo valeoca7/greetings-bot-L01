@@ -7,6 +7,11 @@ class DynamoTable(Protocol):
     def put_item(self, *, Item: Mapping[str, object]) -> Mapping[str, object]:
         ...
 
+
+class DynamoResource(Protocol):
+    def Table(self, name: str) -> DynamoTable:
+        ...
+
     def get_item(self, *, Key: Mapping[str, object]) -> Mapping[str, object]:
         ...
 
@@ -65,3 +70,13 @@ class DynamoUserRepository:
 
     def count(self) -> int:
         return len(self.all())
+
+
+def repository_for_table(
+    table_name: str, resource: Optional[DynamoResource] = None
+) -> DynamoUserRepository:
+    if resource is None:
+        import boto3
+
+        resource = boto3.resource("dynamodb")
+    return DynamoUserRepository(resource.Table(table_name))

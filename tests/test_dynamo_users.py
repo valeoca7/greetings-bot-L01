@@ -2,6 +2,7 @@ import unittest
 
 from greetings_bot.dynamo_users import (
     DynamoUserRepository,
+    repository_for_table,
     user_from_item,
     user_item,
     user_key,
@@ -30,6 +31,16 @@ class FakeTable:
                 result["LastEvaluatedKey"] = {"pk": "next", "sk": "next"}
             return result
         return {"Items": list(self.items.values())}
+
+
+class FakeResource:
+    def __init__(self, table):
+        self.table = table
+        self.requested_name = None
+
+    def Table(self, name):
+        self.requested_name = name
+        return self.table
 
 
 class UserKeyTest(unittest.TestCase):
@@ -109,6 +120,14 @@ class DynamoUserRepositoryTest(unittest.TestCase):
         users = DynamoUserRepository(table).all()
 
         self.assertEqual([user.telegram_id for user in users], [7, 42])
+
+    def test_builds_repository_from_named_table(self):
+        resource = FakeResource(FakeTable())
+
+        users = repository_for_table("greetings-users", resource)
+        users.save(User(42, 84, "Mira"))
+
+        self.assertEqual(resource.requested_name, "greetings-users")
 
 
 if __name__ == "__main__":
