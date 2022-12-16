@@ -73,3 +73,8 @@ sam local invoke WebhookFunction --event events/webhook.json
 
 The template and handler can be tested offline. Nothing in this repository creates
 AWS resources or registers the webhook with Telegram.
+
+The Lambda configuration points `USER_TABLE_NAME` at an encrypted, on-demand DynamoDB
+table. User profiles use `USER#<telegram-id>` as the partition key and `PROFILE` as
+the sort key. The function role is limited to the read, write, and scan operations
+currently used by the repository adapter.
