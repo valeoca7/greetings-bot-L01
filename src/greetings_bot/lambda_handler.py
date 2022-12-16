@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from typing import Any, Dict, Mapping
 
 from greetings_bot.api_gateway import (
@@ -7,6 +8,7 @@ from greetings_bot.api_gateway import (
     ApiGatewayRequestError,
     ApiGatewayResponse,
 )
+from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.runtime import process_payload
 from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
@@ -38,8 +40,19 @@ class WebhookHandler:
         return ApiGatewayResponse(400, json.dumps({"error": message})).to_dict()
 
 
-_users = InMemoryUserRepository()
-_handler = WebhookHandler(_users)
+def build_default_handler(
+    environ: Mapping[str, str] = os.environ,
+    dynamodb_resource: DynamoResource = None,
+) -> WebhookHandler:
+    table_name = environ.get("USER_TABLE_NAME")
+    if table_name:
+        users = repository_for_table(table_name, dynamodb_resource)
+    else:
+        users = InMemoryUserRepository()
+    return WebhookHandler(users)
+
+
+_handler = build_default_handler()
 
 
 def handle_event(

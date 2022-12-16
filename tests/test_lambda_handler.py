@@ -3,7 +3,12 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from greetings_bot.lambda_handler import WebhookHandler, handle_event
+from greetings_bot.dynamo_users import DynamoUserRepository
+from greetings_bot.lambda_handler import (
+    WebhookHandler,
+    build_default_handler,
+    handle_event,
+)
 from greetings_bot.users import InMemoryUserRepository
 
 
@@ -58,6 +63,21 @@ class LambdaHandlerTest(unittest.TestCase):
 
         self.assertEqual(response["statusCode"], 200)
         self.assertIn("Hello, Mira!", response["body"])
+
+    def test_uses_configured_dynamo_table(self):
+        class Resource:
+            def Table(self, name):
+                self.name = name
+                return object()
+
+        resource = Resource()
+
+        handler = build_default_handler(
+            {"USER_TABLE_NAME": "greetings-users"}, resource
+        )
+
+        self.assertIsInstance(handler.users, DynamoUserRepository)
+        self.assertEqual(resource.name, "greetings-users")
 
 
 if __name__ == "__main__":
