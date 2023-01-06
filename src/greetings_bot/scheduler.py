@@ -50,10 +50,12 @@ class GreetingDispatcher:
         users: UserRepository,
         clock: Clock,
         deliveries: Optional[DeliveryLedger] = None,
+        max_batch: int = 100,
     ) -> None:
         self.users = users
         self.clock = clock
         self.deliveries = deliveries or InMemoryDeliveryLedger()
+        self.max_batch = max_batch
 
     def dispatch(self) -> List[Reply]:
         current_time = self.clock.now()
@@ -61,7 +63,7 @@ class GreetingDispatcher:
             user
             for user in due_users(self.users.all(), current_time)
             if not self.deliveries.contains(Delivery(user.telegram_id, current_time.date()))
-        ]
+        ][: self.max_batch]
         LOGGER.info("dispatching %d scheduled greetings", len(users))
         replies = build_greeting_replies(users)
         for user in users:

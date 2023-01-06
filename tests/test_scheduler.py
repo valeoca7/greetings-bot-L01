@@ -135,6 +135,18 @@ class GreetingScheduleTest(unittest.TestCase):
 
         self.assertEqual([], dispatcher.dispatch())
 
+    def test_limits_one_dispatch_batch(self):
+        users = InMemoryUserRepository()
+        users.save(User(1, 1, "Mira", greeting_time="08:00"))
+        users.save(User(2, 2, "Leo", greeting_time="08:00"))
+        dispatcher = GreetingDispatcher(
+            users,
+            FixedClock(datetime(2023, 1, 5, 8, 0)),
+            max_batch=1,
+        )
+
+        self.assertEqual(len(dispatcher.dispatch()), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
