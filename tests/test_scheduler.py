@@ -147,6 +147,14 @@ class GreetingScheduleTest(unittest.TestCase):
 
         self.assertEqual(len(dispatcher.dispatch()), 1)
 
+    def test_rejects_empty_batch_limit(self):
+        with self.assertRaisesRegex(ValueError, "max_batch"):
+            GreetingDispatcher(
+                InMemoryUserRepository(),
+                FixedClock(datetime(2023, 1, 5, 8, 0)),
+                max_batch=0,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -52,6 +52,8 @@ class GreetingDispatcher:
         deliveries: Optional[DeliveryLedger] = None,
         max_batch: int = 100,
     ) -> None:
+        if max_batch < 1:
+            raise ValueError("max_batch must be positive")
         self.users = users
         self.clock = clock
         self.deliveries = deliveries or InMemoryDeliveryLedger()
