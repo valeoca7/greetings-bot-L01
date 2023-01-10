@@ -44,6 +44,10 @@ def build_greeting_replies(users: Iterable[User]) -> List[Reply]:
     ]
 
 
+def greeting_delivery(user: User, current_time: datetime) -> Delivery:
+    return Delivery(user.telegram_id, user_local_time(user, current_time).date())
+
+
 class GreetingDispatcher:
     def __init__(
         self,
@@ -64,10 +68,10 @@ class GreetingDispatcher:
         users = [
             user
             for user in due_users(self.users.all(), current_time)
-            if not self.deliveries.contains(Delivery(user.telegram_id, current_time.date()))
+            if not self.deliveries.contains(greeting_delivery(user, current_time))
         ][: self.max_batch]
         LOGGER.info("dispatching %d scheduled greetings", len(users))
         replies = build_greeting_replies(users)
         for user in users:
-            self.deliveries.record(Delivery(user.telegram_id, current_time.date()))
+            self.deliveries.record(greeting_delivery(user, current_time))
         return replies

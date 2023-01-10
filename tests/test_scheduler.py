@@ -1,11 +1,13 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from greetings_bot.clock import FixedClock
+from greetings_bot.deliveries import Delivery, InMemoryDeliveryLedger
 from greetings_bot.scheduler import (
     GreetingDispatcher,
     build_greeting_replies,
     due_users,
+    greeting_delivery,
     is_greeting_due,
     is_quiet_time,
 )
@@ -154,6 +156,15 @@ class GreetingScheduleTest(unittest.TestCase):
                 FixedClock(datetime(2023, 1, 5, 8, 0)),
                 max_batch=0,
             )
+
+    def test_records_delivery_on_the_users_local_day(self):
+        user = User(42, 42, "Mira", timezone="Asia/Tokyo")
+        current = datetime(2023, 1, 8, 15, 30, tzinfo=timezone.utc)
+
+        self.assertEqual(
+            greeting_delivery(user, current),
+            Delivery(42, date(2023, 1, 9)),
+        )
 
 
 if __name__ == "__main__":
