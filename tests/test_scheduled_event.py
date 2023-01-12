@@ -14,6 +14,10 @@ class ScheduledEventTest(unittest.TestCase):
         with self.assertRaisesRegex(ScheduledEventError, "required"):
             event_time({})
 
+    def test_rejects_time_without_offset(self):
+        with self.assertRaisesRegex(ScheduledEventError, "offset"):
+            event_time({"time": "2023-01-10T18:30:00"})
+
 
 if __name__ == "__main__":
     unittest.main()
