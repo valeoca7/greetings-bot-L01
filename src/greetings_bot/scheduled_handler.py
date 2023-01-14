@@ -8,6 +8,9 @@ from greetings_bot.telegram import reply_batch
 from greetings_bot.users import UserRepository
 
 
+ScheduledResponse = List[Dict[str, object]]
+
+
 class ScheduledGreetingHandler:
     def __init__(
         self,
@@ -19,7 +22,7 @@ class ScheduledGreetingHandler:
         self.deliveries = deliveries
         self.max_batch = max_batch
 
-    def handle(self, event: Mapping[str, Any]) -> List[Dict[str, object]]:
+    def handle(self, event: Mapping[str, Any]) -> ScheduledResponse:
         dispatcher = GreetingDispatcher(
             self.users,
             FixedClock(event_time(event)),
@@ -27,3 +30,11 @@ class ScheduledGreetingHandler:
             self.max_batch,
         )
         return reply_batch(dispatcher.dispatch())
+
+
+def handle_event(
+    event: Mapping[str, Any], context: object = None
+) -> ScheduledResponse:
+    from greetings_bot.users import InMemoryUserRepository
+
+    return ScheduledGreetingHandler(InMemoryUserRepository()).handle(event)

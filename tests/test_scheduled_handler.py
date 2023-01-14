@@ -1,6 +1,6 @@
 import unittest
 
-from greetings_bot.scheduled_handler import ScheduledGreetingHandler
+from greetings_bot.scheduled_handler import ScheduledGreetingHandler, handle_event
 from greetings_bot.users import InMemoryUserRepository, User
 
 
@@ -13,6 +13,9 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         replies = handler.handle({"time": "2023-01-12T10:00:00Z"})
 
         self.assertEqual(replies, [{"chat_id": 84, "text": "Good day, Mira!"}])
+
+    def test_lambda_entry_point_accepts_empty_repository(self):
+        self.assertEqual(handle_event({"time": "2023-01-12T10:00:00Z"}), [])
 
 
 if __name__ == "__main__":
