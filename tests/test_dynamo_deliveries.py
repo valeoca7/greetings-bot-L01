@@ -2,7 +2,16 @@ import unittest
 from datetime import date
 
 from greetings_bot.deliveries import Delivery
-from greetings_bot.dynamo_deliveries import delivery_key
+from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger, delivery_key
+
+
+class FakeTable:
+    def __init__(self):
+        self.items = {}
+
+    def get_item(self, *, Key):
+        item = self.items.get((Key["pk"], Key["sk"]))
+        return {} if item is None else {"Item": item}
 
 
 class DeliveryKeyTest(unittest.TestCase):
@@ -13,6 +22,20 @@ class DeliveryKeyTest(unittest.TestCase):
             key,
             {"pk": "USER#42", "sk": "DELIVERY#2023-01-16"},
         )
+
+
+class DynamoDeliveryLedgerTest(unittest.TestCase):
+    def test_finds_existing_delivery(self):
+        table = FakeTable()
+        delivery = Delivery(42, date(2023, 1, 16))
+        table.items[("USER#42", "DELIVERY#2023-01-16")] = delivery_key(delivery)
+
+        self.assertTrue(DynamoDeliveryLedger(table).contains(delivery))
+
+    def test_reports_missing_delivery(self):
+        ledger = DynamoDeliveryLedger(FakeTable())
+
+        self.assertFalse(ledger.contains(Delivery(42, date(2023, 1, 16))))
 
 
 if __name__ == "__main__":
