@@ -13,6 +13,10 @@ class FakeTable:
         item = self.items.get((Key["pk"], Key["sk"]))
         return {} if item is None else {"Item": item}
 
+    def put_item(self, *, Item):
+        self.items[(Item["pk"], Item["sk"])] = dict(Item)
+        return {}
+
 
 class DeliveryKeyTest(unittest.TestCase):
     def test_includes_user_and_local_day(self):
@@ -36,6 +40,19 @@ class DynamoDeliveryLedgerTest(unittest.TestCase):
         ledger = DynamoDeliveryLedger(FakeTable())
 
         self.assertFalse(ledger.contains(Delivery(42, date(2023, 1, 16))))
+
+    def test_records_delivery(self):
+        table = FakeTable()
+        ledger = DynamoDeliveryLedger(table)
+        delivery = Delivery(42, date(2023, 1, 16))
+
+        ledger.record(delivery)
+
+        self.assertTrue(ledger.contains(delivery))
+        self.assertEqual(
+            table.items[("USER#42", "DELIVERY#2023-01-16")]["entity"],
+            "delivery",
+        )
 
 
 if __name__ == "__main__":

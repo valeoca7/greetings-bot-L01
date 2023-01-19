@@ -18,3 +18,8 @@ class DynamoDeliveryLedger:
     def contains(self, delivery: Delivery) -> bool:
         result = self.table.get_item(Key=delivery_key(delivery))
         return "Item" in result
+
+    def record(self, delivery: Delivery) -> None:
+        item = delivery_key(delivery)
+        item["entity"] = "delivery"
+        self.table.put_item(Item=item)
