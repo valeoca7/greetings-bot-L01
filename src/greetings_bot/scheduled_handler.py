@@ -1,11 +1,15 @@
+import os
 from typing import Any, Dict, List, Mapping, Optional
 
 from greetings_bot.clock import FixedClock
 from greetings_bot.deliveries import DeliveryLedger
+from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
+from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.scheduled_event import event_time
 from greetings_bot.scheduler import GreetingDispatcher
 from greetings_bot.telegram import reply_batch
 from greetings_bot.users import UserRepository
+from greetings_bot.users import InMemoryUserRepository
 
 
 ScheduledResponse = List[Dict[str, object]]
@@ -32,9 +36,22 @@ class ScheduledGreetingHandler:
         return reply_batch(dispatcher.dispatch())
 
 
+def build_default_handler(
+    environ: Mapping[str, str] = os.environ,
+    dynamodb_resource: DynamoResource = None,
+) -> ScheduledGreetingHandler:
+    table_name = environ.get("USER_TABLE_NAME")
+    if not table_name:
+        return ScheduledGreetingHandler(InMemoryUserRepository())
+    users = repository_for_table(table_name, dynamodb_resource)
+    deliveries = DynamoDeliveryLedger(users.table)
+    return ScheduledGreetingHandler(users, deliveries)
+
+
+_handler = build_default_handler()
+
+
 def handle_event(
     event: Mapping[str, Any], context: object = None
 ) -> ScheduledResponse:
-    from greetings_bot.users import InMemoryUserRepository
-
-    return ScheduledGreetingHandler(InMemoryUserRepository()).handle(event)
+    return _handler.handle(event)
