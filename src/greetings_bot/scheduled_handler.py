@@ -40,12 +40,15 @@ def build_default_handler(
     environ: Mapping[str, str] = os.environ,
     dynamodb_resource: DynamoResource = None,
 ) -> ScheduledGreetingHandler:
+    max_batch = int(environ.get("DISPATCH_BATCH_SIZE", "100"))
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:
-        return ScheduledGreetingHandler(InMemoryUserRepository())
+        return ScheduledGreetingHandler(
+            InMemoryUserRepository(), max_batch=max_batch
+        )
     users = repository_for_table(table_name, dynamodb_resource)
     deliveries = DynamoDeliveryLedger(users.table)
-    return ScheduledGreetingHandler(users, deliveries)
+    return ScheduledGreetingHandler(users, deliveries, max_batch)
 
 
 _handler = build_default_handler()

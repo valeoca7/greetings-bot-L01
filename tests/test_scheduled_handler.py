@@ -36,6 +36,11 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         self.assertIsInstance(handler.deliveries, DynamoDeliveryLedger)
         self.assertIs(handler.users.table, handler.deliveries.table)
 
+    def test_reads_dispatch_batch_size(self):
+        handler = build_default_handler({"DISPATCH_BATCH_SIZE": "25"})
+
+        self.assertEqual(handler.max_batch, 25)
+
 
 if __name__ == "__main__":
     unittest.main()
