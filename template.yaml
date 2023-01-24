@@ -51,3 +51,16 @@ Resources:
           Properties:
             Path: /telegram/webhook
             Method: post
+
+  GreetingDispatcherFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: greetings_bot.scheduled_handler.handle_event
+      Runtime: python3.9
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref DataTable
+          DISPATCH_BATCH_SIZE: '100'
