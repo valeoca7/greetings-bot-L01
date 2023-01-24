@@ -64,3 +64,11 @@ Resources:
         Variables:
           USER_TABLE_NAME: !Ref DataTable
           DISPATCH_BATCH_SIZE: '100'
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Scan
+              Resource: !GetAtt DataTable.Arn
