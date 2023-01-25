@@ -46,6 +46,12 @@ Resources:
                 - dynamodb:Scan
               Resource: !GetAtt DataTable.Arn
       Events:
+        EveryMinute:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
+            Enabled: true
+      Events:
         Webhook:
           Type: Api
           Properties:
