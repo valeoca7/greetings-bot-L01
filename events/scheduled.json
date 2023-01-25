@@ -1,0 +1,11 @@
+{
+  "version": "0",
+  "id": "local-scheduled-event",
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",
+  "account": "000000000000",
+  "time": "2023-01-24T18:30:00Z",
+  "region": "us-west-2",
+  "resources": [],
+  "detail": {}
+}
