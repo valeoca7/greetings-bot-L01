@@ -1,4 +1,6 @@
+import json
 import unittest
+from pathlib import Path
 
 from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
 from greetings_bot.scheduled_handler import (
@@ -40,6 +42,13 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         handler = build_default_handler({"DISPATCH_BATCH_SIZE": "25"})
 
         self.assertEqual(handler.max_batch, 25)
+
+    def test_accepts_local_scheduled_event(self):
+        event = json.loads(Path("events/scheduled.json").read_text())
+
+        replies = ScheduledGreetingHandler(InMemoryUserRepository()).handle(event)
+
+        self.assertEqual(replies, [])
 
 
 if __name__ == "__main__":
