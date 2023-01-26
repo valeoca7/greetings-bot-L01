@@ -28,6 +28,12 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("dynamodb:Scan", self.template)
         self.assertNotIn("dynamodb:*", self.template)
 
+    def test_defines_minute_dispatcher(self):
+        self.assertIn("GreetingDispatcherFunction:", self.template)
+        self.assertIn("greetings_bot.scheduled_handler.handle_event", self.template)
+        self.assertIn("Schedule: rate(1 minute)", self.template)
+        self.assertIn("DISPATCH_BATCH_SIZE: '100'", self.template)
+
 
 if __name__ == "__main__":
     unittest.main()
