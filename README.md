@@ -78,3 +78,13 @@ The Lambda configuration points `USER_TABLE_NAME` at an encrypted, on-demand Dyn
 table. User profiles use `USER#<telegram-id>` as the partition key and `PROFILE` as
 the sort key. The function role is limited to the read, write, and scan operations
 currently used by the repository adapter.
+
+Scheduled greetings are checked once per minute and limited to 100 messages in one
+invocation. The saved EventBridge event can be used with the local SAM runtime:
+
+```sh
+sam local invoke GreetingDispatcherFunction --event events/scheduled.json
+```
+
+The dispatcher records a delivery for each user's local date so repeated events do
+not prepare the same daily greeting again.
