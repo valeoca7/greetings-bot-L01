@@ -2,7 +2,7 @@ import unittest
 from datetime import date, datetime, timezone
 
 from greetings_bot.clock import FixedClock
-from greetings_bot.deliveries import Delivery, InMemoryDeliveryLedger
+from greetings_bot.deliveries import Delivery
 from greetings_bot.scheduler import (
     GreetingDispatcher,
     build_greeting_replies,
