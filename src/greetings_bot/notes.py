@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
+from uuid import uuid4
 
 
 @dataclass(frozen=True)
@@ -8,3 +9,17 @@ class Note:
     owner_id: int
     text: str
     created_at: datetime
+
+
+def create_note(owner_id: int, text: str) -> Note:
+    clean_text = text.strip()
+    if not clean_text:
+        raise ValueError("note text is required")
+    if len(clean_text) > 500:
+        raise ValueError("note text is too long")
+    return Note(
+        id=uuid4().hex[:8],
+        owner_id=owner_id,
+        text=clean_text,
+        created_at=datetime.now(timezone.utc),
+    )
