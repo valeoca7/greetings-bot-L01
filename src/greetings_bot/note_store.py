@@ -23,3 +23,6 @@ class InMemoryNoteRepository:
 
     def save(self, note: Note) -> None:
         self._notes[(note.owner_id, note.id)] = note
+
+    def get(self, owner_id: int, note_id: str) -> Optional[Note]:
+        return self._notes.get((owner_id, note_id))

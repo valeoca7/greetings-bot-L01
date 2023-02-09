@@ -12,7 +12,14 @@ class InMemoryNoteRepositoryTest(unittest.TestCase):
 
         notes.save(note)
 
-        self.assertEqual(notes._notes[(42, "abcd1234")], note)
+        self.assertEqual(notes.get(42, "abcd1234"), note)
+
+    def test_does_not_return_another_users_note(self):
+        notes = InMemoryNoteRepository()
+        note = Note("abcd1234", 42, "Private", datetime.now(timezone.utc))
+        notes.save(note)
+
+        self.assertIsNone(notes.get(7, "abcd1234"))
 
 
 if __name__ == "__main__":
