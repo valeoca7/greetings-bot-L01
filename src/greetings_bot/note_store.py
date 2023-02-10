@@ -26,3 +26,10 @@ class InMemoryNoteRepository:
 
     def get(self, owner_id: int, note_id: str) -> Optional[Note]:
         return self._notes.get((owner_id, note_id))
+
+    def all_for(self, owner_id: int) -> Sequence[Note]:
+        notes = [
+            note for (stored_owner, _), note in self._notes.items()
+            if stored_owner == owner_id
+        ]
+        return sorted(notes, key=lambda note: note.created_at)
