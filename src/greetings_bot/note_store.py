@@ -33,3 +33,10 @@ class InMemoryNoteRepository:
             if stored_owner == owner_id
         ]
         return sorted(notes, key=lambda note: note.created_at)
+
+    def delete(self, owner_id: int, note_id: str) -> bool:
+        key = (owner_id, note_id)
+        if key not in self._notes:
+            return False
+        del self._notes[key]
+        return True

@@ -31,6 +31,23 @@ class InMemoryNoteRepositoryTest(unittest.TestCase):
 
         self.assertEqual(notes.all_for(42), [first, later])
 
+    def test_deletes_owned_note(self):
+        notes = InMemoryNoteRepository()
+        note = Note("abcd1234", 42, "Private", datetime.now(timezone.utc))
+        notes.save(note)
+
+        self.assertTrue(notes.delete(42, "abcd1234"))
+        self.assertIsNone(notes.get(42, "abcd1234"))
+        self.assertFalse(notes.delete(42, "abcd1234"))
+
+    def test_cannot_delete_another_users_note(self):
+        notes = InMemoryNoteRepository()
+        note = Note("abcd1234", 42, "Private", datetime.now(timezone.utc))
+        notes.save(note)
+
+        self.assertFalse(notes.delete(7, "abcd1234"))
+        self.assertEqual(notes.get(42, "abcd1234"), note)
+
 
 if __name__ == "__main__":
     unittest.main()
