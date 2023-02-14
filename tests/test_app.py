@@ -1,6 +1,7 @@
 import unittest
 
 from greetings_bot.app import Application, handle_update
+from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.telegram import Message, Reply, TelegramUser, Update
 from greetings_bot.users import InMemoryUserRepository
 
@@ -24,6 +25,13 @@ class AppTest(unittest.TestCase):
 
         self.assertIs(application.users, users)
         self.assertEqual(application.users.count(), 1)
+
+    def test_application_keeps_its_note_repository(self):
+        notes = InMemoryNoteRepository()
+
+        application = Application(notes=notes)
+
+        self.assertIs(application.notes, notes)
 
     def test_handles_start_command(self):
         reply = handle_update(text_update("/start"))

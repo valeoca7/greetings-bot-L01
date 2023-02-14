@@ -3,6 +3,7 @@ from typing import Optional
 
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
+from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.preferences import (
     clear_quiet_hours,
     set_first_name,
@@ -29,8 +30,13 @@ def registration_required(chat_id: int) -> Reply:
 
 
 class Application:
-    def __init__(self, users: Optional[UserRepository] = None) -> None:
+    def __init__(
+        self,
+        users: Optional[UserRepository] = None,
+        notes: Optional[NoteRepository] = None,
+    ) -> None:
         self.users = users if users is not None else InMemoryUserRepository()
+        self.notes = notes if notes is not None else InMemoryNoteRepository()
 
     def handle(self, update: Update) -> Optional[Reply]:
         if update.message is None:
@@ -179,6 +185,8 @@ class Application:
 
 
 def handle_update(
-    update: Update, users: Optional[UserRepository] = None
+    update: Update,
+    users: Optional[UserRepository] = None,
+    notes: Optional[NoteRepository] = None,
 ) -> Optional[Reply]:
-    return Application(users).handle(update)
+    return Application(users, notes).handle(update)
