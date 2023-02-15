@@ -4,6 +4,7 @@ from typing import Optional
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
+from greetings_bot.notes import create_note
 from greetings_bot.preferences import (
     clear_quiet_hours,
     set_first_name,
@@ -60,6 +61,19 @@ class Application:
                 "/timezone [area/name] - show or change timezone\n"
                 "/quiet [start end|off] - manage quiet hours\n"
                 "/name [name] - show or change greeting name",
+            )
+        if command.name == "note" and command.arguments[:1] == ("add",):
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            try:
+                note = create_note(user.telegram_id, " ".join(command.arguments[1:]))
+            except ValueError:
+                return Reply(update.message.chat_id, "Use /note add <text>.")
+            self.notes.save(note)
+            return Reply(
+                update.message.chat_id,
+                "Saved note {}.".format(note.id),
             )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)

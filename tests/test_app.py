@@ -230,6 +230,16 @@ class AppTest(unittest.TestCase):
             "Greeting name must be 40 characters or shorter.",
         )
 
+    def test_adds_note(self):
+        users = InMemoryUserRepository()
+        notes = InMemoryNoteRepository()
+        handle_update(text_update("/register"), users, notes)
+
+        reply = handle_update(text_update("/note add Call the dentist"), users, notes)
+
+        self.assertTrue(reply.text.startswith("Saved note "))
+        self.assertEqual(notes.all_for(42)[0].text, "Call the dentist")
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))
