@@ -240,6 +240,18 @@ class AppTest(unittest.TestCase):
         self.assertTrue(reply.text.startswith("Saved note "))
         self.assertEqual(notes.all_for(42)[0].text, "Call the dentist")
 
+    def test_requires_registration_before_saving_note(self):
+        notes = InMemoryNoteRepository()
+
+        reply = handle_update(
+            text_update("/note add Private text"),
+            InMemoryUserRepository(),
+            notes,
+        )
+
+        self.assertEqual(reply.text, "You are not registered. Send /register first.")
+        self.assertEqual(notes.all_for(42), [])
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))
