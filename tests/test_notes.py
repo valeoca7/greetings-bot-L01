@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timezone
 
-from greetings_bot.notes import Note, create_note
+from greetings_bot.notes import Note, create_note, format_note_list
 
 
 class NoteTest(unittest.TestCase):
@@ -30,6 +30,16 @@ class NoteTest(unittest.TestCase):
     def test_rejects_long_note(self):
         with self.assertRaisesRegex(ValueError, "too long"):
             create_note(42, "x" * 501)
+
+    def test_formats_note_list(self):
+        note = Note("a1b2c3d4", 42, "Call the dentist", datetime.now(timezone.utc))
+
+        self.assertEqual(format_note_list([note]), "a1b2c3d4: Call the dentist")
+
+    def test_shortens_long_text_in_list(self):
+        note = Note("a1b2c3d4", 42, "x" * 80, datetime.now(timezone.utc))
+
+        self.assertEqual(format_note_list([note]), "a1b2c3d4: " + "x" * 60)
 
 
 if __name__ == "__main__":

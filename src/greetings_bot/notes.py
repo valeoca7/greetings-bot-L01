@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import uuid4
+from typing import Iterable
 
 
 @dataclass(frozen=True)
@@ -22,4 +23,10 @@ def create_note(owner_id: int, text: str) -> Note:
         owner_id=owner_id,
         text=clean_text,
         created_at=datetime.now(timezone.utc),
+    )
+
+
+def format_note_list(notes: Iterable[Note]) -> str:
+    return "\n".join(
+        "{}: {}".format(note.id, note.text[:60]) for note in notes
     )
