@@ -252,6 +252,17 @@ class AppTest(unittest.TestCase):
         self.assertEqual(reply.text, "You are not registered. Send /register first.")
         self.assertEqual(notes.all_for(42), [])
 
+    def test_lists_notes(self):
+        users = InMemoryUserRepository()
+        notes = InMemoryNoteRepository()
+        handle_update(text_update("/register"), users, notes)
+        saved = handle_update(text_update("/note add Buy tea"), users, notes)
+        note_id = saved.text.split()[2].rstrip(".")
+
+        reply = handle_update(text_update("/notes"), users, notes)
+
+        self.assertEqual(reply.text, "{}: Buy tea".format(note_id))
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))

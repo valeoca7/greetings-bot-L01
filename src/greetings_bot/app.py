@@ -4,7 +4,7 @@ from typing import Optional
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
-from greetings_bot.notes import create_note
+from greetings_bot.notes import create_note, format_note_list
 from greetings_bot.preferences import (
     clear_quiet_hours,
     set_first_name,
@@ -74,6 +74,14 @@ class Application:
             return Reply(
                 update.message.chat_id,
                 "Saved note {}.".format(note.id),
+            )
+        if command.name == "notes":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            return Reply(
+                update.message.chat_id,
+                format_note_list(self.notes.all_for(user.telegram_id)),
             )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
