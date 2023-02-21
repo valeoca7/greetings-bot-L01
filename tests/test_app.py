@@ -263,6 +263,15 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "{}: Buy tea".format(note_id))
 
+    def test_reports_empty_note_list(self):
+        users = InMemoryUserRepository()
+        notes = InMemoryNoteRepository()
+        handle_update(text_update("/register"), users, notes)
+
+        reply = handle_update(text_update("/notes"), users, notes)
+
+        self.assertEqual(reply.text, "You have no notes.")
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))

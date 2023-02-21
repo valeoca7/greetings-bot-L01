@@ -79,10 +79,10 @@ class Application:
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return registration_required(update.message.chat_id)
-            return Reply(
-                update.message.chat_id,
-                format_note_list(self.notes.all_for(user.telegram_id)),
-            )
+            notes = self.notes.all_for(user.telegram_id)
+            if not notes:
+                return Reply(update.message.chat_id, "You have no notes.")
+            return Reply(update.message.chat_id, format_note_list(notes))
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
             if user is None:
