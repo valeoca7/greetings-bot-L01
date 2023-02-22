@@ -75,6 +75,14 @@ class Application:
                 update.message.chat_id,
                 "Saved note {}.".format(note.id),
             )
+        if command.name == "note" and len(command.arguments) == 1:
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            note = self.notes.get(user.telegram_id, command.arguments[0])
+            if note is None:
+                return Reply(update.message.chat_id, "Note not found.")
+            return Reply(update.message.chat_id, note.text)
         if command.name == "notes":
             user = self.users.get(update.message.sender.id)
             if user is None:

@@ -272,6 +272,25 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "You have no notes.")
 
+    def test_shows_note_by_id(self):
+        users = InMemoryUserRepository()
+        notes = InMemoryNoteRepository()
+        handle_update(text_update("/register"), users, notes)
+        saved = handle_update(text_update("/note add Buy green tea"), users, notes)
+        note_id = saved.text.split()[2].rstrip(".")
+
+        reply = handle_update(text_update("/note " + note_id), users, notes)
+
+        self.assertEqual(reply.text, "Buy green tea")
+
+    def test_hides_unknown_note(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/note missing"), users)
+
+        self.assertEqual(reply.text, "Note not found.")
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))
