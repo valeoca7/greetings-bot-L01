@@ -75,6 +75,15 @@ class Application:
                 update.message.chat_id,
                 "Saved note {}.".format(note.id),
             )
+        if command.name == "note" and command.arguments[:1] == ("delete",):
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if len(command.arguments) != 2:
+                return Reply(update.message.chat_id, "Use /note delete <id>.")
+            if not self.notes.delete(user.telegram_id, command.arguments[1]):
+                return Reply(update.message.chat_id, "Note not found.")
+            return Reply(update.message.chat_id, "Note deleted.")
         if command.name == "note" and len(command.arguments) == 1:
             user = self.users.get(update.message.sender.id)
             if user is None:

@@ -291,6 +291,28 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Note not found.")
 
+    def test_deletes_note(self):
+        users = InMemoryUserRepository()
+        notes = InMemoryNoteRepository()
+        handle_update(text_update("/register"), users, notes)
+        saved = handle_update(text_update("/note add Temporary"), users, notes)
+        note_id = saved.text.split()[2].rstrip(".")
+
+        reply = handle_update(
+            text_update("/note delete " + note_id), users, notes
+        )
+
+        self.assertEqual(reply.text, "Note deleted.")
+        self.assertEqual(notes.all_for(42), [])
+
+    def test_reports_unknown_note_on_delete(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/note delete missing"), users)
+
+        self.assertEqual(reply.text, "Note not found.")
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))
