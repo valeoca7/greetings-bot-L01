@@ -92,6 +92,11 @@ class Application:
             if note is None:
                 return Reply(update.message.chat_id, "Note not found.")
             return Reply(update.message.chat_id, note.text)
+        if command.name == "note":
+            return Reply(
+                update.message.chat_id,
+                "Use /note add <text>, /note <id>, or /note delete <id>.",
+            )
         if command.name == "notes":
             user = self.users.get(update.message.sender.id)
             if user is None:

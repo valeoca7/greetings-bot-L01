@@ -313,6 +313,14 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Note not found.")
 
+    def test_explains_note_command(self):
+        reply = handle_update(text_update("/note"))
+
+        self.assertEqual(
+            reply.text,
+            "Use /note add <text>, /note <id>, or /note delete <id>.",
+        )
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))
