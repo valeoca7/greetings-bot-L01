@@ -321,6 +321,17 @@ class AppTest(unittest.TestCase):
             "Use /note add <text>, /note <id>, or /note delete <id>.",
         )
 
+    def test_rejects_long_note_text(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/note add " + "x" * 501), users)
+
+        self.assertEqual(
+            reply.text,
+            "Note text must be 500 characters or shorter.",
+        )
+
     def test_logs_command_without_its_arguments(self):
         with self.assertLogs("greetings_bot.app", level="INFO") as logs:
             handle_update(text_update("/start private-text"))

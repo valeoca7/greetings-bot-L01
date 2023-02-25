@@ -68,7 +68,12 @@ class Application:
                 return registration_required(update.message.chat_id)
             try:
                 note = create_note(user.telegram_id, " ".join(command.arguments[1:]))
-            except ValueError:
+            except ValueError as error:
+                if "too long" in str(error):
+                    return Reply(
+                        update.message.chat_id,
+                        "Note text must be 500 characters or shorter.",
+                    )
                 return Reply(update.message.chat_id, "Use /note add <text>.")
             self.notes.save(note)
             return Reply(
