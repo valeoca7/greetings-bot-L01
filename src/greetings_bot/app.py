@@ -60,7 +60,9 @@ class Application:
                 "/time [HH:MM] - show or change greeting time\n"
                 "/timezone [area/name] - show or change timezone\n"
                 "/quiet [start end|off] - manage quiet hours\n"
-                "/name [name] - show or change greeting name",
+                "/name [name] - show or change greeting name\n"
+                "/note add <text> - save a note\n"
+                "/notes - list saved notes",
             )
         if command.name == "note" and command.arguments[:1] == ("add",):
             user = self.users.get(update.message.sender.id)
