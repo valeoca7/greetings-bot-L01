@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Dict, Mapping
+from typing import Dict, Mapping, Optional
 
+from greetings_bot.dynamo_users import DynamoTable
 from greetings_bot.notes import Note
 
 
@@ -32,3 +33,18 @@ def note_from_item(item: Mapping[str, object]) -> Note:
         text=str(item["text"]),
         created_at=datetime.fromisoformat(str(item["created_at"])),
     )
+
+
+class DynamoNoteRepository:
+    def __init__(self, table: DynamoTable) -> None:
+        self.table = table
+
+    def save(self, note: Note) -> None:
+        self.table.put_item(Item=note_item(note))
+
+    def get(self, owner_id: int, note_id: str) -> Optional[Note]:
+        result = self.table.get_item(Key=note_key(owner_id, note_id))
+        item = result.get("Item")
+        if not isinstance(item, dict) or item.get("entity") != "note":
+            return None
+        return note_from_item(item)

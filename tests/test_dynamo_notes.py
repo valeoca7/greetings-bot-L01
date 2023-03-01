@@ -1,8 +1,26 @@
 import unittest
 from datetime import datetime, timezone
 
-from greetings_bot.dynamo_notes import note_from_item, note_item, note_key
+from greetings_bot.dynamo_notes import (
+    DynamoNoteRepository,
+    note_from_item,
+    note_item,
+    note_key,
+)
 from greetings_bot.notes import Note
+
+
+class FakeTable:
+    def __init__(self):
+        self.items = {}
+
+    def put_item(self, *, Item):
+        self.items[(Item["pk"], Item["sk"])] = dict(Item)
+        return {}
+
+    def get_item(self, *, Key):
+        item = self.items.get((Key["pk"], Key["sk"]))
+        return {} if item is None else {"Item": item}
 
 
 class NoteMappingTest(unittest.TestCase):
@@ -21,6 +39,22 @@ class NoteMappingTest(unittest.TestCase):
         )
 
         self.assertEqual(note_from_item(note_item(note)), note)
+
+
+class DynamoNoteRepositoryTest(unittest.TestCase):
+    def test_saves_and_loads_owned_note(self):
+        notes = DynamoNoteRepository(FakeTable())
+        note = Note(
+            "abcd1234",
+            42,
+            "Call the dentist",
+            datetime(2023, 2, 28, 18, 0, tzinfo=timezone.utc),
+        )
+
+        notes.save(note)
+
+        self.assertEqual(notes.get(42, "abcd1234"), note)
+        self.assertIsNone(notes.get(7, "abcd1234"))
 
 
 if __name__ == "__main__":
