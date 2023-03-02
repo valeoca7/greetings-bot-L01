@@ -22,6 +22,14 @@ class FakeTable:
         item = self.items.get((Key["pk"], Key["sk"]))
         return {} if item is None else {"Item": item}
 
+    def query(self, **kwargs):
+        owner = kwargs["ExpressionAttributeValues"][":pk"]
+        items = [
+            item for (pk, sk), item in self.items.items()
+            if pk == owner and sk.startswith("NOTE#")
+        ]
+        return {"Items": items}
+
 
 class NoteMappingTest(unittest.TestCase):
     def test_builds_owned_note_key(self):
@@ -55,6 +63,16 @@ class DynamoNoteRepositoryTest(unittest.TestCase):
 
         self.assertEqual(notes.get(42, "abcd1234"), note)
         self.assertIsNone(notes.get(7, "abcd1234"))
+
+    def test_lists_only_notes_in_owner_partition(self):
+        notes = DynamoNoteRepository(FakeTable())
+        first = Note("aaaa1111", 42, "First", datetime(2023, 2, 27, tzinfo=timezone.utc))
+        later = Note("bbbb2222", 42, "Later", datetime(2023, 2, 28, tzinfo=timezone.utc))
+        other = Note("cccc3333", 7, "Other", datetime(2023, 2, 26, tzinfo=timezone.utc))
+        for note in (later, first, other):
+            notes.save(note)
+
+        self.assertEqual(notes.all_for(42), [first, later])
 
 
 if __name__ == "__main__":

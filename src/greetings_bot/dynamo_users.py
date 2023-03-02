@@ -13,6 +13,9 @@ class DynamoTable(Protocol):
     def scan(self, **kwargs: object) -> Mapping[str, object]:
         ...
 
+    def query(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
 
 class DynamoResource(Protocol):
     def Table(self, name: str) -> DynamoTable:

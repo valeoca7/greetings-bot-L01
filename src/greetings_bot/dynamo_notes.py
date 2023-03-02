@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, Sequence
 
 from greetings_bot.dynamo_users import DynamoTable
 from greetings_bot.notes import Note
@@ -48,3 +48,26 @@ class DynamoNoteRepository:
         if not isinstance(item, dict) or item.get("entity") != "note":
             return None
         return note_from_item(item)
+
+    def all_for(self, owner_id: int) -> Sequence[Note]:
+        query_args = {
+            "KeyConditionExpression": "pk = :pk AND begins_with(sk, :prefix)",
+            "ExpressionAttributeValues": {
+                ":pk": "USER#{}".format(owner_id),
+                ":prefix": "NOTE#",
+            },
+        }
+        items = []
+        while True:
+            result = self.table.query(**query_args)
+            items.extend(result.get("Items", []))
+            last_key = result.get("LastEvaluatedKey")
+            if not isinstance(last_key, dict):
+                break
+            query_args["ExclusiveStartKey"] = last_key
+        notes = [
+            note_from_item(item)
+            for item in items
+            if isinstance(item, dict) and item.get("entity") == "note"
+        ]
+        return sorted(notes, key=lambda note: note.created_at)
