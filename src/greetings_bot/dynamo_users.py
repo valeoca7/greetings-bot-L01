@@ -16,6 +16,9 @@ class DynamoTable(Protocol):
     def query(self, **kwargs: object) -> Mapping[str, object]:
         ...
 
+    def delete_item(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
 
 class DynamoResource(Protocol):
     def Table(self, name: str) -> DynamoTable:

@@ -30,6 +30,10 @@ class FakeTable:
         ]
         return {"Items": items}
 
+    def delete_item(self, *, Key, ReturnValues):
+        item = self.items.pop((Key["pk"], Key["sk"]), None)
+        return {} if item is None else {"Attributes": item}
+
 
 class NoteMappingTest(unittest.TestCase):
     def test_builds_owned_note_key(self):
@@ -73,6 +77,15 @@ class DynamoNoteRepositoryTest(unittest.TestCase):
             notes.save(note)
 
         self.assertEqual(notes.all_for(42), [first, later])
+
+    def test_deletes_owned_note(self):
+        notes = DynamoNoteRepository(FakeTable())
+        note = Note("abcd1234", 42, "Old", datetime.now(timezone.utc))
+        notes.save(note)
+
+        self.assertTrue(notes.delete(42, "abcd1234"))
+        self.assertIsNone(notes.get(42, "abcd1234"))
+        self.assertFalse(notes.delete(7, "abcd1234"))
 
 
 if __name__ == "__main__":

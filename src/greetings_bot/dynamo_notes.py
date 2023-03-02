@@ -71,3 +71,11 @@ class DynamoNoteRepository:
             if isinstance(item, dict) and item.get("entity") == "note"
         ]
         return sorted(notes, key=lambda note: note.created_at)
+
+    def delete(self, owner_id: int, note_id: str) -> bool:
+        result = self.table.delete_item(
+            Key=note_key(owner_id, note_id),
+            ReturnValues="ALL_OLD",
+        )
+        attributes = result.get("Attributes")
+        return isinstance(attributes, dict) and attributes.get("entity") == "note"
