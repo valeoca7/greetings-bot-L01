@@ -26,6 +26,8 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("dynamodb:GetItem", self.template)
         self.assertIn("dynamodb:PutItem", self.template)
         self.assertIn("dynamodb:Scan", self.template)
+        self.assertIn("dynamodb:Query", self.template)
+        self.assertIn("dynamodb:DeleteItem", self.template)
         self.assertNotIn("dynamodb:*", self.template)
 
     def test_defines_minute_dispatcher(self):

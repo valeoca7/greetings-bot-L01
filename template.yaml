@@ -44,6 +44,8 @@ Resources:
                 - dynamodb:GetItem
                 - dynamodb:PutItem
                 - dynamodb:Scan
+                - dynamodb:Query
+                - dynamodb:DeleteItem
               Resource: !GetAtt DataTable.Arn
       Events:
         Webhook:
