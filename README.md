@@ -54,6 +54,9 @@ does not send them to Telegram.
 - `/me` shows the current profile
 - `/timezone [area/name]` shows or changes the user's timezone
 - `/quiet [start end]` sets local quiet hours; `/quiet off` removes them
+- `/note add <text>` saves a private note and returns its short ID
+- `/notes` lists the current user's notes
+- `/note <id>` shows a note; `/note delete <id>` removes it
 - `/help` lists the available actions
 
 Run the tests with:
@@ -88,3 +91,7 @@ sam local invoke GreetingDispatcherFunction --event events/scheduled.json
 
 The dispatcher records a delivery for each user's local date so repeated events do
 not prepare the same daily greeting again.
+
+Notes are stored beside the owner's profile under `NOTE#<id>` sort keys. Lookups and
+deletes always include the Telegram user ID, and note listings query only that user
+partition.
