@@ -27,3 +27,10 @@ class InMemoryReminderRepository:
 
     def get(self, owner_id: int, reminder_id: str) -> Optional[Reminder]:
         return self._reminders.get((owner_id, reminder_id))
+
+    def all_for(self, owner_id: int) -> Sequence[Reminder]:
+        reminders = [
+            value for (stored_owner, _), value in self._reminders.items()
+            if stored_owner == owner_id
+        ]
+        return sorted(reminders, key=lambda value: value.due_at)
