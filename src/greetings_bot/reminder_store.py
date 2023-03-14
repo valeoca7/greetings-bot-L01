@@ -34,3 +34,10 @@ class InMemoryReminderRepository:
             if stored_owner == owner_id
         ]
         return sorted(reminders, key=lambda value: value.due_at)
+
+    def due_before(self, current_time: datetime, limit: int) -> Sequence[Reminder]:
+        due = [
+            reminder for reminder in self._reminders.values()
+            if reminder.status == "pending" and reminder.due_at <= current_time
+        ]
+        return sorted(due, key=lambda reminder: reminder.due_at)[:limit]
