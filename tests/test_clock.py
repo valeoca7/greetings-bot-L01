@@ -1,17 +1,18 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 
 from greetings_bot.clock import FixedClock, SystemClock
 
 
 class SystemClockTest(unittest.TestCase):
     def test_returns_current_datetime(self):
-        before = datetime.now()
+        before = datetime.now(timezone.utc)
         current = SystemClock().now()
-        after = datetime.now()
+        after = datetime.now(timezone.utc)
 
         self.assertLessEqual(before, current)
         self.assertLessEqual(current, after)
+        self.assertIsNotNone(current.tzinfo)
 
     def test_fixed_clock_keeps_supplied_time(self):
         current = datetime(2022, 8, 9, 20, 15)
