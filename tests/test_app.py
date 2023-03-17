@@ -2,6 +2,7 @@ import unittest
 
 from greetings_bot.app import Application, handle_update
 from greetings_bot.note_store import InMemoryNoteRepository
+from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.telegram import Message, Reply, TelegramUser, Update
 from greetings_bot.users import InMemoryUserRepository
 
@@ -32,6 +33,13 @@ class AppTest(unittest.TestCase):
         application = Application(notes=notes)
 
         self.assertIs(application.notes, notes)
+
+    def test_application_keeps_its_reminder_repository(self):
+        reminders = InMemoryReminderRepository()
+
+        application = Application(reminders=reminders)
+
+        self.assertIs(application.reminders, reminders)
 
     def test_handles_start_command(self):
         reply = handle_update(text_update("/start"))

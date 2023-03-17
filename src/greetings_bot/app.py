@@ -1,10 +1,15 @@
 import logging
 from typing import Optional
 
+from greetings_bot.clock import Clock, SystemClock
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.notes import create_note, format_note_list
+from greetings_bot.reminder_store import (
+    InMemoryReminderRepository,
+    ReminderRepository,
+)
 from greetings_bot.preferences import (
     clear_quiet_hours,
     set_first_name,
@@ -35,9 +40,15 @@ class Application:
         self,
         users: Optional[UserRepository] = None,
         notes: Optional[NoteRepository] = None,
+        reminders: Optional[ReminderRepository] = None,
+        clock: Optional[Clock] = None,
     ) -> None:
         self.users = users if users is not None else InMemoryUserRepository()
         self.notes = notes if notes is not None else InMemoryNoteRepository()
+        self.reminders = (
+            reminders if reminders is not None else InMemoryReminderRepository()
+        )
+        self.clock = clock if clock is not None else SystemClock()
 
     def handle(self, update: Update) -> Optional[Reply]:
         if update.message is None:
@@ -239,5 +250,7 @@ def handle_update(
     update: Update,
     users: Optional[UserRepository] = None,
     notes: Optional[NoteRepository] = None,
+    reminders: Optional[ReminderRepository] = None,
+    clock: Optional[Clock] = None,
 ) -> Optional[Reply]:
-    return Application(users, notes).handle(update)
+    return Application(users, notes, reminders, clock).handle(update)
