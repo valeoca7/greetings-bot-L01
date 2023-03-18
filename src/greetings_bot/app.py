@@ -10,6 +10,7 @@ from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
 )
+from greetings_bot.reminders import create_reminder
 from greetings_bot.preferences import (
     clear_quiet_hours,
     set_first_name,
@@ -123,6 +124,35 @@ class Application:
             if not notes:
                 return Reply(update.message.chat_id, "You have no notes.")
             return Reply(update.message.chat_id, format_note_list(notes))
+        if command.name == "remind":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if len(command.arguments) < 3:
+                return Reply(
+                    update.message.chat_id,
+                    "Use /remind YYYY-MM-DD HH:MM <text>.",
+                )
+            try:
+                reminder = create_reminder(
+                    user,
+                    command.arguments[0],
+                    command.arguments[1],
+                    " ".join(command.arguments[2:]),
+                    self.clock.now(),
+                )
+            except ValueError:
+                return Reply(
+                    update.message.chat_id,
+                    "Use a future local time: /remind YYYY-MM-DD HH:MM <text>.",
+                )
+            self.reminders.save(reminder)
+            return Reply(
+                update.message.chat_id,
+                "Reminder {} set for {} {}.".format(
+                    reminder.id, command.arguments[0], command.arguments[1]
+                ),
+            )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
             if user is None:

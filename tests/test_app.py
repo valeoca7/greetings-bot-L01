@@ -1,6 +1,8 @@
 import unittest
+from datetime import datetime, timezone
 
 from greetings_bot.app import Application, handle_update
+from greetings_bot.clock import FixedClock
 from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.telegram import Message, Reply, TelegramUser, Update
@@ -330,6 +332,21 @@ class AppTest(unittest.TestCase):
             reply.text,
             "Use /note add <text>, /note <id>, or /note delete <id>.",
         )
+
+    def test_creates_one_time_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(
+            text_update("/remind 2023-04-01 09:30 Call home"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 3, 17, 18, 0, tzinfo=timezone.utc)),
+        )
+
+        self.assertIn("set for 2023-04-01 09:30", reply.text)
+        self.assertEqual(reminders.all_for(42)[0].text, "Call home")
 
     def test_rejects_long_note_text(self):
         users = InMemoryUserRepository()
