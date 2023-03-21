@@ -1,7 +1,12 @@
 import unittest
 from datetime import datetime, timezone
 
-from greetings_bot.reminders import Reminder, create_reminder, mark_sent
+from greetings_bot.reminders import (
+    Reminder,
+    create_reminder,
+    format_reminder_list,
+    mark_sent,
+)
 from greetings_bot.users import User
 
 
@@ -43,6 +48,17 @@ class ReminderTest(unittest.TestCase):
                 "Old",
                 datetime(2023, 3, 7, 10, 0, tzinfo=timezone.utc),
             )
+
+    def test_formats_due_time_in_user_timezone(self):
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Call home",
+            datetime(2023, 4, 1, 16, 30, tzinfo=timezone.utc),
+            datetime(2023, 3, 7, 18, 0, tzinfo=timezone.utc),
+        )
+
+        text = format_reminder_list([reminder], "America/Vancouver")
+
+        self.assertEqual(text, "abcd1234: 2023-04-01 09:30 Call home (pending)")
 
 
 if __name__ == "__main__":

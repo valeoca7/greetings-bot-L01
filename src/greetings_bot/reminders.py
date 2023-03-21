@@ -1,6 +1,6 @@
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
-from typing import Literal
+from typing import Iterable, Literal
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -52,4 +52,19 @@ def create_reminder(
         text=clean_text,
         due_at=due_at,
         created_at=now.astimezone(timezone.utc),
+    )
+
+
+def format_reminder_list(
+    reminders: Iterable[Reminder], timezone_name: str
+) -> str:
+    zone = ZoneInfo(timezone_name)
+    return "\n".join(
+        "{}: {} {} ({})".format(
+            reminder.id,
+            reminder.due_at.astimezone(zone).strftime("%Y-%m-%d %H:%M"),
+            reminder.text[:50],
+            reminder.status,
+        )
+        for reminder in reminders
     )
