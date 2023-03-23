@@ -10,7 +10,7 @@ from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
 )
-from greetings_bot.reminders import create_reminder
+from greetings_bot.reminders import create_reminder, format_reminder_list
 from greetings_bot.preferences import (
     clear_quiet_hours,
     set_first_name,
@@ -152,6 +152,17 @@ class Application:
                 "Reminder {} set for {} {}.".format(
                     reminder.id, command.arguments[0], command.arguments[1]
                 ),
+            )
+        if command.name == "reminders":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            reminders = self.reminders.all_for(user.telegram_id)
+            if not reminders:
+                return Reply(update.message.chat_id, "You have no reminders.")
+            return Reply(
+                update.message.chat_id,
+                format_reminder_list(reminders, user.timezone),
             )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)

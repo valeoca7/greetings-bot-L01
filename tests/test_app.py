@@ -348,6 +348,32 @@ class AppTest(unittest.TestCase):
         self.assertIn("set for 2023-04-01 09:30", reply.text)
         self.assertEqual(reminders.all_for(42)[0].text, "Call home")
 
+    def test_lists_reminders(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+        clock = FixedClock(datetime(2023, 3, 17, 18, 0, tzinfo=timezone.utc))
+        handle_update(
+            text_update("/remind 2023-04-01 09:30 Call home"),
+            users,
+            reminders=reminders,
+            clock=clock,
+        )
+
+        reply = handle_update(
+            text_update("/reminders"), users, reminders=reminders
+        )
+
+        self.assertIn("2023-04-01 09:30 Call home (pending)", reply.text)
+
+    def test_reports_empty_reminder_list(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/reminders"), users)
+
+        self.assertEqual(reply.text, "You have no reminders.")
+
     def test_rejects_long_note_text(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)
