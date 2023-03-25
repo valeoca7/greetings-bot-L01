@@ -74,7 +74,9 @@ class Application:
                 "/quiet [start end|off] - manage quiet hours\n"
                 "/name [name] - show or change greeting name\n"
                 "/note add <text> - save a note\n"
-                "/notes - list saved notes",
+                "/notes - list saved notes\n"
+                "/remind YYYY-MM-DD HH:MM <text> - set a reminder\n"
+                "/reminders - list reminders",
             )
         if command.name == "note" and command.arguments[:1] == ("add",):
             user = self.users.get(update.message.sender.id)

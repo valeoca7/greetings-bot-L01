@@ -62,7 +62,9 @@ class AppTest(unittest.TestCase):
             "/quiet [start end|off] - manage quiet hours\n"
             "/name [name] - show or change greeting name\n"
             "/note add <text> - save a note\n"
-            "/notes - list saved notes",
+            "/notes - list saved notes\n"
+            "/remind YYYY-MM-DD HH:MM <text> - set a reminder\n"
+            "/reminders - list reminders",
         )
         self.assertEqual(reply.chat_id, 42)
 
