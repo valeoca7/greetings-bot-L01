@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Dict, Mapping
+from typing import Dict, Mapping, Optional
 
+from greetings_bot.dynamo_users import DynamoTable
 from greetings_bot.reminders import Reminder
 
 
@@ -43,3 +44,18 @@ def reminder_from_item(item: Mapping[str, object]) -> Reminder:
         created_at=datetime.fromisoformat(str(item["created_at"])),
         status=str(item.get("status", "pending")),
     )
+
+
+class DynamoReminderRepository:
+    def __init__(self, table: DynamoTable) -> None:
+        self.table = table
+
+    def save(self, reminder: Reminder) -> None:
+        self.table.put_item(Item=reminder_item(reminder))
+
+    def get(self, owner_id: int, reminder_id: str) -> Optional[Reminder]:
+        result = self.table.get_item(Key=reminder_key(owner_id, reminder_id))
+        item = result.get("Item")
+        if not isinstance(item, dict) or item.get("entity") != "reminder":
+            return None
+        return reminder_from_item(item)
