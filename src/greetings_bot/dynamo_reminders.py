@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, Sequence
 
 from greetings_bot.dynamo_users import DynamoTable
 from greetings_bot.reminders import Reminder
@@ -59,3 +59,18 @@ class DynamoReminderRepository:
         if not isinstance(item, dict) or item.get("entity") != "reminder":
             return None
         return reminder_from_item(item)
+
+    def all_for(self, owner_id: int) -> Sequence[Reminder]:
+        result = self.table.query(
+            KeyConditionExpression="pk = :pk AND begins_with(sk, :prefix)",
+            ExpressionAttributeValues={
+                ":pk": "USER#{}".format(owner_id),
+                ":prefix": "REMINDER#",
+            },
+        )
+        reminders = [
+            reminder_from_item(item)
+            for item in result.get("Items", [])
+            if isinstance(item, dict) and item.get("entity") == "reminder"
+        ]
+        return sorted(reminders, key=lambda reminder: reminder.due_at)

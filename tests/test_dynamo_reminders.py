@@ -22,6 +22,15 @@ class FakeTable:
         item = self.items.get((Key["pk"], Key["sk"]))
         return {} if item is None else {"Item": item}
 
+    def query(self, **kwargs):
+        owner = kwargs["ExpressionAttributeValues"][":pk"]
+        return {
+            "Items": [
+                item for (pk, sk), item in self.items.items()
+                if pk == owner and sk.startswith("REMINDER#")
+            ]
+        }
+
 
 class ReminderMappingTest(unittest.TestCase):
     def setUp(self):
@@ -63,6 +72,18 @@ class DynamoReminderRepositoryTest(unittest.TestCase):
 
         self.assertEqual(reminders.get(42, "abcd1234"), value)
         self.assertIsNone(reminders.get(7, "abcd1234"))
+
+    def test_lists_owner_reminders(self):
+        reminders = DynamoReminderRepository(FakeTable())
+        value = Reminder(
+            "abcd1234", 42, 84, "Call home",
+            datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc),
+            datetime(2023, 3, 7, 18, 0, tzinfo=timezone.utc),
+        )
+        reminders.save(value)
+
+        self.assertEqual(reminders.all_for(42), [value])
+        self.assertEqual(reminders.all_for(7), [])
 
 
 if __name__ == "__main__":
