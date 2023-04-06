@@ -74,3 +74,21 @@ class DynamoReminderRepository:
             if isinstance(item, dict) and item.get("entity") == "reminder"
         ]
         return sorted(reminders, key=lambda reminder: reminder.due_at)
+
+    def due_before(
+        self, current_time: datetime, limit: int
+    ) -> Sequence[Reminder]:
+        result = self.table.query(
+            IndexName="DueIndex",
+            KeyConditionExpression="gsi1pk = :status AND gsi1sk <= :due",
+            ExpressionAttributeValues={
+                ":status": "REMINDER#PENDING",
+                ":due": current_time.isoformat() + "#~",
+            },
+            Limit=limit,
+        )
+        return [
+            reminder_from_item(item)
+            for item in result.get("Items", [])
+            if isinstance(item, dict) and item.get("entity") == "reminder"
+        ]

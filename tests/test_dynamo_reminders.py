@@ -23,6 +23,14 @@ class FakeTable:
         return {} if item is None else {"Item": item}
 
     def query(self, **kwargs):
+        if kwargs.get("IndexName") == "DueIndex":
+            due = kwargs["ExpressionAttributeValues"][":due"]
+            items = [
+                item for item in self.items.values()
+                if item.get("gsi1pk") == "REMINDER#PENDING"
+                and item["gsi1sk"] <= due
+            ]
+            return {"Items": sorted(items, key=lambda item: item["gsi1sk"])[:kwargs["Limit"]]}
         owner = kwargs["ExpressionAttributeValues"][":pk"]
         return {
             "Items": [
@@ -84,6 +92,27 @@ class DynamoReminderRepositoryTest(unittest.TestCase):
 
         self.assertEqual(reminders.all_for(42), [value])
         self.assertEqual(reminders.all_for(7), [])
+
+    def test_queries_due_index(self):
+        reminders = DynamoReminderRepository(FakeTable())
+        due = Reminder(
+            "due", 42, 84, "Call home",
+            datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc),
+            datetime(2023, 3, 7, 18, 0, tzinfo=timezone.utc),
+        )
+        future = Reminder(
+            "future", 7, 7, "Later",
+            datetime(2023, 4, 2, 18, 0, tzinfo=timezone.utc),
+            datetime(2023, 3, 7, 18, 0, tzinfo=timezone.utc),
+        )
+        reminders.save(due)
+        reminders.save(future)
+
+        selected = reminders.due_before(
+            datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc), 10
+        )
+
+        self.assertEqual(selected, [due])
 
 
 if __name__ == "__main__":
