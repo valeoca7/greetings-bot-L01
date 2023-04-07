@@ -36,6 +36,11 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Schedule: rate(1 minute)", self.template)
         self.assertIn("DISPATCH_BATCH_SIZE: '100'", self.template)
 
+    def test_defines_due_reminder_index(self):
+        self.assertIn("IndexName: DueIndex", self.template)
+        self.assertIn("AttributeName: gsi1pk", self.template)
+        self.assertIn("AttributeName: gsi1sk", self.template)
+
 
 if __name__ == "__main__":
     unittest.main()
