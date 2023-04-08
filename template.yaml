@@ -59,7 +59,9 @@ Resources:
                 - dynamodb:Scan
                 - dynamodb:Query
                 - dynamodb:DeleteItem
-              Resource: !GetAtt DataTable.Arn
+              Resource:
+                - !GetAtt DataTable.Arn
+                - !Sub '${DataTable.Arn}/index/*'
       Events:
         Webhook:
           Type: Api
@@ -86,7 +88,9 @@ Resources:
                 - dynamodb:GetItem
                 - dynamodb:PutItem
                 - dynamodb:Scan
-              Resource: !GetAtt DataTable.Arn
+              Resource:
+                - !GetAtt DataTable.Arn
+                - !Sub '${DataTable.Arn}/index/*'
       Events:
         EveryMinute:
           Type: Schedule

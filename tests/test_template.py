@@ -40,6 +40,7 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("IndexName: DueIndex", self.template)
         self.assertIn("AttributeName: gsi1pk", self.template)
         self.assertIn("AttributeName: gsi1sk", self.template)
+        self.assertIn("${DataTable.Arn}/index/*", self.template)
 
 
 if __name__ == "__main__":
