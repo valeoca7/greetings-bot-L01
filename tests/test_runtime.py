@@ -2,6 +2,7 @@ import unittest
 
 from greetings_bot.runtime import process_payload
 from greetings_bot.note_store import InMemoryNoteRepository
+from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.users import InMemoryUserRepository
 
 
@@ -44,6 +45,18 @@ class RuntimeTest(unittest.TestCase):
         process_payload(register, users, notes)
 
         self.assertEqual(notes.all_for(42)[0].text, "Pack a book")
+
+    def test_accepts_reminder_repository(self):
+        reminders = InMemoryReminderRepository()
+
+        reply = process_payload(
+            {"update_id": 1002},
+            InMemoryUserRepository(),
+            InMemoryNoteRepository(),
+            reminders,
+        )
+
+        self.assertIsNone(reply)
 
 
 if __name__ == "__main__":
