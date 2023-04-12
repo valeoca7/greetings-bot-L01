@@ -10,7 +10,12 @@ from greetings_bot.api_gateway import (
 )
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.dynamo_notes import DynamoNoteRepository
+from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
+from greetings_bot.reminder_store import (
+    InMemoryReminderRepository,
+    ReminderRepository,
+)
 from greetings_bot.runtime import process_payload
 from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
@@ -25,9 +30,13 @@ class WebhookHandler:
         self,
         users: UserRepository,
         notes: NoteRepository = None,
+        reminders: ReminderRepository = None,
     ) -> None:
         self.users = users
         self.notes = notes if notes is not None else InMemoryNoteRepository()
+        self.reminders = (
+            reminders if reminders is not None else InMemoryReminderRepository()
+        )
 
     def handle(self, event: Mapping[str, Any]) -> LambdaResponse:
         try:
@@ -36,7 +45,9 @@ class WebhookHandler:
         except ApiGatewayRequestError as error:
             return self._error_response(str(error))
         try:
-            reply = process_payload(payload, self.users, self.notes)
+            reply = process_payload(
+                payload, self.users, self.notes, self.reminders
+            )
         except UpdateParseError:
             return self._error_response("invalid update payload")
         body = "" if reply is None else json.dumps(reply)
@@ -55,10 +66,12 @@ def build_default_handler(
     if table_name:
         users = repository_for_table(table_name, dynamodb_resource)
         notes = DynamoNoteRepository(users.table)
+        reminders = DynamoReminderRepository(users.table)
     else:
         users = InMemoryUserRepository()
         notes = InMemoryNoteRepository()
-    return WebhookHandler(users, notes)
+        reminders = InMemoryReminderRepository()
+    return WebhookHandler(users, notes, reminders)
 
 
 _handler = build_default_handler()

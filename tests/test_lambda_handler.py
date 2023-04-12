@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from greetings_bot.dynamo_users import DynamoUserRepository
 from greetings_bot.dynamo_notes import DynamoNoteRepository
+from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.lambda_handler import (
     WebhookHandler,
     build_default_handler,
@@ -79,7 +80,9 @@ class LambdaHandlerTest(unittest.TestCase):
 
         self.assertIsInstance(handler.users, DynamoUserRepository)
         self.assertIsInstance(handler.notes, DynamoNoteRepository)
+        self.assertIsInstance(handler.reminders, DynamoReminderRepository)
         self.assertIs(handler.users.table, handler.notes.table)
+        self.assertIs(handler.users.table, handler.reminders.table)
         self.assertEqual(resource.name, "greetings-users")
 
 
