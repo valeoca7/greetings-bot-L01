@@ -1,8 +1,12 @@
 import json
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
+from greetings_bot.dynamo_reminders import DynamoReminderRepository
+from greetings_bot.reminder_store import InMemoryReminderRepository
+from greetings_bot.reminders import Reminder
 from greetings_bot.scheduled_handler import (
     ScheduledGreetingHandler,
     build_default_handler,
@@ -36,7 +40,9 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
 
         self.assertEqual(resource.name, "data")
         self.assertIsInstance(handler.deliveries, DynamoDeliveryLedger)
+        self.assertIsInstance(handler.reminders, DynamoReminderRepository)
         self.assertIs(handler.users.table, handler.deliveries.table)
+        self.assertIs(handler.users.table, handler.reminders.table)
 
     def test_reads_dispatch_batch_size(self):
         handler = build_default_handler({"DISPATCH_BATCH_SIZE": "25"})
@@ -49,6 +55,23 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         replies = ScheduledGreetingHandler(InMemoryUserRepository()).handle(event)
 
         self.assertEqual(replies, [])
+
+    def test_includes_due_reminders(self):
+        reminders = InMemoryReminderRepository()
+        reminders.save(
+            Reminder(
+                "abcd1234", 42, 84, "Call home",
+                datetime(2023, 4, 12, 18, 0, tzinfo=timezone.utc),
+                datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc),
+            )
+        )
+        handler = ScheduledGreetingHandler(
+            InMemoryUserRepository(), reminders=reminders
+        )
+
+        replies = handler.handle({"time": "2023-04-12T18:00:00Z"})
+
+        self.assertEqual(replies, [{"chat_id": 84, "text": "Reminder: Call home"}])
 
 
 if __name__ == "__main__":
