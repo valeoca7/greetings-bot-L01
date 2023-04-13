@@ -57,6 +57,8 @@ does not send them to Telegram.
 - `/note add <text>` saves a private note and returns its short ID
 - `/notes` lists the current user's notes
 - `/note <id>` shows a note; `/note delete <id>` removes it
+- `/remind YYYY-MM-DD HH:MM <text>` creates a one-time local reminder
+- `/reminders` lists reminder due times and lifecycle status
 - `/help` lists the available actions
 
 Run the tests with:
@@ -95,3 +97,7 @@ not prepare the same daily greeting again.
 Notes are stored beside the owner's profile under `NOTE#<id>` sort keys. Lookups and
 deletes always include the Telegram user ID, and note listings query only that user
 partition.
+
+One-time reminders use the profile timezone for command input and are stored as UTC.
+Pending records appear in the sparse `DueIndex`; once dispatched, they move to the
+`sent` state and leave that index.
