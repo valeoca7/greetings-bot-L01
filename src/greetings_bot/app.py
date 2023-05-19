@@ -10,7 +10,13 @@ from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
 )
-from greetings_bot.reminders import create_reminder, format_reminder_list
+from greetings_bot.reminders import (
+    WEEKDAYS,
+    create_daily_reminder,
+    create_reminder,
+    create_weekly_reminder,
+    format_reminder_list,
+)
 from greetings_bot.preferences import (
     clear_quiet_hours,
     set_first_name,
@@ -76,6 +82,8 @@ class Application:
                 "/note add <text> - save a note\n"
                 "/notes - list saved notes\n"
                 "/remind YYYY-MM-DD HH:MM <text> - set a reminder\n"
+                "/remind every day HH:MM <text> - repeat daily\n"
+                "/remind every <weekday> HH:MM <text> - repeat weekly\n"
                 "/reminders - list reminders",
             )
         if command.name == "note" and command.arguments[:1] == ("add",):
@@ -130,6 +138,47 @@ class Application:
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return registration_required(update.message.chat_id)
+            if command.arguments[:2] == ("every", "day") and len(command.arguments) >= 4:
+                try:
+                    reminder = create_daily_reminder(
+                        user,
+                        command.arguments[2],
+                        " ".join(command.arguments[3:]),
+                        self.clock.now(),
+                    )
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Use /remind every day HH:MM <text>.",
+                    )
+                self.reminders.save(reminder)
+                return Reply(
+                    update.message.chat_id,
+                    "Daily reminder {} created.".format(reminder.id),
+                )
+            if (
+                len(command.arguments) >= 4
+                and command.arguments[:1] == ("every",)
+                and command.arguments[1].lower() in WEEKDAYS
+            ):
+                try:
+                    reminder = create_weekly_reminder(
+                        user,
+                        command.arguments[1],
+                        command.arguments[2],
+                        " ".join(command.arguments[3:]),
+                        self.clock.now(),
+                    )
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Use /remind every <weekday> HH:MM <text>.",
+                    )
+                self.reminders.save(reminder)
+                return Reply(
+                    update.message.chat_id,
+                    "Weekly reminder {} created.".format(reminder.id),
+                )
             if len(command.arguments) < 3:
                 return Reply(
                     update.message.chat_id,

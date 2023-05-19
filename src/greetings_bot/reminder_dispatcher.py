@@ -3,7 +3,7 @@ from typing import List
 
 from greetings_bot.clock import Clock
 from greetings_bot.reminder_store import ReminderRepository
-from greetings_bot.reminders import mark_sent
+from greetings_bot.reminders import complete_reminder
 from greetings_bot.telegram import Reply
 
 
@@ -29,5 +29,5 @@ class ReminderDispatcher:
             for reminder in due
         ]
         for reminder in due:
-            self.reminders.save(mark_sent(reminder))
+            self.reminders.save(complete_reminder(reminder))
         return replies

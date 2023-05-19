@@ -58,6 +58,8 @@ does not send them to Telegram.
 - `/notes` lists the current user's notes
 - `/note <id>` shows a note; `/note delete <id>` removes it
 - `/remind YYYY-MM-DD HH:MM <text>` creates a one-time local reminder
+- `/remind every day HH:MM <text>` creates a daily reminder
+- `/remind every <weekday> HH:MM <text>` creates a weekly reminder
 - `/reminders` lists reminder due times and lifecycle status
 - `/help` lists the available actions
 
@@ -101,3 +103,7 @@ partition.
 One-time reminders use the profile timezone for command input and are stored as UTC.
 Pending records appear in the sparse `DueIndex`; once dispatched, they move to the
 `sent` state and leave that index.
+
+Recurring reminders retain their local wall-clock time across timezone offset
+changes. A daily or weekly occurrence that falls inside a daylight-saving gap is
+skipped, and the next valid occurrence remains pending.

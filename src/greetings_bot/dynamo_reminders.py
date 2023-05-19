@@ -24,6 +24,8 @@ def reminder_item(reminder: Reminder) -> Dict[str, object]:
             "due_at": reminder.due_at.isoformat(),
             "created_at": reminder.created_at.isoformat(),
             "status": reminder.status,
+            "recurrence": reminder.recurrence,
+            "timezone": reminder.timezone,
         }
     )
     if reminder.status == "pending":
@@ -43,6 +45,8 @@ def reminder_from_item(item: Mapping[str, object]) -> Reminder:
         due_at=datetime.fromisoformat(str(item["due_at"])),
         created_at=datetime.fromisoformat(str(item["created_at"])),
         status=str(item.get("status", "pending")),
+        recurrence=item.get("recurrence"),
+        timezone=str(item.get("timezone", "UTC")),
     )
 
 

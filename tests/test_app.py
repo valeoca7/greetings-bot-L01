@@ -64,6 +64,8 @@ class AppTest(unittest.TestCase):
             "/note add <text> - save a note\n"
             "/notes - list saved notes\n"
             "/remind YYYY-MM-DD HH:MM <text> - set a reminder\n"
+            "/remind every day HH:MM <text> - repeat daily\n"
+            "/remind every <weekday> HH:MM <text> - repeat weekly\n"
             "/reminders - list reminders",
         )
         self.assertEqual(reply.chat_id, 42)
@@ -375,6 +377,36 @@ class AppTest(unittest.TestCase):
         reply = handle_update(text_update("/reminders"), users)
 
         self.assertEqual(reply.text, "You have no reminders.")
+
+    def test_creates_daily_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(
+            text_update("/remind every day 09:00 Drink water"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 5, 8, 18, 0, tzinfo=timezone.utc)),
+        )
+
+        self.assertTrue(reply.text.startswith("Daily reminder "))
+        self.assertEqual(reminders.all_for(42)[0].recurrence, "daily")
+
+    def test_creates_weekly_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(
+            text_update("/remind every monday 09:00 Plan week"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 5, 8, 18, 0, tzinfo=timezone.utc)),
+        )
+
+        self.assertTrue(reply.text.startswith("Weekly reminder "))
+        self.assertEqual(reminders.all_for(42)[0].recurrence, "weekly")
 
     def test_rejects_long_note_text(self):
         users = InMemoryUserRepository()

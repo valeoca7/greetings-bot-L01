@@ -66,6 +66,17 @@ class ReminderMappingTest(unittest.TestCase):
 
         self.assertNotIn("gsi1pk", reminder_item(sent))
 
+    def test_round_trips_recurrence_fields(self):
+        recurring = Reminder(
+            **{
+                **self.reminder.__dict__,
+                "recurrence": "weekly",
+                "timezone": "America/Vancouver",
+            }
+        )
+
+        self.assertEqual(reminder_from_item(reminder_item(recurring)), recurring)
+
 
 class DynamoReminderRepositoryTest(unittest.TestCase):
     def test_saves_and_loads_owned_reminder(self):

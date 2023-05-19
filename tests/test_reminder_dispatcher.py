@@ -44,6 +44,30 @@ class ReminderDispatcherTest(unittest.TestCase):
 
         self.assertEqual(dispatcher.dispatch(), [])
 
+    def test_advances_recurring_reminder(self):
+        reminders = InMemoryReminderRepository()
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Drink water",
+            datetime(2023, 5, 2, 16, 0, tzinfo=timezone.utc),
+            datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc),
+            recurrence="daily",
+            timezone="America/Vancouver",
+        )
+        reminders.save(reminder)
+        dispatcher = ReminderDispatcher(
+            reminders,
+            FixedClock(datetime(2023, 5, 2, 16, 0, tzinfo=timezone.utc)),
+        )
+
+        dispatcher.dispatch()
+
+        advanced = reminders.get(42, "abcd1234")
+        self.assertEqual(advanced.status, "pending")
+        self.assertEqual(
+            advanced.due_at,
+            datetime(2023, 5, 3, 16, 0, tzinfo=timezone.utc),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
