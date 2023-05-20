@@ -9,6 +9,7 @@ from greetings_bot.reminders import (
     create_reminder,
     format_reminder_list,
     local_to_utc,
+    parse_clock_time,
     mark_sent,
 )
 from greetings_bot.users import User
@@ -94,6 +95,10 @@ class ReminderTest(unittest.TestCase):
                 datetime(2023, 3, 12, 2, 30),
                 "America/Vancouver",
             )
+
+    def test_recurring_time_requires_hour_and_minute(self):
+        with self.assertRaisesRegex(ValueError, "invalid"):
+            parse_clock_time("09:30:15")
 
     def test_creates_next_daily_occurrence(self):
         user = User(42, 84, "Mira", timezone="America/Vancouver")

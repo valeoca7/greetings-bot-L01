@@ -66,6 +66,13 @@ def local_to_utc(local_due: datetime, timezone_name: str) -> datetime:
     return utc_due
 
 
+def parse_clock_time(value: str) -> time:
+    try:
+        return datetime.strptime(value, "%H:%M").time()
+    except ValueError as error:
+        raise ValueError("invalid reminder time") from error
+
+
 def create_reminder(
     user: User,
     local_date: str,
@@ -103,9 +110,9 @@ def create_daily_reminder(
     if not clean_text or len(clean_text) > 500:
         raise ValueError("invalid reminder text")
     try:
-        parsed_time = time.fromisoformat(local_time)
-    except ValueError as error:
-        raise ValueError("invalid reminder time") from error
+        parsed_time = parse_clock_time(local_time)
+    except ValueError:
+        raise
     zone = ZoneInfo(user.timezone)
     local_now = now.astimezone(zone)
     local_due = datetime.combine(local_now.date(), parsed_time)
@@ -136,7 +143,7 @@ def create_weekly_reminder(
         raise ValueError("invalid reminder text")
     try:
         target_weekday = WEEKDAYS[weekday.lower()]
-        parsed_time = time.fromisoformat(local_time)
+        parsed_time = parse_clock_time(local_time)
     except (KeyError, ValueError) as error:
         raise ValueError("invalid weekly reminder") from error
     zone = ZoneInfo(user.timezone)
