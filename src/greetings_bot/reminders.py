@@ -109,10 +109,7 @@ def create_daily_reminder(
     clean_text = text.strip()
     if not clean_text or len(clean_text) > 500:
         raise ValueError("invalid reminder text")
-    try:
-        parsed_time = parse_clock_time(local_time)
-    except ValueError:
-        raise
+    parsed_time = parse_clock_time(local_time)
     zone = ZoneInfo(user.timezone)
     local_now = now.astimezone(zone)
     local_due = datetime.combine(local_now.date(), parsed_time)
