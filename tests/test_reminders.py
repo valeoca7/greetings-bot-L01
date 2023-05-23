@@ -112,6 +112,17 @@ class ReminderTest(unittest.TestCase):
             datetime(2023, 4, 25, 16, 0, tzinfo=timezone.utc),
         )
 
+    def test_daily_can_start_later_today(self):
+        user = User(42, 84, "Mira", timezone="America/Vancouver")
+        now = datetime(2023, 4, 24, 16, 0, tzinfo=timezone.utc)
+
+        reminder = create_daily_reminder(user, "10:00", "Break", now)
+
+        self.assertEqual(
+            reminder.due_at,
+            datetime(2023, 4, 24, 17, 0, tzinfo=timezone.utc),
+        )
+
     def test_creates_next_weekly_occurrence(self):
         user = User(42, 84, "Mira", timezone="America/Vancouver")
         now = datetime(2023, 4, 25, 18, 0, tzinfo=timezone.utc)
@@ -124,6 +135,19 @@ class ReminderTest(unittest.TestCase):
         self.assertEqual(
             reminder.due_at,
             datetime(2023, 5, 1, 16, 0, tzinfo=timezone.utc),
+        )
+
+    def test_weekly_can_start_later_on_matching_weekday(self):
+        user = User(42, 84, "Mira", timezone="America/Vancouver")
+        now = datetime(2023, 5, 22, 16, 0, tzinfo=timezone.utc)
+
+        reminder = create_weekly_reminder(
+            user, "monday", "10:00", "Plan", now
+        )
+
+        self.assertEqual(
+            reminder.due_at,
+            datetime(2023, 5, 22, 17, 0, tzinfo=timezone.utc),
         )
 
     def test_daily_occurrence_keeps_wall_time_across_fall_change(self):
