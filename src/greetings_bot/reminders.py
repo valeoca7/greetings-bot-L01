@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from greetings_bot.users import User
 
 
-ReminderStatus = Literal["pending", "sent", "cancelled"]
+ReminderStatus = Literal["pending", "paused", "sent", "cancelled"]
 Recurrence = Literal["daily", "weekly"]
 WEEKDAYS = {
     "monday": 0,
@@ -35,6 +35,18 @@ class Reminder:
 
 def mark_sent(reminder: Reminder) -> Reminder:
     return replace(reminder, status="sent")
+
+
+def pause_reminder(reminder: Reminder) -> Reminder:
+    if reminder.status != "pending":
+        raise ValueError("only pending reminders can be paused")
+    return replace(reminder, status="paused")
+
+
+def resume_reminder(reminder: Reminder) -> Reminder:
+    if reminder.status != "paused":
+        raise ValueError("only paused reminders can be resumed")
+    return replace(reminder, status="pending")
 
 
 def next_occurrence(reminder: Reminder) -> datetime:

@@ -10,6 +10,8 @@ from greetings_bot.reminders import (
     format_reminder_list,
     local_to_utc,
     parse_clock_time,
+    pause_reminder,
+    resume_reminder,
     mark_sent,
 )
 from greetings_bot.users import User
@@ -37,6 +39,19 @@ class ReminderTest(unittest.TestCase):
 
         self.assertIsNone(reminder.recurrence)
         self.assertEqual(reminder.timezone, "UTC")
+
+    def test_pauses_and_resumes_pending_reminder(self):
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Call home",
+            datetime(2023, 6, 1, 18, 0, tzinfo=timezone.utc),
+            datetime(2023, 5, 1, 18, 0, tzinfo=timezone.utc),
+        )
+
+        paused = pause_reminder(reminder)
+        resumed = resume_reminder(paused)
+
+        self.assertEqual(paused.status, "paused")
+        self.assertEqual(resumed.status, "pending")
 
     def test_creates_reminder_from_user_local_time(self):
         user = User(42, 84, "Mira", timezone="America/Vancouver")
