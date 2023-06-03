@@ -66,6 +66,11 @@ class ReminderMappingTest(unittest.TestCase):
 
         self.assertNotIn("gsi1pk", reminder_item(sent))
 
+    def test_paused_item_leaves_due_index(self):
+        paused = Reminder(**{**self.reminder.__dict__, "status": "paused"})
+
+        self.assertNotIn("gsi1pk", reminder_item(paused))
+
     def test_round_trips_recurrence_fields(self):
         recurring = Reminder(
             **{
