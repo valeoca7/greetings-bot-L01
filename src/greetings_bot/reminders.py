@@ -49,6 +49,15 @@ def resume_reminder(reminder: Reminder) -> Reminder:
     return replace(reminder, status="pending")
 
 
+def edit_reminder_text(reminder: Reminder, text: str) -> Reminder:
+    clean_text = text.strip()
+    if not clean_text or len(clean_text) > 500:
+        raise ValueError("invalid reminder text")
+    if reminder.status in ("sent", "cancelled"):
+        raise ValueError("completed reminder cannot be edited")
+    return replace(reminder, text=clean_text)
+
+
 def next_occurrence(reminder: Reminder) -> datetime:
     if reminder.recurrence not in ("daily", "weekly"):
         raise ValueError("reminder does not recur")

@@ -6,6 +6,7 @@ from greetings_bot.reminders import (
     create_daily_reminder,
     create_weekly_reminder,
     complete_reminder,
+    edit_reminder_text,
     create_reminder,
     format_reminder_list,
     local_to_utc,
@@ -52,6 +53,17 @@ class ReminderTest(unittest.TestCase):
 
         self.assertEqual(paused.status, "paused")
         self.assertEqual(resumed.status, "pending")
+
+    def test_edits_active_reminder_text(self):
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Old text",
+            datetime(2023, 6, 5, 18, 0, tzinfo=timezone.utc),
+            datetime(2023, 5, 1, 18, 0, tzinfo=timezone.utc),
+        )
+
+        edited = edit_reminder_text(reminder, "  New text  ")
+
+        self.assertEqual(edited.text, "New text")
 
     def test_creates_reminder_from_user_local_time(self):
         user = User(42, 84, "Mira", timezone="America/Vancouver")
