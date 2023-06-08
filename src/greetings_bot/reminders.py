@@ -58,6 +58,12 @@ def edit_reminder_text(reminder: Reminder, text: str) -> Reminder:
     return replace(reminder, text=clean_text)
 
 
+def cancel_reminder(reminder: Reminder) -> Reminder:
+    if reminder.status in ("sent", "cancelled"):
+        raise ValueError("reminder is already complete")
+    return replace(reminder, status="cancelled")
+
+
 def next_occurrence(reminder: Reminder) -> datetime:
     if reminder.recurrence not in ("daily", "weekly"):
         raise ValueError("reminder does not recur")

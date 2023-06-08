@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from greetings_bot.reminders import (
     Reminder,
+    cancel_reminder,
     create_daily_reminder,
     create_weekly_reminder,
     complete_reminder,
@@ -64,6 +65,15 @@ class ReminderTest(unittest.TestCase):
         edited = edit_reminder_text(reminder, "  New text  ")
 
         self.assertEqual(edited.text, "New text")
+
+    def test_cancels_active_reminder(self):
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Old text",
+            datetime(2023, 6, 5, 18, 0, tzinfo=timezone.utc),
+            datetime(2023, 5, 1, 18, 0, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(cancel_reminder(reminder).status, "cancelled")
 
     def test_creates_reminder_from_user_local_time(self):
         user = User(42, 84, "Mira", timezone="America/Vancouver")
