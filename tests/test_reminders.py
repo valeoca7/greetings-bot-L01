@@ -12,6 +12,7 @@ from greetings_bot.reminders import (
     format_reminder_list,
     local_to_utc,
     parse_clock_time,
+    parse_snooze_duration,
     pause_reminder,
     resume_reminder,
     mark_sent,
@@ -74,6 +75,15 @@ class ReminderTest(unittest.TestCase):
         )
 
         self.assertEqual(cancel_reminder(reminder).status, "cancelled")
+
+    def test_parses_snooze_units(self):
+        self.assertEqual(parse_snooze_duration("15m"), timedelta(minutes=15))
+        self.assertEqual(parse_snooze_duration("2h"), timedelta(hours=2))
+        self.assertEqual(parse_snooze_duration("1d"), timedelta(days=1))
+
+    def test_limits_snooze_to_one_week(self):
+        with self.assertRaisesRegex(ValueError, "invalid"):
+            parse_snooze_duration("8d")
 
     def test_creates_reminder_from_user_local_time(self):
         user = User(42, 84, "Mira", timezone="America/Vancouver")

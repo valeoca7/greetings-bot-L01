@@ -64,6 +64,18 @@ def cancel_reminder(reminder: Reminder) -> Reminder:
     return replace(reminder, status="cancelled")
 
 
+def parse_snooze_duration(value: str) -> timedelta:
+    units = {"m": 1, "h": 60, "d": 1440}
+    try:
+        amount = int(value[:-1])
+        minutes = amount * units[value[-1].lower()]
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError("invalid snooze duration") from error
+    if minutes < 1 or minutes > 7 * 24 * 60:
+        raise ValueError("invalid snooze duration")
+    return timedelta(minutes=minutes)
+
+
 def next_occurrence(reminder: Reminder) -> datetime:
     if reminder.recurrence not in ("daily", "weekly"):
         raise ValueError("reminder does not recur")
