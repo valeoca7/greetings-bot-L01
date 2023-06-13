@@ -15,6 +15,7 @@ from greetings_bot.reminders import (
     parse_snooze_duration,
     pause_reminder,
     resume_reminder,
+    snooze_reminder,
     mark_sent,
 )
 from greetings_bot.users import User
@@ -84,6 +85,23 @@ class ReminderTest(unittest.TestCase):
     def test_limits_snooze_to_one_week(self):
         with self.assertRaisesRegex(ValueError, "invalid"):
             parse_snooze_duration("8d")
+
+    def test_snoozes_from_current_time(self):
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Call home",
+            datetime(2023, 6, 12, 18, 0, tzinfo=timezone.utc),
+            datetime(2023, 5, 1, 18, 0, tzinfo=timezone.utc),
+            status="paused",
+        )
+        now = datetime(2023, 6, 12, 19, 0, tzinfo=timezone.utc)
+
+        snoozed = snooze_reminder(reminder, timedelta(minutes=30), now)
+
+        self.assertEqual(
+            snoozed.due_at,
+            datetime(2023, 6, 12, 19, 30, tzinfo=timezone.utc),
+        )
+        self.assertEqual(snoozed.status, "pending")
 
     def test_creates_reminder_from_user_local_time(self):
         user = User(42, 84, "Mira", timezone="America/Vancouver")

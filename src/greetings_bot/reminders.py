@@ -76,6 +76,18 @@ def parse_snooze_duration(value: str) -> timedelta:
     return timedelta(minutes=minutes)
 
 
+def snooze_reminder(
+    reminder: Reminder, duration: timedelta, now: datetime
+) -> Reminder:
+    if reminder.status not in ("pending", "paused"):
+        raise ValueError("completed reminder cannot be snoozed")
+    return replace(
+        reminder,
+        due_at=now.astimezone(timezone.utc) + duration,
+        status="pending",
+    )
+
+
 def next_occurrence(reminder: Reminder) -> datetime:
     if reminder.recurrence not in ("daily", "weekly"):
         raise ValueError("reminder does not recur")
