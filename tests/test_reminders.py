@@ -10,6 +10,7 @@ from greetings_bot.reminders import (
     edit_reminder_text,
     create_reminder,
     format_reminder_list,
+    format_reminder,
     local_to_utc,
     parse_clock_time,
     parse_snooze_duration,
@@ -153,6 +154,22 @@ class ReminderTest(unittest.TestCase):
         text = format_reminder_list([reminder], "America/Vancouver")
 
         self.assertIn("(pending, daily)", text)
+
+    def test_formats_reminder_details(self):
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Drink water",
+            datetime(2023, 6, 14, 16, 0, tzinfo=timezone.utc),
+            datetime(2023, 5, 1, 18, 0, tzinfo=timezone.utc),
+            recurrence="daily",
+            timezone="America/Vancouver",
+        )
+
+        text = format_reminder(reminder, "America/Vancouver")
+
+        self.assertEqual(
+            text,
+            "Drink water\nDue: 2023-06-14 09:00\nStatus: pending\nRepeat: daily",
+        )
 
     def test_rejects_time_skipped_by_spring_clock_change(self):
         with self.assertRaisesRegex(ValueError, "does not exist"):
