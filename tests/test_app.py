@@ -378,6 +378,34 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "You have no reminders.")
 
+    def test_shows_owned_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+        created = handle_update(
+            text_update("/remind 2023-07-01 09:30 Call home"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 6, 15, 18, 0, tzinfo=timezone.utc)),
+        )
+        reminder_id = created.text.split()[1]
+
+        reply = handle_update(
+            text_update("/reminder " + reminder_id),
+            users,
+            reminders=reminders,
+        )
+
+        self.assertIn("Call home\nDue: 2023-07-01 09:30", reply.text)
+
+    def test_hides_unknown_reminder(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/reminder missing"), users)
+
+        self.assertEqual(reply.text, "Reminder not found.")
+
     def test_creates_daily_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()

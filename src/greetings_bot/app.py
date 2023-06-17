@@ -15,6 +15,7 @@ from greetings_bot.reminders import (
     create_daily_reminder,
     create_reminder,
     create_weekly_reminder,
+    format_reminder,
     format_reminder_list,
 )
 from greetings_bot.preferences import (
@@ -214,6 +215,17 @@ class Application:
             return Reply(
                 update.message.chat_id,
                 format_reminder_list(reminders, user.timezone),
+            )
+        if command.name == "reminder" and len(command.arguments) == 1:
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            reminder = self.reminders.get(user.telegram_id, command.arguments[0])
+            if reminder is None:
+                return Reply(update.message.chat_id, "Reminder not found.")
+            return Reply(
+                update.message.chat_id,
+                format_reminder(reminder, user.timezone),
             )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
