@@ -406,6 +406,27 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Reminder not found.")
 
+    def test_edits_reminder_text(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+        created = handle_update(
+            text_update("/remind 2023-07-01 09:30 Old text"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 6, 19, 18, 0, tzinfo=timezone.utc)),
+        )
+        reminder_id = created.text.split()[1]
+
+        reply = handle_update(
+            text_update("/reminder edit {} New text".format(reminder_id)),
+            users,
+            reminders=reminders,
+        )
+
+        self.assertEqual(reply.text, "Reminder updated.")
+        self.assertEqual(reminders.get(42, reminder_id).text, "New text")
+
     def test_creates_daily_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()

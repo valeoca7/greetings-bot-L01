@@ -15,6 +15,7 @@ from greetings_bot.reminders import (
     create_daily_reminder,
     create_reminder,
     create_weekly_reminder,
+    edit_reminder_text,
     format_reminder,
     format_reminder_list,
 )
@@ -216,6 +217,26 @@ class Application:
                 update.message.chat_id,
                 format_reminder_list(reminders, user.timezone),
             )
+        if command.name == "reminder" and command.arguments[:1] == ("edit",):
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if len(command.arguments) < 3:
+                return Reply(
+                    update.message.chat_id,
+                    "Use /reminder edit <id> <text>.",
+                )
+            reminder = self.reminders.get(user.telegram_id, command.arguments[1])
+            if reminder is None:
+                return Reply(update.message.chat_id, "Reminder not found.")
+            try:
+                reminder = edit_reminder_text(
+                    reminder, " ".join(command.arguments[2:])
+                )
+            except ValueError:
+                return Reply(update.message.chat_id, "Reminder cannot be edited.")
+            self.reminders.save(reminder)
+            return Reply(update.message.chat_id, "Reminder updated.")
         if command.name == "reminder" and len(command.arguments) == 1:
             user = self.users.get(update.message.sender.id)
             if user is None:
