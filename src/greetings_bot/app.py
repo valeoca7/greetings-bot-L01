@@ -18,6 +18,8 @@ from greetings_bot.reminders import (
     edit_reminder_text,
     format_reminder,
     format_reminder_list,
+    pause_reminder,
+    resume_reminder,
 )
 from greetings_bot.preferences import (
     clear_quiet_hours,
@@ -216,6 +218,34 @@ class Application:
             return Reply(
                 update.message.chat_id,
                 format_reminder_list(reminders, user.timezone),
+            )
+        if (
+            command.name == "reminder"
+            and len(command.arguments) == 2
+            and command.arguments[0] in ("pause", "resume")
+        ):
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            reminder = self.reminders.get(user.telegram_id, command.arguments[1])
+            if reminder is None:
+                return Reply(update.message.chat_id, "Reminder not found.")
+            transition = (
+                pause_reminder
+                if command.arguments[0] == "pause"
+                else resume_reminder
+            )
+            try:
+                reminder = transition(reminder)
+            except ValueError:
+                return Reply(
+                    update.message.chat_id,
+                    "Reminder is already {}.".format(reminder.status),
+                )
+            self.reminders.save(reminder)
+            return Reply(
+                update.message.chat_id,
+                "Reminder {}.".format(reminder.status),
             )
         if command.name == "reminder" and command.arguments[:1] == ("edit",):
             user = self.users.get(update.message.sender.id)

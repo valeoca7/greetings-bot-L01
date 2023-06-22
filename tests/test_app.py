@@ -427,6 +427,33 @@ class AppTest(unittest.TestCase):
         self.assertEqual(reply.text, "Reminder updated.")
         self.assertEqual(reminders.get(42, reminder_id).text, "New text")
 
+    def test_pauses_and_resumes_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+        created = handle_update(
+            text_update("/remind every day 09:30 Stretch"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 6, 20, 18, 0, tzinfo=timezone.utc)),
+        )
+        reminder_id = created.text.split()[2]
+
+        paused = handle_update(
+            text_update("/reminder pause " + reminder_id),
+            users,
+            reminders=reminders,
+        )
+        resumed = handle_update(
+            text_update("/reminder resume " + reminder_id),
+            users,
+            reminders=reminders,
+        )
+
+        self.assertEqual(paused.text, "Reminder paused.")
+        self.assertEqual(resumed.text, "Reminder pending.")
+        self.assertEqual(reminders.get(42, reminder_id).status, "pending")
+
     def test_creates_daily_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()
