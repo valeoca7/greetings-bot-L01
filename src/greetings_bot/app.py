@@ -243,9 +243,12 @@ class Application:
                     "Reminder is already {}.".format(reminder.status),
                 )
             self.reminders.save(reminder)
+            confirmation = (
+                "paused" if command.arguments[0] == "pause" else "resumed"
+            )
             return Reply(
                 update.message.chat_id,
-                "Reminder {}.".format(reminder.status),
+                "Reminder {}.".format(confirmation),
             )
         if command.name == "reminder" and command.arguments[:1] == ("edit",):
             user = self.users.get(update.message.sender.id)

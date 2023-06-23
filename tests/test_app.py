@@ -451,7 +451,7 @@ class AppTest(unittest.TestCase):
         )
 
         self.assertEqual(paused.text, "Reminder paused.")
-        self.assertEqual(resumed.text, "Reminder pending.")
+        self.assertEqual(resumed.text, "Reminder resumed.")
         self.assertEqual(reminders.get(42, reminder_id).status, "pending")
 
     def test_creates_daily_reminder(self):
