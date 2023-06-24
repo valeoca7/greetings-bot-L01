@@ -454,6 +454,27 @@ class AppTest(unittest.TestCase):
         self.assertEqual(resumed.text, "Reminder resumed.")
         self.assertEqual(reminders.get(42, reminder_id).status, "pending")
 
+    def test_cancels_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+        created = handle_update(
+            text_update("/remind 2023-07-01 09:30 Cancel me"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 6, 23, 18, 0, tzinfo=timezone.utc)),
+        )
+        reminder_id = created.text.split()[1]
+
+        reply = handle_update(
+            text_update("/reminder cancel " + reminder_id),
+            users,
+            reminders=reminders,
+        )
+
+        self.assertEqual(reply.text, "Reminder cancelled.")
+        self.assertEqual(reminders.get(42, reminder_id).status, "cancelled")
+
     def test_creates_daily_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()

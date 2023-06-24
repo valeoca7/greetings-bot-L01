@@ -12,6 +12,7 @@ from greetings_bot.reminder_store import (
 )
 from greetings_bot.reminders import (
     WEEKDAYS,
+    cancel_reminder,
     create_daily_reminder,
     create_reminder,
     create_weekly_reminder,
@@ -250,6 +251,23 @@ class Application:
                 update.message.chat_id,
                 "Reminder {}.".format(confirmation),
             )
+        if (
+            command.name == "reminder"
+            and len(command.arguments) == 2
+            and command.arguments[0] == "cancel"
+        ):
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            reminder = self.reminders.get(user.telegram_id, command.arguments[1])
+            if reminder is None:
+                return Reply(update.message.chat_id, "Reminder not found.")
+            try:
+                reminder = cancel_reminder(reminder)
+            except ValueError:
+                return Reply(update.message.chat_id, "Reminder is already complete.")
+            self.reminders.save(reminder)
+            return Reply(update.message.chat_id, "Reminder cancelled.")
         if command.name == "reminder" and command.arguments[:1] == ("edit",):
             user = self.users.get(update.message.sender.id)
             if user is None:
