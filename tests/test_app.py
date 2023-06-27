@@ -475,6 +475,34 @@ class AppTest(unittest.TestCase):
         self.assertEqual(reply.text, "Reminder cancelled.")
         self.assertEqual(reminders.get(42, reminder_id).status, "cancelled")
 
+    def test_snoozes_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+        clock = FixedClock(datetime(2023, 6, 26, 18, 0, tzinfo=timezone.utc))
+        created = handle_update(
+            text_update("/remind 2023-07-01 09:30 Later"),
+            users,
+            reminders=reminders,
+            clock=clock,
+        )
+        reminder_id = created.text.split()[1]
+
+        reply = handle_update(
+            text_update("/reminder snooze {} 30m".format(reminder_id)),
+            users,
+            reminders=reminders,
+            clock=clock,
+        )
+
+        self.assertEqual(
+            reply.text, "Reminder snoozed until 2023-06-26 18:30 UTC."
+        )
+        self.assertEqual(
+            reminders.get(42, reminder_id).due_at,
+            datetime(2023, 6, 26, 18, 30, tzinfo=timezone.utc),
+        )
+
     def test_creates_daily_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()
