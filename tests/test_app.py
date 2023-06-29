@@ -503,6 +503,14 @@ class AppTest(unittest.TestCase):
             datetime(2023, 6, 26, 18, 30, tzinfo=timezone.utc),
         )
 
+    def test_explains_reminder_management_command(self):
+        reply = handle_update(text_update("/reminder"))
+
+        self.assertEqual(
+            reply.text,
+            "Use /reminder <id> or /reminder <edit|pause|resume|cancel|snooze> ...",
+        )
+
     def test_creates_daily_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()

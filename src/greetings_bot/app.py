@@ -329,6 +329,11 @@ class Application:
                 update.message.chat_id,
                 format_reminder(reminder, user.timezone),
             )
+        if command.name == "reminder":
+            return Reply(
+                update.message.chat_id,
+                "Use /reminder <id> or /reminder <edit|pause|resume|cancel|snooze> ...",
+            )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
             if user is None:
