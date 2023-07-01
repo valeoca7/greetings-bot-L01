@@ -66,7 +66,8 @@ class AppTest(unittest.TestCase):
             "/remind YYYY-MM-DD HH:MM <text> - set a reminder\n"
             "/remind every day HH:MM <text> - repeat daily\n"
             "/remind every <weekday> HH:MM <text> - repeat weekly\n"
-            "/reminders - list reminders",
+            "/reminders - list reminders\n"
+            "/reminder <id> - view or manage a reminder",
         )
         self.assertEqual(reply.chat_id, 42)
 

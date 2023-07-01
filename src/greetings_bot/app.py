@@ -91,7 +91,8 @@ class Application:
                 "/remind YYYY-MM-DD HH:MM <text> - set a reminder\n"
                 "/remind every day HH:MM <text> - repeat daily\n"
                 "/remind every <weekday> HH:MM <text> - repeat weekly\n"
-                "/reminders - list reminders",
+                "/reminders - list reminders\n"
+                "/reminder <id> - view or manage a reminder",
             )
         if command.name == "note" and command.arguments[:1] == ("add",):
             user = self.users.get(update.message.sender.id)
