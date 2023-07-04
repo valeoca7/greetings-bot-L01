@@ -18,6 +18,7 @@ from greetings_bot.reminders import (
     create_weekly_reminder,
     edit_reminder_text,
     format_reminder,
+    format_due_time,
     format_reminder_list,
     pause_reminder,
     parse_snooze_duration,
@@ -295,8 +296,8 @@ class Application:
             self.reminders.save(reminder)
             return Reply(
                 update.message.chat_id,
-                "Reminder snoozed until {} UTC.".format(
-                    reminder.due_at.strftime("%Y-%m-%d %H:%M")
+                "Reminder snoozed until {} local time.".format(
+                    format_due_time(reminder, user.timezone)
                 ),
             )
         if command.name == "reminder" and command.arguments[:1] == ("edit",):

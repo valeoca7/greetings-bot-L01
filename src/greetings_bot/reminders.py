@@ -235,14 +235,20 @@ def format_reminder_list(
 
 
 def format_reminder(reminder: Reminder, timezone_name: str) -> str:
-    local_due = reminder.due_at.astimezone(ZoneInfo(timezone_name))
+    local_due = format_due_time(reminder, timezone_name)
     repeat = reminder.recurrence or "once"
     return (
         "{}\nDue: {}\nStatus: {}\nRepeat: {}"
         .format(
             reminder.text,
-            local_due.strftime("%Y-%m-%d %H:%M"),
+            local_due,
             reminder.status,
             repeat,
         )
+    )
+
+
+def format_due_time(reminder: Reminder, timezone_name: str) -> str:
+    return reminder.due_at.astimezone(ZoneInfo(timezone_name)).strftime(
+        "%Y-%m-%d %H:%M"
     )

@@ -497,7 +497,7 @@ class AppTest(unittest.TestCase):
         )
 
         self.assertEqual(
-            reply.text, "Reminder snoozed until 2023-06-26 18:30 UTC."
+            reply.text, "Reminder snoozed until 2023-06-26 18:30 local time."
         )
         self.assertEqual(
             reminders.get(42, reminder_id).due_at,
