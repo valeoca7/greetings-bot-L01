@@ -512,6 +512,27 @@ class AppTest(unittest.TestCase):
             "Use /reminder <id> or /reminder <edit|pause|resume|cancel|snooze> ...",
         )
 
+    def test_cannot_manage_another_users_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register"), users)
+        reminders.save(
+            Reminder(
+                "private1", 7, 7, "Private",
+                datetime(2023, 7, 10, 18, 0, tzinfo=timezone.utc),
+                datetime(2023, 7, 1, 18, 0, tzinfo=timezone.utc),
+            )
+        )
+
+        reply = handle_update(
+            text_update("/reminder pause private1"),
+            users,
+            reminders=reminders,
+        )
+
+        self.assertEqual(reply.text, "Reminder not found.")
+        self.assertEqual(reminders.get(7, "private1").status, "pending")
+
     def test_creates_daily_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()
