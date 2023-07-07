@@ -5,6 +5,7 @@ from greetings_bot.app import Application, handle_update
 from greetings_bot.clock import FixedClock
 from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
+from greetings_bot.reminders import Reminder
 from greetings_bot.telegram import Message, Reply, TelegramUser, Update
 from greetings_bot.users import InMemoryUserRepository
 
