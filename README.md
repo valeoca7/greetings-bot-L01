@@ -61,6 +61,10 @@ does not send them to Telegram.
 - `/remind every day HH:MM <text>` creates a daily reminder
 - `/remind every <weekday> HH:MM <text>` creates a weekly reminder
 - `/reminders` lists reminder due times and lifecycle status
+- `/reminder <id>` shows reminder details
+- `/reminder edit <id> <text>` updates active reminder text
+- `/reminder pause|resume|cancel <id>` changes reminder state
+- `/reminder snooze <id> <duration>` delays it by `30m`, `2h`, or `1d`
 - `/help` lists the available actions
 
 Run the tests with:
@@ -107,3 +111,6 @@ Pending records appear in the sparse `DueIndex`; once dispatched, they move to t
 Recurring reminders retain their local wall-clock time across timezone offset
 changes. A daily or weekly occurrence that falls inside a daylight-saving gap is
 skipped, and the next valid occurrence remains pending.
+
+Paused and cancelled reminders leave the due index. Snoozing a pending or paused
+reminder moves its next deadline by at most seven days and makes it pending again.
