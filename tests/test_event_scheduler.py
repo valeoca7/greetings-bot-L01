@@ -3,6 +3,7 @@ import unittest
 from datetime import datetime, timezone
 
 from greetings_bot.event_scheduler import (
+    EventBridgeReminderScheduler,
     ScheduleTarget,
     create_schedule_request,
     reminder_schedule_name,
@@ -16,6 +17,20 @@ def reminder():
         datetime(2023, 8, 2, 18, 0, tzinfo=timezone.utc),
         datetime(2023, 8, 1, 18, 0, tzinfo=timezone.utc),
     )
+
+
+class FakeSchedulerClient:
+    def __init__(self):
+        self.created = None
+        self.deleted = None
+
+    def create_schedule(self, **kwargs):
+        self.created = kwargs
+        return {}
+
+    def delete_schedule(self, **kwargs):
+        self.deleted = kwargs
+        return {}
 
 
 class ScheduleRequestTest(unittest.TestCase):
@@ -34,6 +49,31 @@ class ScheduleRequestTest(unittest.TestCase):
         self.assertEqual(
             json.loads(request["Target"]["Input"]),
             {"owner_id": 42, "reminder_id": "abcd1234"},
+        )
+
+
+class EventBridgeReminderSchedulerTest(unittest.TestCase):
+    def test_creates_schedule_through_client(self):
+        client = FakeSchedulerClient()
+        scheduler = EventBridgeReminderScheduler(
+            client, ScheduleTarget("target-arn", "role-arn")
+        )
+
+        scheduler.create(reminder())
+
+        self.assertEqual(client.created["Name"], "reminder-42-abcd1234")
+
+    def test_deletes_schedule_by_name_and_group(self):
+        client = FakeSchedulerClient()
+        scheduler = EventBridgeReminderScheduler(
+            client, ScheduleTarget("target-arn", "role-arn")
+        )
+
+        scheduler.delete(reminder())
+
+        self.assertEqual(
+            client.deleted,
+            {"Name": "reminder-42-abcd1234", "GroupName": "greetings-bot"},
         )
 
 

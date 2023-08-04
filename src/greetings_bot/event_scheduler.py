@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Mapping, Protocol
 
 from greetings_bot.reminders import Reminder
 
@@ -9,6 +9,14 @@ from greetings_bot.reminders import Reminder
 class ScheduleTarget:
     arn: str
     role_arn: str
+
+
+class SchedulerClient(Protocol):
+    def create_schedule(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
+    def delete_schedule(self, **kwargs: object) -> Mapping[str, object]:
+        ...
 
 
 def reminder_schedule_name(reminder: Reminder) -> str:
@@ -37,3 +45,26 @@ def create_schedule_request(
             "Input": payload,
         },
     }
+
+
+class EventBridgeReminderScheduler:
+    def __init__(
+        self,
+        client: SchedulerClient,
+        target: ScheduleTarget,
+        group_name: str = "greetings-bot",
+    ) -> None:
+        self.client = client
+        self.target = target
+        self.group_name = group_name
+
+    def create(self, reminder: Reminder) -> None:
+        self.client.create_schedule(
+            **create_schedule_request(reminder, self.target, self.group_name)
+        )
+
+    def delete(self, reminder: Reminder) -> None:
+        self.client.delete_schedule(
+            Name=reminder_schedule_name(reminder),
+            GroupName=self.group_name,
+        )
