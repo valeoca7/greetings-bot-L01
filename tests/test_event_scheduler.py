@@ -23,6 +23,7 @@ class FakeSchedulerClient:
     def __init__(self):
         self.created = None
         self.deleted = None
+        self.updated = None
 
     def create_schedule(self, **kwargs):
         self.created = kwargs
@@ -30,6 +31,10 @@ class FakeSchedulerClient:
 
     def delete_schedule(self, **kwargs):
         self.deleted = kwargs
+        return {}
+
+    def update_schedule(self, **kwargs):
+        self.updated = kwargs
         return {}
 
 
@@ -74,6 +79,19 @@ class EventBridgeReminderSchedulerTest(unittest.TestCase):
         self.assertEqual(
             client.deleted,
             {"Name": "reminder-42-abcd1234", "GroupName": "greetings-bot"},
+        )
+
+    def test_updates_schedule_time(self):
+        client = FakeSchedulerClient()
+        scheduler = EventBridgeReminderScheduler(
+            client, ScheduleTarget("target-arn", "role-arn")
+        )
+
+        scheduler.update(reminder())
+
+        self.assertEqual(
+            client.updated["ScheduleExpression"],
+            "at(2023-08-02T18:00:00)",
         )
 
 

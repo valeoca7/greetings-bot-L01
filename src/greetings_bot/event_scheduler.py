@@ -18,6 +18,9 @@ class SchedulerClient(Protocol):
     def delete_schedule(self, **kwargs: object) -> Mapping[str, object]:
         ...
 
+    def update_schedule(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
 
 def reminder_schedule_name(reminder: Reminder) -> str:
     return "reminder-{}-{}".format(reminder.owner_id, reminder.id)
@@ -67,4 +70,9 @@ class EventBridgeReminderScheduler:
         self.client.delete_schedule(
             Name=reminder_schedule_name(reminder),
             GroupName=self.group_name,
+        )
+
+    def update(self, reminder: Reminder) -> None:
+        self.client.update_schedule(
+            **create_schedule_request(reminder, self.target, self.group_name)
         )
