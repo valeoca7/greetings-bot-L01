@@ -15,6 +15,12 @@ class SchedulerClient(Protocol):
     def create_schedule(self, **kwargs: object) -> Mapping[str, object]:
         ...
 
+    def delete_schedule(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
+    def update_schedule(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
 
 class ReminderSchedulePort(Protocol):
     def create(self, reminder: Reminder) -> None:
@@ -36,12 +42,6 @@ class NoopReminderScheduler:
 
     def update(self, reminder: Reminder) -> None:
         pass
-
-    def delete_schedule(self, **kwargs: object) -> Mapping[str, object]:
-        ...
-
-    def update_schedule(self, **kwargs: object) -> Mapping[str, object]:
-        ...
 
 
 def reminder_schedule_name(reminder: Reminder) -> str:
