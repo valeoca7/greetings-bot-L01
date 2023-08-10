@@ -2,6 +2,10 @@ import logging
 from typing import Optional
 
 from greetings_bot.clock import Clock, SystemClock
+from greetings_bot.event_scheduler import (
+    NoopReminderScheduler,
+    ReminderSchedulePort,
+)
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
@@ -57,6 +61,7 @@ class Application:
         notes: Optional[NoteRepository] = None,
         reminders: Optional[ReminderRepository] = None,
         clock: Optional[Clock] = None,
+        reminder_scheduler: Optional[ReminderSchedulePort] = None,
     ) -> None:
         self.users = users if users is not None else InMemoryUserRepository()
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -64,6 +69,11 @@ class Application:
             reminders if reminders is not None else InMemoryReminderRepository()
         )
         self.clock = clock if clock is not None else SystemClock()
+        self.reminder_scheduler = (
+            reminder_scheduler
+            if reminder_scheduler is not None
+            else NoopReminderScheduler()
+        )
 
     def handle(self, update: Update) -> Optional[Reply]:
         if update.message is None:
@@ -207,6 +217,7 @@ class Application:
                     "Use a future local time: /remind YYYY-MM-DD HH:MM <text>.",
                 )
             self.reminders.save(reminder)
+            self.reminder_scheduler.create(reminder)
             return Reply(
                 update.message.chat_id,
                 "Reminder {} set for {} {}.".format(
@@ -465,5 +476,8 @@ def handle_update(
     notes: Optional[NoteRepository] = None,
     reminders: Optional[ReminderRepository] = None,
     clock: Optional[Clock] = None,
+    reminder_scheduler: Optional[ReminderSchedulePort] = None,
 ) -> Optional[Reply]:
-    return Application(users, notes, reminders, clock).handle(update)
+    return Application(
+        users, notes, reminders, clock, reminder_scheduler
+    ).handle(update)

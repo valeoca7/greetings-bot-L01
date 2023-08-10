@@ -10,6 +10,22 @@ from greetings_bot.telegram import Message, Reply, TelegramUser, Update
 from greetings_bot.users import InMemoryUserRepository
 
 
+class FakeReminderScheduler:
+    def __init__(self):
+        self.created = []
+        self.deleted = []
+        self.updated = []
+
+    def create(self, reminder):
+        self.created.append(reminder)
+
+    def delete(self, reminder):
+        self.deleted.append(reminder)
+
+    def update(self, reminder):
+        self.updated.append(reminder)
+
+
 def text_update(text, language_code=None):
     sender = TelegramUser(
         id=42,
@@ -353,6 +369,22 @@ class AppTest(unittest.TestCase):
 
         self.assertIn("set for 2023-04-01 09:30", reply.text)
         self.assertEqual(reminders.all_for(42)[0].text, "Call home")
+
+    def test_schedules_one_time_reminder(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        scheduler = FakeReminderScheduler()
+        handle_update(text_update("/register"), users)
+
+        handle_update(
+            text_update("/remind 2023-09-01 09:30 Call home"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 8, 9, 18, 0, tzinfo=timezone.utc)),
+            reminder_scheduler=scheduler,
+        )
+
+        self.assertEqual(scheduler.created, reminders.all_for(42))
 
     def test_lists_reminders(self):
         users = InMemoryUserRepository()
