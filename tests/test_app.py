@@ -386,6 +386,36 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(scheduler.created, reminders.all_for(42))
 
+    def test_removes_paused_schedule_and_recreates_on_resume(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        scheduler = FakeReminderScheduler()
+        handle_update(text_update("/register"), users)
+        created = handle_update(
+            text_update("/remind 2023-09-01 09:30 Call home"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 8, 10, 18, 0, tzinfo=timezone.utc)),
+            reminder_scheduler=scheduler,
+        )
+        reminder_id = created.text.split()[1]
+
+        handle_update(
+            text_update("/reminder pause " + reminder_id),
+            users,
+            reminders=reminders,
+            reminder_scheduler=scheduler,
+        )
+        handle_update(
+            text_update("/reminder resume " + reminder_id),
+            users,
+            reminders=reminders,
+            reminder_scheduler=scheduler,
+        )
+
+        self.assertEqual(len(scheduler.deleted), 1)
+        self.assertEqual(len(scheduler.created), 2)
+
     def test_lists_reminders(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()

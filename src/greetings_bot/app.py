@@ -259,6 +259,11 @@ class Application:
                     "Reminder is already {}.".format(reminder.status),
                 )
             self.reminders.save(reminder)
+            if reminder.recurrence is None:
+                if command.arguments[0] == "pause":
+                    self.reminder_scheduler.delete(reminder)
+                else:
+                    self.reminder_scheduler.create(reminder)
             confirmation = (
                 "paused" if command.arguments[0] == "pause" else "resumed"
             )
