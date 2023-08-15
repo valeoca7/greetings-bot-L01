@@ -539,6 +539,29 @@ class AppTest(unittest.TestCase):
         self.assertEqual(reply.text, "Reminder cancelled.")
         self.assertEqual(reminders.get(42, reminder_id).status, "cancelled")
 
+    def test_cancellation_deletes_one_time_schedule(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        scheduler = FakeReminderScheduler()
+        handle_update(text_update("/register"), users)
+        created = handle_update(
+            text_update("/remind 2023-09-01 09:30 Cancel me"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 8, 14, 18, 0, tzinfo=timezone.utc)),
+            reminder_scheduler=scheduler,
+        )
+        reminder_id = created.text.split()[1]
+
+        handle_update(
+            text_update("/reminder cancel " + reminder_id),
+            users,
+            reminders=reminders,
+            reminder_scheduler=scheduler,
+        )
+
+        self.assertEqual(len(scheduler.deleted), 1)
+
     def test_snoozes_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()
@@ -566,6 +589,31 @@ class AppTest(unittest.TestCase):
             reminders.get(42, reminder_id).due_at,
             datetime(2023, 6, 26, 18, 30, tzinfo=timezone.utc),
         )
+
+    def test_snooze_updates_one_time_schedule(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        scheduler = FakeReminderScheduler()
+        handle_update(text_update("/register"), users)
+        clock = FixedClock(datetime(2023, 8, 14, 18, 0, tzinfo=timezone.utc))
+        created = handle_update(
+            text_update("/remind 2023-09-01 09:30 Later"),
+            users,
+            reminders=reminders,
+            clock=clock,
+            reminder_scheduler=scheduler,
+        )
+        reminder_id = created.text.split()[1]
+
+        handle_update(
+            text_update("/reminder snooze {} 1h".format(reminder_id)),
+            users,
+            reminders=reminders,
+            clock=clock,
+            reminder_scheduler=scheduler,
+        )
+
+        self.assertEqual(len(scheduler.updated), 1)
 
     def test_explains_reminder_management_command(self):
         reply = handle_update(text_update("/reminder"))

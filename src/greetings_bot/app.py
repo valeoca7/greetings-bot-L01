@@ -287,6 +287,8 @@ class Application:
             except ValueError:
                 return Reply(update.message.chat_id, "Reminder is already complete.")
             self.reminders.save(reminder)
+            if reminder.recurrence is None:
+                self.reminder_scheduler.delete(reminder)
             return Reply(update.message.chat_id, "Reminder cancelled.")
         if (
             command.name == "reminder"
@@ -310,6 +312,8 @@ class Application:
                     "Use /reminder snooze <id> <minutes|hours|days>, for example 30m.",
                 )
             self.reminders.save(reminder)
+            if reminder.recurrence is None:
+                self.reminder_scheduler.update(reminder)
             return Reply(
                 update.message.chat_id,
                 "Reminder snoozed until {} local time.".format(
