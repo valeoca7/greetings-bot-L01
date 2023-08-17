@@ -7,6 +7,7 @@ from greetings_bot.event_scheduler import (
     ScheduleTarget,
     create_schedule_request,
     reminder_schedule_name,
+    scheduler_from_env,
 )
 from greetings_bot.reminders import Reminder
 
@@ -93,6 +94,24 @@ class EventBridgeReminderSchedulerTest(unittest.TestCase):
             client.updated["ScheduleExpression"],
             "at(2023-08-02T18:00:00)",
         )
+
+    def test_builds_adapter_from_environment(self):
+        scheduler = scheduler_from_env(
+            {
+                "SCHEDULER_TARGET_ARN": "target-arn",
+                "SCHEDULER_ROLE_ARN": "role-arn",
+                "SCHEDULER_GROUP": "reminders",
+            },
+            FakeSchedulerClient(),
+        )
+
+        self.assertIsInstance(scheduler, EventBridgeReminderScheduler)
+        self.assertEqual(scheduler.group_name, "reminders")
+
+    def test_uses_noop_without_scheduler_configuration(self):
+        scheduler = scheduler_from_env({}, FakeSchedulerClient())
+
+        self.assertEqual(scheduler.__class__.__name__, "NoopReminderScheduler")
 
 
 if __name__ == "__main__":

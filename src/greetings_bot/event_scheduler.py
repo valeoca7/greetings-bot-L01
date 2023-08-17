@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Dict, Mapping, Protocol
+from typing import Dict, Mapping, Optional, Protocol
 
 from greetings_bot.reminders import Reminder
 
@@ -98,3 +98,22 @@ class EventBridgeReminderScheduler:
         self.client.update_schedule(
             **create_schedule_request(reminder, self.target, self.group_name)
         )
+
+
+def scheduler_from_env(
+    environ: Mapping[str, str],
+    client: Optional[SchedulerClient] = None,
+) -> ReminderSchedulePort:
+    target_arn = environ.get("SCHEDULER_TARGET_ARN")
+    role_arn = environ.get("SCHEDULER_ROLE_ARN")
+    if not target_arn or not role_arn:
+        return NoopReminderScheduler()
+    if client is None:
+        import boto3
+
+        client = boto3.client("scheduler")
+    return EventBridgeReminderScheduler(
+        client,
+        ScheduleTarget(target_arn, role_arn),
+        environ.get("SCHEDULER_GROUP", "greetings-bot"),
+    )
