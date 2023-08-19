@@ -11,6 +11,11 @@ from greetings_bot.api_gateway import (
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.dynamo_notes import DynamoNoteRepository
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
+from greetings_bot.event_scheduler import (
+    NoopReminderScheduler,
+    ReminderSchedulePort,
+    scheduler_from_env,
+)
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
@@ -31,11 +36,17 @@ class WebhookHandler:
         users: UserRepository,
         notes: NoteRepository = None,
         reminders: ReminderRepository = None,
+        reminder_scheduler: ReminderSchedulePort = None,
     ) -> None:
         self.users = users
         self.notes = notes if notes is not None else InMemoryNoteRepository()
         self.reminders = (
             reminders if reminders is not None else InMemoryReminderRepository()
+        )
+        self.reminder_scheduler = (
+            reminder_scheduler
+            if reminder_scheduler is not None
+            else NoopReminderScheduler()
         )
 
     def handle(self, event: Mapping[str, Any]) -> LambdaResponse:
@@ -46,7 +57,11 @@ class WebhookHandler:
             return self._error_response(str(error))
         try:
             reply = process_payload(
-                payload, self.users, self.notes, self.reminders
+                payload,
+                self.users,
+                self.notes,
+                self.reminders,
+                self.reminder_scheduler,
             )
         except UpdateParseError:
             return self._error_response("invalid update payload")
@@ -71,7 +86,8 @@ def build_default_handler(
         users = InMemoryUserRepository()
         notes = InMemoryNoteRepository()
         reminders = InMemoryReminderRepository()
-    return WebhookHandler(users, notes, reminders)
+    reminder_scheduler = scheduler_from_env(environ)
+    return WebhookHandler(users, notes, reminders, reminder_scheduler)
 
 
 _handler = build_default_handler()
