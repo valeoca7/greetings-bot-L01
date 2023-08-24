@@ -1,7 +1,11 @@
 import unittest
 from datetime import datetime, timezone
 
-from greetings_bot.reminder_handler import ScheduledReminderHandler
+from greetings_bot.dynamo_reminders import DynamoReminderRepository
+from greetings_bot.reminder_handler import (
+    ScheduledReminderHandler,
+    build_default_handler,
+)
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
 
@@ -29,6 +33,19 @@ class ScheduledReminderHandlerTest(unittest.TestCase):
 
         self.assertIsNone(handler.handle({"owner_id": 42, "reminder_id": "missing"}))
         self.assertIsNone(handler.handle({}))
+
+    def test_builds_dynamo_handler_from_table_name(self):
+        class Resource:
+            def Table(self, name):
+                self.name = name
+                return object()
+
+        resource = Resource()
+
+        handler = build_default_handler({"USER_TABLE_NAME": "data"}, resource)
+
+        self.assertEqual(resource.name, "data")
+        self.assertIsInstance(handler.reminders, DynamoReminderRepository)
 
 
 if __name__ == "__main__":
