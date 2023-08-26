@@ -42,6 +42,14 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("AttributeName: gsi1sk", self.template)
         self.assertIn("${DataTable.Arn}/index/*", self.template)
 
+    def test_defines_targeted_reminder_scheduler(self):
+        self.assertIn("Type: AWS::Scheduler::ScheduleGroup", self.template)
+        self.assertIn("greetings_bot.reminder_handler.handle_event", self.template)
+        self.assertIn("Service: scheduler.amazonaws.com", self.template)
+        self.assertIn("Action: lambda:InvokeFunction", self.template)
+        self.assertIn("scheduler:CreateSchedule", self.template)
+        self.assertIn("Action: iam:PassRole", self.template)
+
 
 if __name__ == "__main__":
     unittest.main()

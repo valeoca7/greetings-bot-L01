@@ -50,6 +50,9 @@ Resources:
         Variables:
           TELEGRAM_BOT_TOKEN: !Ref TelegramBotToken
           USER_TABLE_NAME: !Ref DataTable
+          SCHEDULER_TARGET_ARN: !GetAtt ReminderDeliveryFunction.Arn
+          SCHEDULER_ROLE_ARN: !GetAtt SchedulerInvokeRole.Arn
+          SCHEDULER_GROUP: !Ref ReminderScheduleGroup
       Policies:
         - Statement:
             - Effect: Allow
@@ -59,9 +62,16 @@ Resources:
                 - dynamodb:Scan
                 - dynamodb:Query
                 - dynamodb:DeleteItem
+                - scheduler:CreateSchedule
+                - scheduler:UpdateSchedule
+                - scheduler:DeleteSchedule
               Resource:
                 - !GetAtt DataTable.Arn
                 - !Sub '${DataTable.Arn}/index/*'
+                - !Sub 'arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/${ReminderScheduleGroup}/*'
+            - Effect: Allow
+              Action: iam:PassRole
+              Resource: !GetAtt SchedulerInvokeRole.Arn
       Events:
         Webhook:
           Type: Api
@@ -97,3 +107,46 @@ Resources:
           Properties:
             Schedule: rate(1 minute)
             Enabled: true
+
+  ReminderDeliveryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: greetings_bot.reminder_handler.handle_event
+      Runtime: python3.9
+      Timeout: 10
+      MemorySize: 128
+      Environment:
+        Variables:
+          USER_TABLE_NAME: !Ref DataTable
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+              Resource: !GetAtt DataTable.Arn
+
+  ReminderScheduleGroup:
+    Type: AWS::Scheduler::ScheduleGroup
+    Properties:
+      Name: !Sub '${AWS::StackName}-reminders'
+
+  SchedulerInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: invoke-reminder-delivery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt ReminderDeliveryFunction.Arn
