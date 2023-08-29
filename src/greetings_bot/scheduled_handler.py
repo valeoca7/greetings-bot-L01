@@ -28,6 +28,7 @@ class ScheduledGreetingHandler:
         deliveries: Optional[DeliveryLedger] = None,
         max_batch: int = 100,
         reminders: Optional[ReminderRepository] = None,
+        include_reminders: bool = True,
     ) -> None:
         self.users = users
         self.deliveries = deliveries
@@ -35,6 +36,7 @@ class ScheduledGreetingHandler:
         self.reminders = (
             reminders if reminders is not None else InMemoryReminderRepository()
         )
+        self.include_reminders = include_reminders
 
     def handle(self, event: Mapping[str, Any]) -> ScheduledResponse:
         clock = FixedClock(event_time(event))
@@ -45,11 +47,12 @@ class ScheduledGreetingHandler:
             self.max_batch,
         )
         replies = dispatcher.dispatch()
-        replies.extend(
-            ReminderDispatcher(
-                self.reminders, clock, self.max_batch
-            ).dispatch()
-        )
+        if self.include_reminders:
+            replies.extend(
+                ReminderDispatcher(
+                    self.reminders, clock, self.max_batch
+                ).dispatch()
+            )
         return reply_batch(replies)
 
 
@@ -58,15 +61,20 @@ def build_default_handler(
     dynamodb_resource: DynamoResource = None,
 ) -> ScheduledGreetingHandler:
     max_batch = int(environ.get("DISPATCH_BATCH_SIZE", "100"))
+    include_reminders = environ.get("TARGETED_REMINDERS") != "true"
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:
         return ScheduledGreetingHandler(
-            InMemoryUserRepository(), max_batch=max_batch
+            InMemoryUserRepository(),
+            max_batch=max_batch,
+            include_reminders=include_reminders,
         )
     users = repository_for_table(table_name, dynamodb_resource)
     deliveries = DynamoDeliveryLedger(users.table)
     reminders = DynamoReminderRepository(users.table)
-    return ScheduledGreetingHandler(users, deliveries, max_batch, reminders)
+    return ScheduledGreetingHandler(
+        users, deliveries, max_batch, reminders, include_reminders
+    )
 
 
 _handler = build_default_handler()

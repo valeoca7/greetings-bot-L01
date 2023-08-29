@@ -49,6 +49,11 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
 
         self.assertEqual(handler.max_batch, 25)
 
+    def test_disables_polled_reminders_for_targeted_delivery(self):
+        handler = build_default_handler({"TARGETED_REMINDERS": "true"})
+
+        self.assertFalse(handler.include_reminders)
+
     def test_accepts_local_scheduled_event(self):
         event = json.loads(Path("events/scheduled.json").read_text())
 

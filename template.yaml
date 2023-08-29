@@ -91,6 +91,7 @@ Resources:
         Variables:
           USER_TABLE_NAME: !Ref DataTable
           DISPATCH_BATCH_SIZE: '100'
+          TARGETED_REMINDERS: 'true'
       Policies:
         - Statement:
             - Effect: Allow
