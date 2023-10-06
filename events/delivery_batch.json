@@ -1,0 +1,9 @@
+{
+  "Records": [
+    {
+      "messageId": "local-queue-record",
+      "eventSource": "aws:sqs",
+      "body": "{\"id\":\"local-delivery\",\"chat_id\":42,\"text\":\"Good evening!\",\"kind\":\"greeting\"}"
+    }
+  ]
+}

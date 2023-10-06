@@ -119,3 +119,18 @@ Cloud one-time reminders can use EventBridge Scheduler `at(...)` schedules. Each
 schedule targets a narrow reminder-delivery Lambda, deletes itself after completion,
 and is updated or removed when the user snoozes, pauses, or cancels the reminder.
 Local runs retain the minute-based in-memory path and make no Scheduler API calls.
+
+Greeting and reminder handlers place outbound messages on an encrypted SQS queue.
+The delivery worker sends them to Telegram in batches, records completed delivery
+IDs in DynamoDB, and returns individual failures for retry. Messages that fail five
+times move to the dead-letter queue.
+
+The saved queue event can be checked without polling SQS:
+
+```sh
+sam local invoke DeliveryWorkerFunction --event events/delivery_batch.json
+```
+
+This command still requires local table and bot-token configuration. The project
+does not create a queue or send a Telegram message unless an operator deploys and
+configures it separately.

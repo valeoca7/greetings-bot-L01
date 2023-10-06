@@ -50,6 +50,14 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("scheduler:CreateSchedule", self.template)
         self.assertIn("Action: iam:PassRole", self.template)
 
+    def test_defines_delivery_queue_and_dlq(self):
+        self.assertIn("DeliveryDeadLetterQueue:", self.template)
+        self.assertIn("deadLetterTargetArn: !GetAtt DeliveryDeadLetterQueue.Arn", self.template)
+        self.assertIn("maxReceiveCount: 5", self.template)
+        self.assertIn("greetings_bot.queue_worker.handle_event", self.template)
+        self.assertIn("ReportBatchItemFailures", self.template)
+        self.assertEqual(self.template.count("SqsManagedSseEnabled: true"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

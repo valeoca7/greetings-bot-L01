@@ -2,6 +2,7 @@ import os
 from typing import Any, Dict, List, Mapping, Optional
 
 from greetings_bot.clock import FixedClock
+from greetings_bot.delivery_queue import DeliveryMessage, DeliveryQueue, queue_from_env
 from greetings_bot.deliveries import DeliveryLedger
 from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
@@ -29,6 +30,7 @@ class ScheduledGreetingHandler:
         max_batch: int = 100,
         reminders: Optional[ReminderRepository] = None,
         include_reminders: bool = True,
+        queue: Optional[DeliveryQueue] = None,
     ) -> None:
         self.users = users
         self.deliveries = deliveries
@@ -37,6 +39,7 @@ class ScheduledGreetingHandler:
             reminders if reminders is not None else InMemoryReminderRepository()
         )
         self.include_reminders = include_reminders
+        self.queue = queue
 
     def handle(self, event: Mapping[str, Any]) -> ScheduledResponse:
         clock = FixedClock(event_time(event))
@@ -53,6 +56,18 @@ class ScheduledGreetingHandler:
                     self.reminders, clock, self.max_batch
                 ).dispatch()
             )
+        if self.queue is not None:
+            event_stamp = clock.now().strftime("%Y%m%d%H%M")
+            for reply in replies:
+                kind = "reminder" if reply.text.startswith("Reminder:") else "greeting"
+                self.queue.enqueue(
+                    DeliveryMessage(
+                        "{}-{}-{}".format(kind, reply.chat_id, event_stamp),
+                        reply.chat_id,
+                        reply.text,
+                        kind,
+                    )
+                )
         return reply_batch(replies)
 
 
@@ -62,18 +77,20 @@ def build_default_handler(
 ) -> ScheduledGreetingHandler:
     max_batch = int(environ.get("DISPATCH_BATCH_SIZE", "100"))
     include_reminders = environ.get("TARGETED_REMINDERS") != "true"
+    queue = queue_from_env(environ)
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:
         return ScheduledGreetingHandler(
             InMemoryUserRepository(),
             max_batch=max_batch,
             include_reminders=include_reminders,
+            queue=queue,
         )
     users = repository_for_table(table_name, dynamodb_resource)
     deliveries = DynamoDeliveryLedger(users.table)
     reminders = DynamoReminderRepository(users.table)
     return ScheduledGreetingHandler(
-        users, deliveries, max_batch, reminders, include_reminders
+        users, deliveries, max_batch, reminders, include_reminders, queue
     )
 
 

@@ -7,6 +7,14 @@ from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
+
+
+class FakeQueue:
+    def __init__(self):
+        self.messages = []
+
+    def enqueue(self, message):
+        self.messages.append(message)
 from greetings_bot.scheduled_handler import (
     ScheduledGreetingHandler,
     build_default_handler,
@@ -77,6 +85,18 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         replies = handler.handle({"time": "2023-04-12T18:00:00Z"})
 
         self.assertEqual(replies, [{"chat_id": 84, "text": "Reminder: Call home"}])
+
+    def test_enqueues_scheduled_greeting(self):
+        users = InMemoryUserRepository()
+        users.save(User(42, 84, "Mira", greeting_time="10:00"))
+        queue = FakeQueue()
+        handler = ScheduledGreetingHandler(users, queue=queue)
+
+        handler.handle({"time": "2023-09-21T10:00:00Z"})
+
+        self.assertEqual(len(queue.messages), 1)
+        self.assertEqual(queue.messages[0].kind, "greeting")
+        self.assertEqual(queue.messages[0].id, "greeting-84-202309211000")
 
 
 if __name__ == "__main__":
