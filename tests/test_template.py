@@ -54,6 +54,7 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("DeliveryDeadLetterQueue:", self.template)
         self.assertIn("deadLetterTargetArn: !GetAtt DeliveryDeadLetterQueue.Arn", self.template)
         self.assertIn("maxReceiveCount: 5", self.template)
+        self.assertIn("VisibilityTimeout: 120", self.template)
         self.assertIn("greetings_bot.queue_worker.handle_event", self.template)
         self.assertIn("ReportBatchItemFailures", self.template)
         self.assertEqual(self.template.count("SqsManagedSseEnabled: true"), 2)

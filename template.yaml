@@ -48,7 +48,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       SqsManagedSseEnabled: true
-      VisibilityTimeout: 30
+      VisibilityTimeout: 120
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt DeliveryDeadLetterQueue.Arn
         maxReceiveCount: 5
