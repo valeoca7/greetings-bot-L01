@@ -6,7 +6,8 @@ from greetings_bot.telegram_client import TelegramBotClient
 
 
 class FakeResponse:
-    status = 200
+    def __init__(self, status=200):
+        self.status = status
 
     def __enter__(self):
         return self
@@ -16,14 +17,15 @@ class FakeResponse:
 
 
 class FakeOpener:
-    def __init__(self):
+    def __init__(self, status=200):
         self.request = None
         self.timeout = None
+        self.status = status
 
     def __call__(self, request, timeout):
         self.request = request
         self.timeout = timeout
-        return FakeResponse()
+        return FakeResponse(self.status)
 
 
 class TelegramBotClientTest(unittest.TestCase):
@@ -38,6 +40,12 @@ class TelegramBotClientTest(unittest.TestCase):
             json.loads(opener.request.data), {"chat_id": 42, "text": "Hello"}
         )
         self.assertEqual(opener.timeout, 5)
+
+    def test_rejects_an_error_response(self):
+        client = TelegramBotClient("secret", FakeOpener(status=429))
+
+        with self.assertRaisesRegex(RuntimeError, "Telegram send failed"):
+            client.send(DeliveryMessage("delivery-1", 42, "Hello", "greeting"))
 
 
 if __name__ == "__main__":
