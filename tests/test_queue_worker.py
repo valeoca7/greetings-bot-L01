@@ -81,6 +81,20 @@ class DeliveryQueueWorkerTest(unittest.TestCase):
             result, {"batchItemFailures": [{"itemIdentifier": "sqs-1"}]}
         )
 
+    def test_retries_a_malformed_message(self):
+        worker = DeliveryQueueWorker(
+            FakeSender(), InMemoryDeliveryReceiptLedger()
+        )
+
+        with self.assertLogs("greetings_bot.queue_worker", level="WARNING"):
+            result = worker.handle(
+                {"Records": [{"messageId": "bad-1", "body": "{"}]}
+            )
+
+        self.assertEqual(
+            result, {"batchItemFailures": [{"itemIdentifier": "bad-1"}]}
+        )
+
     def test_retries_transport_errors(self):
         worker = DeliveryQueueWorker(
             FakeSender(fail=True, error=OSError),
