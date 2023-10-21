@@ -17,6 +17,7 @@ from greetings_bot.event_scheduler import (
     scheduler_from_env,
 )
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
+from greetings_bot.observability import correlation_id, log_event
 from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
@@ -96,6 +97,6 @@ _handler = build_default_handler()
 def handle_event(
     event: Mapping[str, Any], context: object = None
 ) -> LambdaResponse:
-    request_id = getattr(context, "aws_request_id", "local")
-    LOGGER.info("handling webhook request %s", request_id)
+    request_id = correlation_id(event, context)
+    log_event(LOGGER, "webhook_received", request_id=request_id)
     return _handler.handle(event)
