@@ -5,6 +5,7 @@ from typing import Dict, List, Mapping, Protocol
 from greetings_bot.delivery_queue import DeliveryMessage, message_from_body
 from greetings_bot.dynamo_receipts import DynamoDeliveryReceiptLedger
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
+from greetings_bot.observability import correlation_id, log_event
 from greetings_bot.telegram_client import TelegramBotClient
 
 logger = logging.getLogger(__name__)
@@ -41,19 +42,29 @@ class DeliveryQueueWorker:
         self.sender = sender
         self.receipts = receipts
 
-    def handle(self, event: Mapping[str, object]) -> Dict[str, List[Dict[str, str]]]:
+    def handle(
+        self, event: Mapping[str, object], request_id: str = "local"
+    ) -> Dict[str, List[Dict[str, str]]]:
         failures = []
         for record in event.get("Records", []):
             message_id = str(record.get("messageId", "unknown"))
+            delivery_id = None
             try:
                 message = message_from_body(str(record["body"]))
+                delivery_id = message.id
                 if self.receipts.contains(message.id):
                     continue
                 self.sender.send(message)
                 self.receipts.record(message.id)
             except (KeyError, TypeError, ValueError, RuntimeError, OSError):
-                # TODO: include the delivery correlation ID in retry logs.
-                logger.warning("delivery failed; queue record will be retried")
+                log_event(
+                    logger,
+                    "delivery_failed",
+                    logging.WARNING,
+                    delivery_id=delivery_id,
+                    message_id=message_id,
+                    request_id=request_id,
+                )
                 failures.append({"itemIdentifier": message_id})
         return {"batchItemFailures": failures}
 
@@ -79,4 +90,4 @@ def handle_event(event: Mapping[str, object], context: object = None):
     global _worker
     if _worker is None:
         _worker = build_default_worker()
-    return _worker.handle(event)
+    return _worker.handle(event, correlation_id(event, context))
