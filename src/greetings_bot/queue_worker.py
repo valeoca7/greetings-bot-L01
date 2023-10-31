@@ -5,7 +5,7 @@ from typing import Dict, List, Mapping, Protocol
 from greetings_bot.delivery_queue import DeliveryMessage, message_from_body
 from greetings_bot.dynamo_receipts import DynamoDeliveryReceiptLedger
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
-from greetings_bot.observability import correlation_id, log_event
+from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.telegram_client import TelegramBotClient
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,8 @@ class DeliveryQueueWorker:
         self, event: Mapping[str, object], request_id: str = "local"
     ) -> Dict[str, List[Dict[str, str]]]:
         failures = []
+        delivered = 0
+        duplicates = 0
         for record in event.get("Records", []):
             message_id = str(record.get("messageId", "unknown"))
             delivery_id = None
@@ -53,9 +55,11 @@ class DeliveryQueueWorker:
                 message = message_from_body(str(record["body"]))
                 delivery_id = message.id
                 if self.receipts.contains(message.id):
+                    duplicates += 1
                     continue
                 self.sender.send(message)
                 self.receipts.record(message.id)
+                delivered += 1
             except (KeyError, TypeError, ValueError, RuntimeError, OSError):
                 log_event(
                     logger,
@@ -66,6 +70,9 @@ class DeliveryQueueWorker:
                     request_id=request_id,
                 )
                 failures.append({"itemIdentifier": message_id})
+        emit_metric(logger, "delivery", "Delivered", delivered)
+        emit_metric(logger, "delivery", "Duplicate", duplicates)
+        emit_metric(logger, "delivery", "Failed", len(failures))
         return {"batchItemFailures": failures}
 
 

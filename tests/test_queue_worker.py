@@ -50,11 +50,13 @@ class DeliveryQueueWorkerTest(unittest.TestCase):
         worker = DeliveryQueueWorker(sender, receipts)
         message = DeliveryMessage("delivery-1", 42, "Hello", "greeting")
 
-        result = worker.handle(sqs_event(message))
+        with self.assertLogs("greetings_bot.queue_worker", level="INFO") as logs:
+            result = worker.handle(sqs_event(message))
 
         self.assertEqual(sender.messages, [message])
         self.assertTrue(receipts.contains("delivery-1"))
         self.assertEqual(result, {"batchItemFailures": []})
+        self.assertTrue(any('"Delivered":1' in line for line in logs.output))
 
     def test_skips_duplicate_delivery(self):
         sender = FakeSender()
