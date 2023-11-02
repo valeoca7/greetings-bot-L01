@@ -34,7 +34,13 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         self.assertEqual(replies, [{"chat_id": 84, "text": "Good day, Mira!"}])
 
     def test_lambda_entry_point_accepts_empty_repository(self):
-        self.assertEqual(handle_event({"time": "2023-01-12T10:00:00Z"}), [])
+        event = {"id": "schedule-2", "time": "2023-01-12T10:00:00Z"}
+
+        with self.assertLogs("greetings_bot.scheduled_handler", level="INFO") as logs:
+            self.assertEqual(handle_event(event), [])
+
+        self.assertTrue(any('"request_id":"schedule-2"' in line for line in logs.output))
+        self.assertTrue(any('"Prepared":0' in line for line in logs.output))
 
     def test_builds_cloud_handler_with_shared_table(self):
         class Resource:

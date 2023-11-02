@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Any, Dict, List, Mapping, Optional
 
@@ -7,6 +8,7 @@ from greetings_bot.deliveries import DeliveryLedger
 from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
+from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.scheduled_event import event_time
 from greetings_bot.reminder_dispatcher import ReminderDispatcher
 from greetings_bot.reminder_store import (
@@ -20,6 +22,7 @@ from greetings_bot.users import InMemoryUserRepository
 
 
 ScheduledResponse = List[Dict[str, object]]
+LOGGER = logging.getLogger(__name__)
 
 
 class ScheduledGreetingHandler:
@@ -100,4 +103,10 @@ _handler = build_default_handler()
 def handle_event(
     event: Mapping[str, Any], context: object = None
 ) -> ScheduledResponse:
-    return _handler.handle(event)
+    request_id = correlation_id(event, context)
+    replies = _handler.handle(event)
+    log_event(
+        LOGGER, "scheduled_dispatch_complete", request_id=request_id, count=len(replies)
+    )
+    emit_metric(LOGGER, "dispatcher", "Prepared", len(replies))
+    return replies
