@@ -5,6 +5,7 @@ from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.reminder_handler import (
     ScheduledReminderHandler,
     build_default_handler,
+    handle_event,
 )
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
@@ -19,6 +20,19 @@ class FakeQueue:
 
 
 class ScheduledReminderHandlerTest(unittest.TestCase):
+    def test_entry_point_reports_a_missing_reminder(self):
+        event = {
+            "id": "event-1",
+            "owner_id": 42,
+            "reminder_id": "missing",
+        }
+
+        with self.assertLogs("greetings_bot.reminder_handler", level="INFO") as logs:
+            self.assertIsNone(handle_event(event))
+
+        self.assertTrue(any('"prepared":0' in line for line in logs.output))
+        self.assertTrue(any('"request_id":"event-1"' in line for line in logs.output))
+
     def test_delivers_named_pending_reminder(self):
         reminders = InMemoryReminderRepository()
         reminders.save(

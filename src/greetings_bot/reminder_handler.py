@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Dict, Mapping, Optional, Union
 
@@ -8,10 +9,13 @@ from greetings_bot.delivery_queue import (
 )
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
+from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.reminder_store import ReminderRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import complete_reminder
 from greetings_bot.telegram import Reply, reply_payload
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ScheduledReminderHandler:
@@ -69,4 +73,15 @@ _handler = build_default_handler()
 
 
 def handle_event(event: Mapping[str, object], context: object = None):
-    return _handler.handle(event)
+    request_id = correlation_id(event, context)
+    reply = _handler.handle(event)
+    prepared = int(reply is not None)
+    log_event(
+        LOGGER,
+        "reminder_dispatch_complete",
+        request_id=request_id,
+        reminder_id=event.get("reminder_id"),
+        prepared=prepared,
+    )
+    emit_metric(LOGGER, "reminder_dispatcher", "Prepared", prepared)
+    return reply
