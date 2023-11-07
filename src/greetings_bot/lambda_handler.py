@@ -99,4 +99,11 @@ def handle_event(
 ) -> LambdaResponse:
     request_id = correlation_id(event, context)
     log_event(LOGGER, "webhook_received", request_id=request_id)
-    return _handler.handle(event)
+    response = _handler.handle(event)
+    log_event(
+        LOGGER,
+        "webhook_complete",
+        request_id=request_id,
+        status_code=response["statusCode"],
+    )
+    return response

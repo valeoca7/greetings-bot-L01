@@ -28,6 +28,9 @@ class LambdaHandlerTest(unittest.TestCase):
         payload = json.loads(logs.output[0].split(":", 2)[-1])
         self.assertEqual(payload["event"], "webhook_received")
         self.assertEqual(payload["request_id"], "request-123")
+        complete = json.loads(logs.output[1].split(":", 2)[-1])
+        self.assertEqual(complete["event"], "webhook_complete")
+        self.assertEqual(complete["status_code"], 200)
 
     def test_processes_telegram_command(self):
         handler = WebhookHandler(InMemoryUserRepository())
