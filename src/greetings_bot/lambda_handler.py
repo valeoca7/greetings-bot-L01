@@ -17,7 +17,7 @@ from greetings_bot.event_scheduler import (
     scheduler_from_env,
 )
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
-from greetings_bot.observability import correlation_id, log_event
+from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
@@ -105,5 +105,12 @@ def handle_event(
         "webhook_complete",
         request_id=request_id,
         status_code=response["statusCode"],
+    )
+    emit_metric(LOGGER, "webhook", "Requests")
+    emit_metric(
+        LOGGER,
+        "webhook",
+        "ClientError",
+        int(int(response["statusCode"]) >= 400),
     )
     return response
