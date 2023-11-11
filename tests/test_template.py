@@ -59,6 +59,14 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("ReportBatchItemFailures", self.template)
         self.assertEqual(self.template.count("SqsManagedSseEnabled: true"), 2)
 
+    def test_alarms_on_delivery_failures_and_dead_letters(self):
+        self.assertEqual(self.template.count("Type: AWS::CloudWatch::Alarm"), 2)
+        self.assertIn("MetricName: Failed", self.template)
+        self.assertIn("Value: delivery", self.template)
+        self.assertIn("MetricName: ApproximateNumberOfMessagesVisible", self.template)
+        self.assertIn("Value: !GetAtt DeliveryDeadLetterQueue.QueueName", self.template)
+        self.assertEqual(self.template.count("TreatMissingData: notBreaching"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
