@@ -70,6 +70,14 @@ class DeliveryQueueWorker:
                     request_id=request_id,
                 )
                 failures.append({"itemIdentifier": message_id})
+        log_event(
+            logger,
+            "delivery_batch_complete",
+            request_id=request_id,
+            delivered=delivered,
+            duplicates=duplicates,
+            failed=len(failures),
+        )
         emit_metric(logger, "delivery", "Delivered", delivered)
         emit_metric(logger, "delivery", "Duplicate", duplicates)
         emit_metric(logger, "delivery", "Failed", len(failures))

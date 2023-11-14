@@ -56,6 +56,9 @@ class DeliveryQueueWorkerTest(unittest.TestCase):
         self.assertEqual(sender.messages, [message])
         self.assertTrue(receipts.contains("delivery-1"))
         self.assertEqual(result, {"batchItemFailures": []})
+        self.assertTrue(
+            any('"event":"delivery_batch_complete"' in line for line in logs.output)
+        )
         self.assertTrue(any('"Delivered":1' in line for line in logs.output))
 
     def test_skips_duplicate_delivery(self):
