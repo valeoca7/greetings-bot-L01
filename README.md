@@ -134,3 +134,14 @@ sam local invoke DeliveryWorkerFunction --event events/delivery_batch.json
 This command still requires local table and bot-token configuration. The project
 does not create a queue or send a Telegram message unless an operator deploys and
 configures it separately.
+
+## Operations
+
+Lambda entry points write single-line JSON events with request IDs. Delivery retry
+events also include the SQS record and delivery IDs, but never the greeting or note
+text. Dispatch and delivery counts use CloudWatch embedded metric format under the
+`GreetingsBot` namespace.
+
+The SAM template defines alarms for failed delivery attempts and visible messages in
+the dead-letter queue. Alarm notification actions are intentionally left for the
+deploying environment to configure.
