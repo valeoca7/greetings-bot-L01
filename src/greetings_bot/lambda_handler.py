@@ -100,17 +100,19 @@ def handle_event(
     request_id = correlation_id(event, context)
     log_event(LOGGER, "webhook_received", request_id=request_id)
     response = _handler.handle(event)
+    status_code = int(response["statusCode"])
     log_event(
         LOGGER,
         "webhook_complete",
+        logging.WARNING if status_code >= 400 else logging.INFO,
         request_id=request_id,
-        status_code=response["statusCode"],
+        status_code=status_code,
     )
     emit_metric(LOGGER, "webhook", "Requests")
     emit_metric(
         LOGGER,
         "webhook",
         "ClientError",
-        int(int(response["statusCode"]) >= 400),
+        int(status_code >= 400),
     )
     return response

@@ -48,12 +48,14 @@ class LambdaHandlerTest(unittest.TestCase):
         self.assertIn("Hello, Mira!", response["body"])
 
     def test_rejects_event_without_body(self):
-        response = WebhookHandler(InMemoryUserRepository()).handle({})
+        with self.assertLogs("greetings_bot.lambda_handler", level="WARNING") as logs:
+            response = handle_event({})
 
         self.assertEqual(response["statusCode"], 400)
         self.assertEqual(
             json.loads(response["body"]), {"error": "request body is required"}
         )
+        self.assertTrue(any('"status_code":400' in line for line in logs.output))
 
     def test_rejects_incomplete_telegram_update(self):
         response = WebhookHandler(InMemoryUserRepository()).handle(
