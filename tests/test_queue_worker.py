@@ -121,13 +121,18 @@ class DeliveryQueueWorkerTest(unittest.TestCase):
 
         with self.assertLogs("greetings_bot.queue_worker", level="WARNING") as logs:
             worker.handle(
-                sqs_event(DeliveryMessage("delivery-1", 42, "Hello", "greeting")),
+                sqs_event(
+                    DeliveryMessage(
+                        "delivery-1", 42, "private greeting", "greeting"
+                    )
+                ),
                 "request-7",
             )
 
         self.assertIn('"delivery_id":"delivery-1"', logs.output[0])
         self.assertIn('"message_id":"sqs-1"', logs.output[0])
         self.assertIn('"request_id":"request-7"', logs.output[0])
+        self.assertNotIn("private greeting", logs.output[0])
 
     def test_builds_worker_with_dynamo_receipts(self):
         class Resource:
