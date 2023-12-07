@@ -12,6 +12,7 @@ class BuildFilesTest(unittest.TestCase):
         self.assertIn("check: check-syntax test-unit check-template", self.makefile)
         self.assertIn("package:", self.makefile)
         self.assertIn("greetings-bot-src.tar.gz", self.makefile)
+        self.assertIn("src tests events", self.makefile)
 
     def test_pipeline_runs_the_local_workflow(self):
         self.assertIn("sh 'make check'", self.jenkinsfile)

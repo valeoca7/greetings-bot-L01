@@ -20,4 +20,4 @@ check-template:
 
 package:
 	mkdir -p dist
-	$(PYTHON) -m tarfile -c dist/greetings-bot-src.tar.gz README.md setup.cfg setup.py template.yaml src
+	$(PYTHON) -m tarfile -c dist/greetings-bot-src.tar.gz README.md Makefile Jenkinsfile setup.cfg setup.py template.yaml src tests events
