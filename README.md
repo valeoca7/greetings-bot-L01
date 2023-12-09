@@ -73,6 +73,16 @@ Run the tests with:
 make test
 ```
 
+Run the complete local verification or build a tracked-source archive with:
+
+```sh
+make check
+make package
+```
+
+The `Jenkinsfile` uses those same targets, limits concurrent and stalled builds, and
+archives the resulting tarball. It does not deploy infrastructure or contact AWS.
+
 ## Lambda webhook
 
 `template.yaml` contains the first SAM definition for the webhook function. A saved
