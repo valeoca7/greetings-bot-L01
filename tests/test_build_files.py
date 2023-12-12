@@ -9,6 +9,7 @@ class BuildFilesTest(unittest.TestCase):
         cls.jenkinsfile = Path("Jenkinsfile").read_text()
 
     def test_makefile_has_check_and_package_targets(self):
+        self.assertIn("help:", self.makefile)
         self.assertIn("check: check-syntax test-unit check-template", self.makefile)
         self.assertIn("package:", self.makefile)
         self.assertIn("greetings-bot-src.tar.gz", self.makefile)

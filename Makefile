@@ -1,6 +1,11 @@
 PYTHON ?= python3
 
-.PHONY: run test test-unit check check-syntax check-template package
+.PHONY: help run test test-unit check check-syntax check-template package
+
+help:
+	@echo "make check    run syntax, unit, and template checks"
+	@echo "make package  create the tracked source archive"
+	@echo "make run      start the local command line app"
 
 run:
 	PYTHONPATH=src $(PYTHON) -m greetings_bot
