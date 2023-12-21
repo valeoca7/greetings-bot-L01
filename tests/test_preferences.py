@@ -2,6 +2,7 @@ import unittest
 
 from greetings_bot.preferences import (
     set_first_name,
+    set_greeting_days,
     set_greeting_time,
     set_quiet_hours,
     set_timezone,
@@ -62,6 +63,30 @@ class GreetingTimeTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             set_quiet_hours(user, "08:00", "08:00")
+
+    def test_sets_selected_greeting_days_in_week_order(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        updated = set_greeting_days(user, ("friday", "mon", "wed"))
+
+        self.assertEqual(updated.greeting_days, ("mon", "wed", "fri"))
+
+    def test_accepts_weekday_and_daily_shortcuts(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        self.assertEqual(
+            set_greeting_days(user, ("weekdays",)).greeting_days,
+            ("mon", "tue", "wed", "thu", "fri"),
+        )
+        self.assertEqual(len(set_greeting_days(user, ("daily",)).greeting_days), 7)
+
+    def test_rejects_unknown_or_empty_greeting_days(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        for values in ((), ("funday",)):
+            with self.subTest(values=values):
+                with self.assertRaises(ValueError):
+                    set_greeting_days(user, values)
 
 
 if __name__ == "__main__":
