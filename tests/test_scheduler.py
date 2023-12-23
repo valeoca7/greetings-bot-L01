@@ -10,12 +10,36 @@ from greetings_bot.scheduler import (
     greeting_delivery,
     is_greeting_due,
     is_quiet_time,
+    is_delivery_day,
 )
 from greetings_bot.telegram import Reply
 from greetings_bot.users import InMemoryUserRepository, User
 
 
 class GreetingScheduleTest(unittest.TestCase):
+    def test_checks_the_users_local_delivery_day(self):
+        user = User(
+            3,
+            3,
+            "Lee",
+            timezone="America/Vancouver",
+            greeting_days=("sun",),
+        )
+        monday_utc = datetime(2024, 1, 8, 7, 30, tzinfo=timezone.utc)
+
+        self.assertTrue(is_delivery_day(user, monday_utc))
+
+    def test_skips_unselected_greeting_days(self):
+        user = User(
+            3,
+            3,
+            "Lee",
+            greeting_time="09:00",
+            greeting_days=("mon", "wed", "fri"),
+        )
+
+        self.assertEqual([], due_users([user], datetime(2024, 1, 9, 9, 0)))
+
     def test_matches_greeting_minute(self):
         user = User(
             telegram_id=42,

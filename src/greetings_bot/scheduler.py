@@ -18,6 +18,11 @@ def is_greeting_due(user: User, current_time: datetime) -> bool:
     return user.greeting_time == user_local_time(user, current_time).strftime("%H:%M")
 
 
+def is_delivery_day(user: User, current_time: datetime) -> bool:
+    day = user_local_time(user, current_time).strftime("%a").lower()
+    return day in user.greeting_days
+
+
 def is_quiet_time(user: User, current_time: datetime) -> bool:
     if user.quiet_start is None or user.quiet_end is None:
         return False
@@ -32,6 +37,7 @@ def due_users(users: Iterable[User], current_time: datetime) -> List[User]:
         user
         for user in users
         if user.enabled
+        and is_delivery_day(user, current_time)
         and is_greeting_due(user, current_time)
         and not is_quiet_time(user, current_time)
     ]
