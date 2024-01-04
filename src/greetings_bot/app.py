@@ -32,6 +32,7 @@ from greetings_bot.reminders import (
 from greetings_bot.preferences import (
     clear_quiet_hours,
     set_first_name,
+    set_greeting_days,
     set_greeting_time,
     set_quiet_hours,
     set_timezone,
@@ -381,6 +382,31 @@ class Application:
             return Reply(
                 update.message.chat_id,
                 "Your greeting time is {}.".format(user.greeting_time),
+            )
+        if command.name == "days":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if command.arguments:
+                try:
+                    user = set_greeting_days(user, command.arguments)
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Use /days daily, /days weekdays, or /days mon wed fri.",
+                    )
+                self.users.save(user)
+                return Reply(
+                    update.message.chat_id,
+                    "Greeting days changed to {}.".format(
+                        ", ".join(user.greeting_days)
+                    ),
+                )
+            return Reply(
+                update.message.chat_id,
+                "Your greeting days are {}.".format(
+                    ", ".join(user.greeting_days)
+                ),
             )
         if command.name == "timezone":
             user = self.users.get(update.message.sender.id)

@@ -185,6 +185,28 @@ class AppTest(unittest.TestCase):
         )
         self.assertEqual(users.get(42).greeting_time, "09:00")
 
+    def test_shows_and_changes_greeting_days(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        current = handle_update(text_update("/days"), users)
+        changed = handle_update(text_update("/days mon wed friday"), users)
+
+        self.assertIn("mon, tue, wed, thu, fri, sat, sun", current.text)
+        self.assertEqual(changed.text, "Greeting days changed to mon, wed, fri.")
+        self.assertEqual(users.get(42).greeting_days, ("mon", "wed", "fri"))
+
+    def test_rejects_unknown_greeting_day(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/days someday"), users)
+
+        self.assertEqual(
+            reply.text,
+            "Use /days daily, /days weekdays, or /days mon wed fri.",
+        )
+
     def test_shows_timezone(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)
