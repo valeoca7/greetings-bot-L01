@@ -13,7 +13,8 @@ class ProfileTest(unittest.TestCase):
         self.assertEqual(
             profile,
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
-            "Greeting time: 09:00\nTimezone: UTC\nGreetings: on",
+            "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
+            "Timezone: UTC\nGreetings: on",
         )
 
     def test_formats_a_disabled_user(self):

@@ -75,6 +75,7 @@ class AppTest(unittest.TestCase):
             "/register - create a profile\n"
             "/me - show your profile\n"
             "/time [HH:MM] - show or change greeting time\n"
+            "/days [daily|weekdays|days...] - choose greeting days\n"
             "/timezone [area/name] - show or change timezone\n"
             "/quiet [start end|off] - manage quiet hours\n"
             "/name [name] - show or change greeting name\n"
@@ -145,7 +146,8 @@ class AppTest(unittest.TestCase):
         self.assertEqual(
             reply.text,
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
-            "Greeting time: 09:00\nTimezone: UTC\nGreetings: on",
+            "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
+            "Timezone: UTC\nGreetings: on",
         )
 
     def test_reports_missing_profile(self):
