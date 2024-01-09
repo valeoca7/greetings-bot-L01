@@ -16,6 +16,7 @@ class User:
     quiet_start: Optional[str] = None
     quiet_end: Optional[str] = None
     greeting_days: Tuple[str, ...] = EVERY_DAY
+    digest_mode: str = "off"
 
 
 def user_to_dict(user: User) -> Dict[str, object]:
@@ -30,6 +31,7 @@ def user_to_dict(user: User) -> Dict[str, object]:
         "quiet_start": user.quiet_start,
         "quiet_end": user.quiet_end,
         "greeting_days": list(user.greeting_days),
+        "digest_mode": user.digest_mode,
     }
 
 
@@ -45,6 +47,7 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
         quiet_start=data.get("quiet_start"),
         quiet_end=data.get("quiet_end"),
         greeting_days=tuple(data.get("greeting_days", EVERY_DAY)),
+        digest_mode=str(data.get("digest_mode", "off")),
     )
 
 

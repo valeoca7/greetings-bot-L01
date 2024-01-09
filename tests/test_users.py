@@ -27,6 +27,7 @@ class UserTest(unittest.TestCase):
             user.greeting_days,
             ("mon", "tue", "wed", "thu", "fri", "sat", "sun"),
         )
+        self.assertEqual(user.digest_mode, "off")
 
     def test_normalizes_first_name(self):
         self.assertEqual(normalize_first_name("  Mira "), "Mira")
@@ -55,6 +56,7 @@ class UserTest(unittest.TestCase):
             data["greeting_days"],
             ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
         )
+        self.assertEqual(data["digest_mode"], "off")
 
     def test_defaults_timezone_in_old_records(self):
         user = user_from_dict({"telegram_id": 1, "chat_id": 1, "first_name": "Jo"})
