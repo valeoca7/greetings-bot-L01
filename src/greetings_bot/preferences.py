@@ -68,3 +68,10 @@ def set_greeting_days(user: User, values: Sequence[str]) -> User:
         user,
         greeting_days=tuple(day for day in EVERY_DAY if day in selected),
     )
+
+
+def set_digest_mode(user: User, value: str) -> User:
+    mode = value.lower()
+    if mode not in ("off", "daily"):
+        raise ValueError("digest mode must be off or daily")
+    return replace(user, digest_mode=mode)
