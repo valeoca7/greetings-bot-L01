@@ -31,6 +31,7 @@ from greetings_bot.reminders import (
 )
 from greetings_bot.preferences import (
     clear_quiet_hours,
+    set_digest_mode,
     set_first_name,
     set_greeting_days,
     set_greeting_time,
@@ -407,6 +408,36 @@ class Application:
                 update.message.chat_id,
                 "Your greeting days are {}.".format(
                     ", ".join(user.greeting_days)
+                ),
+            )
+        if command.name == "digest":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if len(command.arguments) == 1:
+                try:
+                    user = set_digest_mode(user, command.arguments[0])
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Use /digest daily or /digest off.",
+                    )
+                self.users.save(user)
+                return Reply(
+                    update.message.chat_id,
+                    "Daily digest is {}.".format(
+                        "on" if user.digest_mode == "daily" else "off"
+                    ),
+                )
+            if command.arguments:
+                return Reply(
+                    update.message.chat_id,
+                    "Use /digest daily or /digest off.",
+                )
+            return Reply(
+                update.message.chat_id,
+                "Daily digest is {}.".format(
+                    "on" if user.digest_mode == "daily" else "off"
                 ),
             )
         if command.name == "timezone":

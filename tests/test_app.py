@@ -209,6 +209,25 @@ class AppTest(unittest.TestCase):
             "Use /days daily, /days weekdays, or /days mon wed fri.",
         )
 
+    def test_shows_and_changes_digest_mode(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        current = handle_update(text_update("/digest"), users)
+        changed = handle_update(text_update("/digest daily"), users)
+
+        self.assertEqual(current.text, "Daily digest is off.")
+        self.assertEqual(changed.text, "Daily digest is on.")
+        self.assertEqual(users.get(42).digest_mode, "daily")
+
+    def test_rejects_unknown_digest_mode(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/digest weekly"), users)
+
+        self.assertEqual(reply.text, "Use /digest daily or /digest off.")
+
     def test_shows_timezone(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)
