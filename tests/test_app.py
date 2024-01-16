@@ -76,6 +76,7 @@ class AppTest(unittest.TestCase):
             "/me - show your profile\n"
             "/time [HH:MM] - show or change greeting time\n"
             "/days [daily|weekdays|days...] - choose greeting days\n"
+            "/digest [daily|off] - manage the daily digest\n"
             "/timezone [area/name] - show or change timezone\n"
             "/quiet [start end|off] - manage quiet hours\n"
             "/name [name] - show or change greeting name\n"
@@ -147,7 +148,7 @@ class AppTest(unittest.TestCase):
             reply.text,
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
             "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
-            "Timezone: UTC\nGreetings: on",
+            "Daily digest: off\nTimezone: UTC\nGreetings: on",
         )
 
     def test_reports_missing_profile(self):
