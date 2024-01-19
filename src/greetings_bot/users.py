@@ -36,6 +36,15 @@ def user_to_dict(user: User) -> Dict[str, object]:
 
 
 def user_from_dict(data: Mapping[str, Any]) -> User:
+    stored_days = data.get("greeting_days", EVERY_DAY)
+    if not isinstance(stored_days, (list, tuple)):
+        stored_days = EVERY_DAY
+    greeting_days = tuple(day for day in EVERY_DAY if day in stored_days)
+    if not greeting_days:
+        greeting_days = EVERY_DAY
+    digest_mode = str(data.get("digest_mode", "off"))
+    if digest_mode not in ("off", "daily"):
+        digest_mode = "off"
     return User(
         telegram_id=int(data["telegram_id"]),
         chat_id=int(data["chat_id"]),
@@ -46,8 +55,8 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
         timezone=str(data.get("timezone", "UTC")),
         quiet_start=data.get("quiet_start"),
         quiet_end=data.get("quiet_end"),
-        greeting_days=tuple(data.get("greeting_days", EVERY_DAY)),
-        digest_mode=str(data.get("digest_mode", "off")),
+        greeting_days=greeting_days,
+        digest_mode=digest_mode,
     )
 
 

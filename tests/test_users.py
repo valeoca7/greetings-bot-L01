@@ -1,6 +1,7 @@
 import unittest
 
 from greetings_bot.users import (
+    EVERY_DAY,
     InMemoryUserRepository,
     User,
     normalize_first_name,
@@ -62,6 +63,28 @@ class UserTest(unittest.TestCase):
         user = user_from_dict({"telegram_id": 1, "chat_id": 1, "first_name": "Jo"})
 
         self.assertEqual("UTC", user.timezone)
+
+    def test_defaults_new_delivery_preferences_in_old_records(self):
+        user = user_from_dict(
+            {"telegram_id": 1, "chat_id": 2, "first_name": "Mira"}
+        )
+
+        self.assertEqual(user.greeting_days, EVERY_DAY)
+        self.assertEqual(user.digest_mode, "off")
+
+    def test_repairs_invalid_stored_delivery_preferences(self):
+        user = user_from_dict(
+            {
+                "telegram_id": 1,
+                "chat_id": 2,
+                "first_name": "Mira",
+                "greeting_days": "monday",
+                "digest_mode": "sometimes",
+            }
+        )
+
+        self.assertEqual(user.greeting_days, EVERY_DAY)
+        self.assertEqual(user.digest_mode, "off")
 
     def test_restores_user_from_dict(self):
         original = User(telegram_id=42, chat_id=84, first_name="Mira")
