@@ -53,7 +53,9 @@ does not send them to Telegram.
 - `/register` creates a user profile
 - `/me` shows the current profile
 - `/timezone [area/name]` shows or changes the user's timezone
+- `/days [daily|weekdays|days...]` chooses local greeting weekdays
 - `/quiet [start end]` sets local quiet hours; `/quiet off` removes them
+- `/digest [daily|off]` controls daily summary delivery
 - `/note add <text>` saves a private note and returns its short ID
 - `/notes` lists the current user's notes
 - `/note <id>` shows a note; `/note delete <id>` removes it
@@ -124,6 +126,10 @@ skipped, and the next valid occurrence remains pending.
 
 Paused and cancelled reminders leave the due index. Snoozing a pending or paused
 reminder moves its next deadline by at most seven days and makes it pending again.
+
+Greeting weekdays and quiet hours are evaluated in the profile timezone. The daily
+digest preference is stored with the profile so summary sources can use one delivery
+choice as they are added; it is off for existing and newly registered users.
 
 Cloud one-time reminders can use EventBridge Scheduler `at(...)` schedules. Each
 schedule targets a narrow reminder-delivery Lambda, deletes itself after completion,
