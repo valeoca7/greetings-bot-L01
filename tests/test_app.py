@@ -280,6 +280,17 @@ class AppTest(unittest.TestCase):
         self.assertEqual("Quiet hours turned off.", reply.text)
         self.assertIsNone(users.get(42).quiet_start)
 
+    def test_rejects_incomplete_quiet_hours(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/quiet later"), users)
+
+        self.assertEqual(
+            reply.text,
+            "Use /quiet HH:MM HH:MM or /quiet off.",
+        )
+
     def test_shows_greeting_name(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)

@@ -479,6 +479,11 @@ class Application:
             if command.arguments == ("off",):
                 self.users.save(clear_quiet_hours(user))
                 return Reply(update.message.chat_id, "Quiet hours turned off.")
+            if command.arguments:
+                return Reply(
+                    update.message.chat_id,
+                    "Use /quiet HH:MM HH:MM or /quiet off.",
+                )
             if user.quiet_start is None:
                 return Reply(update.message.chat_id, "Quiet hours are off.")
             return Reply(
