@@ -86,6 +86,20 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.greeting_days, EVERY_DAY)
         self.assertEqual(user.digest_mode, "off")
 
+    def test_round_trips_custom_delivery_preferences(self):
+        user = User(
+            telegram_id=1,
+            chat_id=2,
+            first_name="Mira",
+            greeting_days=("tue", "thu"),
+            digest_mode="daily",
+        )
+
+        restored = user_from_dict(user_to_dict(user))
+
+        self.assertEqual(restored.greeting_days, ("tue", "thu"))
+        self.assertEqual(restored.digest_mode, "daily")
+
     def test_restores_user_from_dict(self):
         original = User(telegram_id=42, chat_id=84, first_name="Mira")
 
