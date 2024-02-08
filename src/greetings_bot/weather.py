@@ -9,6 +9,16 @@ class WeatherLocation:
     latitude: float
     longitude: float
 
+    def __post_init__(self) -> None:
+        name = self.name.strip()
+        if not name or len(name) > 80:
+            raise ValueError("location name is invalid")
+        if not -90 <= self.latitude <= 90:
+            raise ValueError("latitude is out of range")
+        if not -180 <= self.longitude <= 180:
+            raise ValueError("longitude is out of range")
+        object.__setattr__(self, "name", name)
+
 
 @dataclass(frozen=True)
 class DailyForecast:
