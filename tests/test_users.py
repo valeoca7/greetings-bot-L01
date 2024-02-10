@@ -9,6 +9,7 @@ from greetings_bot.users import (
     user_from_dict,
     user_to_dict,
 )
+from greetings_bot.weather import WeatherLocation
 
 
 class UserTest(unittest.TestCase):
@@ -29,6 +30,7 @@ class UserTest(unittest.TestCase):
             ("mon", "tue", "wed", "thu", "fri", "sat", "sun"),
         )
         self.assertEqual(user.digest_mode, "off")
+        self.assertIsNone(user.weather_location)
 
     def test_normalizes_first_name(self):
         self.assertEqual(normalize_first_name("  Mira "), "Mira")
@@ -99,6 +101,18 @@ class UserTest(unittest.TestCase):
 
         self.assertEqual(restored.greeting_days, ("tue", "thu"))
         self.assertEqual(restored.digest_mode, "daily")
+
+    def test_round_trips_weather_location(self):
+        user = User(
+            telegram_id=1,
+            chat_id=2,
+            first_name="Mira",
+            weather_location=WeatherLocation("Vancouver", 49.2827, -123.1207),
+        )
+
+        restored = user_from_dict(user_to_dict(user))
+
+        self.assertEqual(restored.weather_location, user.weather_location)
 
     def test_restores_user_from_dict(self):
         original = User(telegram_id=42, chat_id=84, first_name="Mira")

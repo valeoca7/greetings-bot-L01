@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Protocol, Sequence, Tuple
 
+from greetings_bot.weather import WeatherLocation
+
 EVERY_DAY = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 
 
@@ -17,6 +19,7 @@ class User:
     quiet_end: Optional[str] = None
     greeting_days: Tuple[str, ...] = EVERY_DAY
     digest_mode: str = "off"
+    weather_location: Optional[WeatherLocation] = None
 
 
 def user_to_dict(user: User) -> Dict[str, object]:
@@ -32,6 +35,15 @@ def user_to_dict(user: User) -> Dict[str, object]:
         "quiet_end": user.quiet_end,
         "greeting_days": list(user.greeting_days),
         "digest_mode": user.digest_mode,
+        "weather_location": (
+            None
+            if user.weather_location is None
+            else {
+                "name": user.weather_location.name,
+                "latitude": str(user.weather_location.latitude),
+                "longitude": str(user.weather_location.longitude),
+            }
+        ),
     }
 
 
@@ -45,6 +57,17 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
     digest_mode = str(data.get("digest_mode", "off"))
     if digest_mode not in ("off", "daily"):
         digest_mode = "off"
+    location_data = data.get("weather_location")
+    weather_location = None
+    if isinstance(location_data, dict):
+        try:
+            weather_location = WeatherLocation(
+                str(location_data["name"]),
+                float(location_data["latitude"]),
+                float(location_data["longitude"]),
+            )
+        except (KeyError, TypeError, ValueError):
+            weather_location = None
     return User(
         telegram_id=int(data["telegram_id"]),
         chat_id=int(data["chat_id"]),
@@ -57,6 +80,7 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
         quiet_end=data.get("quiet_end"),
         greeting_days=greeting_days,
         digest_mode=digest_mode,
+        weather_location=weather_location,
     )
 
 
