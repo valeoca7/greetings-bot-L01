@@ -1,11 +1,28 @@
 import unittest
 from datetime import date
 
-from greetings_bot.open_meteo import forecast_params
+from greetings_bot.open_meteo import forecast_params, weather_condition
 from greetings_bot.weather import WeatherLocation
 
 
 class OpenMeteoProviderTest(unittest.TestCase):
+    def test_maps_weather_codes_to_short_conditions(self):
+        expected = {
+            0: "clear",
+            2: "partly cloudy",
+            3: "overcast",
+            45: "fog",
+            53: "drizzle",
+            63: "rain",
+            75: "snow",
+            95: "thunderstorm",
+            100: "unknown conditions",
+        }
+
+        for code, condition in expected.items():
+            with self.subTest(code=code):
+                self.assertEqual(weather_condition(code), condition)
+
     def test_builds_a_single_day_request(self):
         params = forecast_params(
             WeatherLocation("Vancouver", 49.2827, -123.1207),
