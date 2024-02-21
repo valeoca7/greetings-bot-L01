@@ -1,10 +1,18 @@
 from datetime import date
-from typing import Dict
+from typing import Dict, Mapping, Protocol
 
-from greetings_bot.weather import WeatherLocation
+from greetings_bot.weather import DailyForecast, WeatherLocation
+from greetings_bot.weather_client import JsonHttpClient
 
 
 FORECAST_ENDPOINT = "https://api.open-meteo.com/v1/forecast"
+
+
+class JsonClient(Protocol):
+    def get(
+        self, endpoint: str, params: Mapping[str, object]
+    ) -> Mapping[str, object]:
+        ...
 
 
 def weather_condition(code: int) -> str:
@@ -42,3 +50,27 @@ def forecast_params(
         "start_date": day,
         "end_date": day,
     }
+
+
+class OpenMeteoWeatherProvider:
+    def __init__(self, client: JsonClient = None) -> None:
+        self.client = client or JsonHttpClient()
+
+    def daily_forecast(
+        self, location: WeatherLocation, forecast_date: date
+    ) -> DailyForecast:
+        value = self.client.get(
+            FORECAST_ENDPOINT, forecast_params(location, forecast_date)
+        )
+        try:
+            daily = value["daily"]
+            index = daily["time"].index(forecast_date.isoformat())
+            return DailyForecast(
+                forecast_date,
+                float(daily["temperature_2m_min"][index]),
+                float(daily["temperature_2m_max"][index]),
+                weather_condition(int(daily["weather_code"][index])),
+                int(daily["precipitation_probability_max"][index] or 0),
+            )
+        except (AttributeError, KeyError, IndexError, TypeError, ValueError):
+            raise ValueError("invalid weather response")
