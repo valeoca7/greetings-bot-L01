@@ -28,6 +28,14 @@ class DailyForecast:
     condition: str
     precipitation_percent: int = 0
 
+    def __post_init__(self) -> None:
+        if self.low_celsius > self.high_celsius:
+            raise ValueError("forecast temperatures are reversed")
+        if not self.condition.strip():
+            raise ValueError("forecast condition is required")
+        if not 0 <= self.precipitation_percent <= 100:
+            raise ValueError("precipitation percent is out of range")
+
 
 class WeatherProvider(Protocol):
     def daily_forecast(

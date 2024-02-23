@@ -29,6 +29,24 @@ class WeatherModelTest(unittest.TestCase):
         self.assertEqual(forecast.condition, "rain")
         self.assertEqual(forecast.precipitation_percent, 70)
 
+    def test_rejects_invalid_daily_forecast_values(self):
+        values = (
+            (9, 4, "rain", 20),
+            (4, 9, "", 20),
+            (4, 9, "rain", 101),
+        )
+
+        for low, high, condition, precipitation in values:
+            with self.subTest(values=(low, high, condition, precipitation)):
+                with self.assertRaises(ValueError):
+                    DailyForecast(
+                        date(2024, 2, 22),
+                        low,
+                        high,
+                        condition,
+                        precipitation,
+                    )
+
 
 if __name__ == "__main__":
     unittest.main()
