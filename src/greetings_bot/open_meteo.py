@@ -1,7 +1,11 @@
 from datetime import date
 from typing import Dict, Mapping, Protocol
 
-from greetings_bot.weather import DailyForecast, WeatherLocation
+from greetings_bot.weather import (
+    DailyForecast,
+    WeatherLocation,
+    WeatherProviderError,
+)
 from greetings_bot.weather_client import JsonHttpClient
 
 
@@ -59,10 +63,10 @@ class OpenMeteoWeatherProvider:
     def daily_forecast(
         self, location: WeatherLocation, forecast_date: date
     ) -> DailyForecast:
-        value = self.client.get(
-            FORECAST_ENDPOINT, forecast_params(location, forecast_date)
-        )
         try:
+            value = self.client.get(
+                FORECAST_ENDPOINT, forecast_params(location, forecast_date)
+            )
             daily = value["daily"]
             index = daily["time"].index(forecast_date.isoformat())
             return DailyForecast(
@@ -72,5 +76,13 @@ class OpenMeteoWeatherProvider:
                 weather_condition(int(daily["weather_code"][index])),
                 int(daily["precipitation_probability_max"][index] or 0),
             )
-        except (AttributeError, KeyError, IndexError, TypeError, ValueError):
-            raise ValueError("invalid weather response")
+        except (
+            AttributeError,
+            KeyError,
+            IndexError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as error:
+            raise WeatherProviderError("weather provider unavailable") from error

@@ -7,7 +7,7 @@ from greetings_bot.open_meteo import (
     forecast_params,
     weather_condition,
 )
-from greetings_bot.weather import WeatherLocation
+from greetings_bot.weather import WeatherLocation, WeatherProviderError
 
 
 class OpenMeteoProviderTest(unittest.TestCase):
@@ -45,8 +45,19 @@ class OpenMeteoProviderTest(unittest.TestCase):
 
         provider = OpenMeteoWeatherProvider(Client())
 
-        with self.assertRaisesRegex(ValueError, "invalid weather response"):
+        with self.assertRaisesRegex(WeatherProviderError, "provider unavailable"):
             provider.daily_forecast(
+                WeatherLocation("Vancouver", 49.2, -123.1),
+                date(2024, 2, 20),
+            )
+
+    def test_normalizes_transport_errors(self):
+        class Client:
+            def get(self, endpoint, params):
+                raise OSError("timed out")
+
+        with self.assertRaises(WeatherProviderError):
+            OpenMeteoWeatherProvider(Client()).daily_forecast(
                 WeatherLocation("Vancouver", 49.2, -123.1),
                 date(2024, 2, 20),
             )

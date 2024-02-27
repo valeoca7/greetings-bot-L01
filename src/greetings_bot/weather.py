@@ -3,6 +3,10 @@ from datetime import date
 from typing import Protocol
 
 
+class WeatherProviderError(RuntimeError):
+    pass
+
+
 @dataclass(frozen=True)
 class WeatherLocation:
     name: str
