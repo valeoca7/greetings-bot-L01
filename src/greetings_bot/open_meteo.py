@@ -1,5 +1,6 @@
+import os
 from datetime import date
-from typing import Dict, Mapping, Protocol
+from typing import Callable, Dict, Mapping, Optional, Protocol
 
 from greetings_bot.weather import (
     DailyForecast,
@@ -86,3 +87,17 @@ class OpenMeteoWeatherProvider:
             ValueError,
         ) as error:
             raise WeatherProviderError("weather provider unavailable") from error
+
+
+def weather_provider_from_env(
+    environ: Mapping[str, str] = os.environ,
+    opener: Optional[Callable] = None,
+) -> OpenMeteoWeatherProvider:
+    try:
+        timeout = int(environ.get("WEATHER_TIMEOUT_SECONDS", "5"))
+    except ValueError:
+        raise ValueError("weather timeout must be an integer")
+    client = JsonHttpClient(timeout=timeout)
+    if opener is not None:
+        client = JsonHttpClient(opener, timeout)
+    return OpenMeteoWeatherProvider(client)

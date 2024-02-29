@@ -5,12 +5,26 @@ from greetings_bot.open_meteo import (
     FORECAST_ENDPOINT,
     OpenMeteoWeatherProvider,
     forecast_params,
+    weather_provider_from_env,
     weather_condition,
 )
 from greetings_bot.weather import WeatherLocation, WeatherProviderError
 
 
 class OpenMeteoProviderTest(unittest.TestCase):
+    def test_reads_timeout_from_environment(self):
+        provider = weather_provider_from_env(
+            {"WEATHER_TIMEOUT_SECONDS": "3"}, lambda url, timeout: None
+        )
+
+        self.assertEqual(provider.client.timeout, 3)
+
+    def test_rejects_invalid_configured_timeout(self):
+        for value in ("slow", "0"):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    weather_provider_from_env({"WEATHER_TIMEOUT_SECONDS": value})
+
     def test_reads_a_daily_forecast(self):
         class Client:
             def get(self, endpoint, params):
