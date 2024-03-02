@@ -161,3 +161,13 @@ text. Dispatch and delivery counts use CloudWatch embedded metric format under t
 The SAM template defines alarms for failed delivery attempts and visible messages in
 the dead-letter queue. Alarm notification actions are intentionally left for the
 deploying environment to configure.
+
+## Weather provider
+
+Weather locations store a display name and validated latitude/longitude pair on the
+user profile. The provider boundary currently supports one-day forecasts through an
+injectable Open-Meteo adapter with a five-second default timeout. Set
+`WEATHER_TIMEOUT_SECONDS` to change that bound.
+
+The adapter is not called by any command in this release. Its tests use fake HTTP
+openers and saved dictionaries, so local verification performs no network requests.
