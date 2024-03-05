@@ -2,6 +2,7 @@ import unittest
 
 from greetings_bot.profiles import format_profile
 from greetings_bot.users import User
+from greetings_bot.weather import WeatherLocation
 
 
 class ProfileTest(unittest.TestCase):
@@ -14,7 +15,8 @@ class ProfileTest(unittest.TestCase):
             profile,
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
             "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
-            "Quiet hours: off\nDaily digest: off\nTimezone: UTC\nGreetings: on",
+            "Quiet hours: off\nDaily digest: off\nWeather location: not set\n"
+            "Timezone: UTC\nGreetings: on",
         )
 
     def test_formats_a_disabled_user(self):
@@ -37,6 +39,16 @@ class ProfileTest(unittest.TestCase):
         )
 
         self.assertIn("Quiet hours: 22:00-07:00", format_profile(user))
+
+    def test_formats_weather_location_name(self):
+        user = User(
+            telegram_id=42,
+            chat_id=42,
+            first_name="Mira",
+            weather_location=WeatherLocation("Vancouver", 49.2, -123.1),
+        )
+
+        self.assertIn("Weather location: Vancouver", format_profile(user))
 
 
 if __name__ == "__main__":

@@ -148,7 +148,8 @@ class AppTest(unittest.TestCase):
             reply.text,
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
             "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
-            "Quiet hours: off\nDaily digest: off\nTimezone: UTC\nGreetings: on",
+            "Quiet hours: off\nDaily digest: off\nWeather location: not set\n"
+            "Timezone: UTC\nGreetings: on",
         )
 
     def test_reports_missing_profile(self):
