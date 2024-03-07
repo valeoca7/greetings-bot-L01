@@ -1,12 +1,14 @@
 import unittest
 
 from greetings_bot.preferences import (
+    clear_weather_location,
     set_first_name,
     set_digest_mode,
     set_greeting_days,
     set_greeting_time,
     set_quiet_hours,
     set_timezone,
+    set_weather_location,
     validate_greeting_time,
 )
 from greetings_bot.users import User
@@ -101,6 +103,21 @@ class GreetingTimeTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             set_digest_mode(user, "weekly")
+
+    def test_sets_and_clears_weather_location(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        located = set_weather_location(user, "Vancouver", "49.2827", "-123.1207")
+
+        self.assertEqual(located.weather_location.name, "Vancouver")
+        self.assertEqual(located.weather_location.latitude, 49.2827)
+        self.assertIsNone(clear_weather_location(located).weather_location)
+
+    def test_rejects_invalid_weather_location(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        with self.assertRaisesRegex(ValueError, "invalid weather location"):
+            set_weather_location(user, "Nowhere", "north", "west")
 
 
 if __name__ == "__main__":

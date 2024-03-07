@@ -4,6 +4,7 @@ from typing import Sequence
 
 from greetings_bot.timezones import validate_timezone
 from greetings_bot.users import EVERY_DAY, User, normalize_first_name
+from greetings_bot.weather import WeatherLocation
 
 
 TIME_PATTERN = re.compile(r"^(?:[01][0-9]|2[0-3]):[0-5][0-9]$")
@@ -75,3 +76,17 @@ def set_digest_mode(user: User, value: str) -> User:
     if mode not in ("off", "daily"):
         raise ValueError("digest mode must be off or daily")
     return replace(user, digest_mode=mode)
+
+
+def set_weather_location(
+    user: User, name: str, latitude: str, longitude: str
+) -> User:
+    try:
+        location = WeatherLocation(name, float(latitude), float(longitude))
+    except ValueError as error:
+        raise ValueError("invalid weather location") from error
+    return replace(user, weather_location=location)
+
+
+def clear_weather_location(user: User) -> User:
+    return replace(user, weather_location=None)
