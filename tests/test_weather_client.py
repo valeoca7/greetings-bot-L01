@@ -49,6 +49,18 @@ class JsonHttpClientTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             client.get("https://weather.test", {})
 
+    def test_rejects_invalid_json(self):
+        class Response(FakeResponse):
+            def read(self):
+                return b"not json"
+
+        class Opener:
+            def __call__(self, url, timeout):
+                return Response({})
+
+        with self.assertRaises(ValueError):
+            JsonHttpClient(Opener()).get("https://weather.test", {})
+
     def test_rejects_an_unbounded_timeout(self):
         with self.assertRaises(ValueError):
             JsonHttpClient(timeout=0)
