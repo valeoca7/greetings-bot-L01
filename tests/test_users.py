@@ -110,9 +110,12 @@ class UserTest(unittest.TestCase):
             weather_location=WeatherLocation("Vancouver", 49.2827, -123.1207),
         )
 
-        restored = user_from_dict(user_to_dict(user))
+        data = user_to_dict(user)
+        restored = user_from_dict(data)
 
         self.assertEqual(restored.weather_location, user.weather_location)
+        self.assertEqual(data["weather_location"]["latitude"], "49.2827")
+        self.assertEqual(data["weather_location"]["longitude"], "-123.1207")
 
     def test_restores_user_from_dict(self):
         original = User(telegram_id=42, chat_id=84, first_name="Mira")
