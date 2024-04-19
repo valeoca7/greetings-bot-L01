@@ -56,6 +56,8 @@ does not send them to Telegram.
 - `/days [daily|weekdays|days...]` chooses local greeting weekdays
 - `/quiet [start end]` sets local quiet hours; `/quiet off` removes them
 - `/digest [daily|off]` controls daily summary delivery
+- `/location [latitude longitude name|off]` manages the weather location
+- `/weather` shows today's forecast; `/weather units metric|imperial` changes units
 - `/note add <text>` saves a private note and returns its short ID
 - `/notes` lists the current user's notes
 - `/note <id>` shows a note; `/note delete <id>` removes it
@@ -169,5 +171,7 @@ user profile. The provider boundary currently supports one-day forecasts through
 injectable Open-Meteo adapter with a five-second default timeout. Set
 `WEATHER_TIMEOUT_SECONDS` to change that bound.
 
-The adapter is not called by any command in this release. Its tests use fake HTTP
-openers and saved dictionaries, so local verification performs no network requests.
+The `/weather` command calls the adapter only after a registered user saves a
+location. Provider and command tests use fake HTTP openers and saved dictionaries,
+so local verification performs no network requests. Failed or malformed provider
+responses return a short temporary-unavailable message without exposing internals.

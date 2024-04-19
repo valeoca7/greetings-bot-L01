@@ -7,7 +7,8 @@ from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
 from greetings_bot.telegram import Message, Reply, TelegramUser, Update
-from greetings_bot.users import InMemoryUserRepository
+from greetings_bot.users import InMemoryUserRepository, User
+from greetings_bot.weather import DailyForecast, WeatherLocation, WeatherProviderError
 
 
 class FakeReminderScheduler:
@@ -24,6 +25,19 @@ class FakeReminderScheduler:
 
     def update(self, reminder):
         self.updated.append(reminder)
+
+
+class FakeWeatherProvider:
+    def __init__(self, forecast=None, error=None):
+        self.forecast = forecast
+        self.error = error
+
+    def daily_forecast(self, location, forecast_date):
+        self.location = location
+        self.forecast_date = forecast_date
+        if self.error:
+            raise self.error
+        return self.forecast
 
 
 def text_update(text, language_code=None):
@@ -60,6 +74,13 @@ class AppTest(unittest.TestCase):
 
         self.assertIs(application.reminders, reminders)
 
+    def test_application_keeps_its_weather_provider(self):
+        provider = object()
+
+        application = Application(weather_provider=provider)
+
+        self.assertIs(application.weather_provider, provider)
+
     def test_handles_start_command(self):
         reply = handle_update(text_update("/start"))
 
@@ -77,6 +98,8 @@ class AppTest(unittest.TestCase):
             "/time [HH:MM] - show or change greeting time\n"
             "/days [daily|weekdays|days...] - choose greeting days\n"
             "/digest [daily|off] - manage the daily digest\n"
+            "/location [lat lon name|off] - manage weather location\n"
+            "/weather - show today's forecast\n"
             "/timezone [area/name] - show or change timezone\n"
             "/quiet [start end|off] - manage quiet hours\n"
             "/name [name] - show or change greeting name\n"
@@ -94,7 +117,7 @@ class AppTest(unittest.TestCase):
         self.assertIsNone(handle_update(text_update("hello")))
 
     def test_replies_to_unknown_commands(self):
-        reply = handle_update(text_update("/weather"))
+        reply = handle_update(text_update("/something"))
 
         self.assertEqual(reply.text, "I don't know that command. Try /help.")
 
@@ -149,7 +172,7 @@ class AppTest(unittest.TestCase):
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
             "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
             "Quiet hours: off\nDaily digest: off\nWeather location: not set\n"
-            "Timezone: UTC\nGreetings: on",
+            "Weather units: metric\nTimezone: UTC\nGreetings: on",
         )
 
     def test_reports_missing_profile(self):
@@ -229,6 +252,147 @@ class AppTest(unittest.TestCase):
         reply = handle_update(text_update("/digest weekly"), users)
 
         self.assertEqual(reply.text, "Use /digest daily or /digest off.")
+
+    def test_sets_and_shows_weather_location(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        changed = handle_update(
+            text_update("/location 49.2827 -123.1207 Vancouver BC"), users
+        )
+        current = handle_update(text_update("/location"), users)
+
+        self.assertEqual(changed.text, "Weather location set to Vancouver BC.")
+        self.assertEqual(
+            current.text,
+            "Weather location is Vancouver BC (49.2827, -123.1207).",
+        )
+
+    def test_removes_weather_location(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        handle_update(text_update("/location 49 -123 Vancouver"), users)
+
+        reply = handle_update(text_update("/location off"), users)
+
+        self.assertEqual(reply.text, "Weather location removed.")
+        self.assertIsNone(users.get(42).weather_location)
+
+    def test_rejects_invalid_weather_location(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/location north west Home"), users)
+
+        self.assertEqual(
+            reply.text,
+            "Use /location <latitude> <longitude> <name>.",
+        )
+
+    def test_changes_weather_units(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/weather units imperial"), users)
+
+        self.assertEqual(reply.text, "Weather units changed to imperial.")
+        self.assertEqual(users.get(42).weather_units, "imperial")
+
+    def test_rejects_unknown_weather_units(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/weather units kelvin"), users)
+
+        self.assertEqual(
+            reply.text,
+            "Use /weather units metric or /weather units imperial.",
+        )
+
+    def test_returns_todays_weather(self):
+        users = InMemoryUserRepository()
+        users.save(
+            User(
+                42,
+                42,
+                "Mira",
+                timezone="America/Vancouver",
+                weather_location=WeatherLocation("Vancouver", 49.2, -123.1),
+            )
+        )
+        provider = FakeWeatherProvider(
+            DailyForecast(
+                datetime(2024, 4, 1).date(), 3, 9, "rain", 60
+            )
+        )
+        app = Application(
+            users=users,
+            clock=FixedClock(datetime(2024, 4, 2, 1, 0, tzinfo=timezone.utc)),
+            weather_provider=provider,
+        )
+
+        reply = app.handle(text_update("/weather"))
+
+        self.assertEqual(provider.forecast_date.isoformat(), "2024-04-01")
+        self.assertEqual(
+            reply.text,
+            "Vancouver: rain, 3-9°C. Rain chance: 60%.",
+        )
+
+    def test_returns_weather_in_saved_imperial_units(self):
+        users = InMemoryUserRepository()
+        users.save(
+            User(
+                42,
+                42,
+                "Mira",
+                weather_location=WeatherLocation("Vancouver", 49.2, -123.1),
+                weather_units="imperial",
+            )
+        )
+        provider = FakeWeatherProvider(
+            DailyForecast(datetime(2024, 4, 15).date(), 0, 10, "clear", 5)
+        )
+
+        reply = Application(users, weather_provider=provider).handle(
+            text_update("/weather")
+        )
+
+        self.assertEqual(
+            reply.text,
+            "Vancouver: clear, 32-50°F. Rain chance: 5%.",
+        )
+
+    def test_requires_a_weather_location(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = Application(users, weather_provider=FakeWeatherProvider()).handle(
+            text_update("/weather")
+        )
+
+        self.assertEqual(
+            reply.text,
+            "Set a weather location with /location first.",
+        )
+
+    def test_handles_weather_provider_failure(self):
+        users = InMemoryUserRepository()
+        users.save(
+            User(
+                42,
+                42,
+                "Mira",
+                weather_location=WeatherLocation("Vancouver", 49.2, -123.1),
+            )
+        )
+        provider = FakeWeatherProvider(error=WeatherProviderError("down"))
+
+        reply = Application(users, weather_provider=provider).handle(
+            text_update("/weather")
+        )
+
+        self.assertEqual(reply.text, "Weather is temporarily unavailable.")
 
     def test_shows_timezone(self):
         users = InMemoryUserRepository()

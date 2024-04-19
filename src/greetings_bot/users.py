@@ -20,6 +20,7 @@ class User:
     greeting_days: Tuple[str, ...] = EVERY_DAY
     digest_mode: str = "off"
     weather_location: Optional[WeatherLocation] = None
+    weather_units: str = "metric"
 
 
 def user_to_dict(user: User) -> Dict[str, object]:
@@ -44,6 +45,7 @@ def user_to_dict(user: User) -> Dict[str, object]:
                 "longitude": str(user.weather_location.longitude),
             }
         ),
+        "weather_units": user.weather_units,
     }
 
 
@@ -68,6 +70,9 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
             )
         except (KeyError, TypeError, ValueError):
             weather_location = None
+    weather_units = str(data.get("weather_units", "metric"))
+    if weather_units not in ("metric", "imperial"):
+        weather_units = "metric"
     return User(
         telegram_id=int(data["telegram_id"]),
         chat_id=int(data["chat_id"]),
@@ -81,6 +86,7 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
         greeting_days=greeting_days,
         digest_mode=digest_mode,
         weather_location=weather_location,
+        weather_units=weather_units,
     )
 
 

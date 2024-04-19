@@ -31,15 +31,19 @@ from greetings_bot.reminders import (
 )
 from greetings_bot.preferences import (
     clear_quiet_hours,
+    clear_weather_location,
     set_digest_mode,
     set_first_name,
     set_greeting_days,
     set_greeting_time,
     set_quiet_hours,
     set_timezone,
+    set_weather_location,
+    set_weather_units,
 )
 from greetings_bot.profiles import format_profile
 from greetings_bot.telegram import Reply, Update
+from greetings_bot.timezones import user_local_time
 from greetings_bot.users import (
     InMemoryUserRepository,
     User,
@@ -47,6 +51,8 @@ from greetings_bot.users import (
     normalize_first_name,
     normalize_locale,
 )
+from greetings_bot.weather import WeatherProvider, WeatherProviderError
+from greetings_bot.weather_format import format_daily_forecast
 
 
 LOGGER = logging.getLogger(__name__)
@@ -64,6 +70,7 @@ class Application:
         reminders: Optional[ReminderRepository] = None,
         clock: Optional[Clock] = None,
         reminder_scheduler: Optional[ReminderSchedulePort] = None,
+        weather_provider: Optional[WeatherProvider] = None,
     ) -> None:
         self.users = users if users is not None else InMemoryUserRepository()
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -76,6 +83,7 @@ class Application:
             if reminder_scheduler is not None
             else NoopReminderScheduler()
         )
+        self.weather_provider = weather_provider
 
     def handle(self, update: Update) -> Optional[Reply]:
         if update.message is None:
@@ -98,6 +106,8 @@ class Application:
                 "/time [HH:MM] - show or change greeting time\n"
                 "/days [daily|weekdays|days...] - choose greeting days\n"
                 "/digest [daily|off] - manage the daily digest\n"
+                "/location [lat lon name|off] - manage weather location\n"
+                "/weather - show today's forecast\n"
                 "/timezone [area/name] - show or change timezone\n"
                 "/quiet [start end|off] - manage quiet hours\n"
                 "/name [name] - show or change greeting name\n"
@@ -441,6 +451,95 @@ class Application:
                     "on" if user.digest_mode == "daily" else "off"
                 ),
             )
+        if command.name == "location":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if command.arguments == ("off",):
+                self.users.save(clear_weather_location(user))
+                return Reply(update.message.chat_id, "Weather location removed.")
+            if len(command.arguments) >= 3:
+                try:
+                    user = set_weather_location(
+                        user,
+                        " ".join(command.arguments[2:]),
+                        command.arguments[0],
+                        command.arguments[1],
+                    )
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Use /location <latitude> <longitude> <name>.",
+                    )
+                self.users.save(user)
+                return Reply(
+                    update.message.chat_id,
+                    "Weather location set to {}.".format(
+                        user.weather_location.name
+                    ),
+                )
+            if command.arguments:
+                return Reply(
+                    update.message.chat_id,
+                    "Use /location <latitude> <longitude> <name>.",
+                )
+            if user.weather_location is None:
+                return Reply(update.message.chat_id, "Weather location is not set.")
+            return Reply(
+                update.message.chat_id,
+                "Weather location is {} ({:.4f}, {:.4f}).".format(
+                    user.weather_location.name,
+                    user.weather_location.latitude,
+                    user.weather_location.longitude,
+                ),
+            )
+        if command.name == "weather" and command.arguments[:1] == ("units",):
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if len(command.arguments) != 2:
+                return Reply(
+                    update.message.chat_id,
+                    "Use /weather units metric or /weather units imperial.",
+                )
+            try:
+                user = set_weather_units(user, command.arguments[1])
+            except ValueError:
+                return Reply(
+                    update.message.chat_id,
+                    "Use /weather units metric or /weather units imperial.",
+                )
+            self.users.save(user)
+            return Reply(
+                update.message.chat_id,
+                "Weather units changed to {}.".format(user.weather_units),
+            )
+        if command.name == "weather":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if command.arguments:
+                return Reply(update.message.chat_id, "Use /weather for today's forecast.")
+            if user.weather_location is None:
+                return Reply(
+                    update.message.chat_id,
+                    "Set a weather location with /location first.",
+                )
+            if self.weather_provider is None:
+                return Reply(update.message.chat_id, "Weather is temporarily unavailable.")
+            forecast_date = user_local_time(user, self.clock.now()).date()
+            try:
+                forecast = self.weather_provider.daily_forecast(
+                    user.weather_location, forecast_date
+                )
+            except WeatherProviderError:
+                return Reply(update.message.chat_id, "Weather is temporarily unavailable.")
+            return Reply(
+                update.message.chat_id,
+                format_daily_forecast(
+                    user.weather_location, forecast, user.weather_units
+                ),
+            )
         if command.name == "timezone":
             user = self.users.get(update.message.sender.id)
             if user is None:
@@ -550,7 +649,13 @@ def handle_update(
     reminders: Optional[ReminderRepository] = None,
     clock: Optional[Clock] = None,
     reminder_scheduler: Optional[ReminderSchedulePort] = None,
+    weather_provider: Optional[WeatherProvider] = None,
 ) -> Optional[Reply]:
     return Application(
-        users, notes, reminders, clock, reminder_scheduler
+        users,
+        notes,
+        reminders,
+        clock,
+        reminder_scheduler,
+        weather_provider,
     ).handle(update)

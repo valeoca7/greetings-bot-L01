@@ -16,7 +16,7 @@ def format_profile(user: User) -> str:
     return (
         "Name: {}\nTelegram ID: {}\nLanguage: {}\nGreeting time: {}\n"
         "Greeting days: {}\nQuiet hours: {}\nDaily digest: {}\n"
-        "Weather location: {}\nTimezone: {}\nGreetings: {}"
+        "Weather location: {}\nWeather units: {}\nTimezone: {}\nGreetings: {}"
     ).format(
         user.first_name,
         user.telegram_id,
@@ -26,6 +26,7 @@ def format_profile(user: User) -> str:
         quiet_hours,
         user.digest_mode,
         weather_location,
+        user.weather_units,
         user.timezone,
         status,
     )

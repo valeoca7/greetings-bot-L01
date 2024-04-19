@@ -68,6 +68,7 @@ Resources:
           SCHEDULER_TARGET_ARN: !GetAtt ReminderDeliveryFunction.Arn
           SCHEDULER_ROLE_ARN: !GetAtt SchedulerInvokeRole.Arn
           SCHEDULER_GROUP: !Ref ReminderScheduleGroup
+          WEATHER_TIMEOUT_SECONDS: '5'
       Policies:
         - Statement:
             - Effect: Allow

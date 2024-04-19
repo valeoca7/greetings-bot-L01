@@ -31,6 +31,7 @@ class UserTest(unittest.TestCase):
         )
         self.assertEqual(user.digest_mode, "off")
         self.assertIsNone(user.weather_location)
+        self.assertEqual(user.weather_units, "metric")
 
     def test_normalizes_first_name(self):
         self.assertEqual(normalize_first_name("  Mira "), "Mira")
@@ -116,6 +117,16 @@ class UserTest(unittest.TestCase):
         self.assertEqual(restored.weather_location, user.weather_location)
         self.assertEqual(data["weather_location"]["latitude"], "49.2827")
         self.assertEqual(data["weather_location"]["longitude"], "-123.1207")
+
+    def test_repairs_unknown_weather_units(self):
+        data = {
+            "telegram_id": 1,
+            "chat_id": 2,
+            "first_name": "Mira",
+            "weather_units": "kelvin",
+        }
+
+        self.assertEqual(user_from_dict(data).weather_units, "metric")
 
     def test_restores_user_from_dict(self):
         original = User(telegram_id=42, chat_id=84, first_name="Mira")

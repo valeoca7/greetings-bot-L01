@@ -18,6 +18,7 @@ from greetings_bot.event_scheduler import (
 )
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.observability import correlation_id, emit_metric, log_event
+from greetings_bot.open_meteo import weather_provider_from_env
 from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
@@ -25,6 +26,7 @@ from greetings_bot.reminder_store import (
 from greetings_bot.runtime import process_payload
 from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
+from greetings_bot.weather import WeatherProvider
 
 
 LambdaResponse = Dict[str, object]
@@ -38,6 +40,7 @@ class WebhookHandler:
         notes: NoteRepository = None,
         reminders: ReminderRepository = None,
         reminder_scheduler: ReminderSchedulePort = None,
+        weather_provider: WeatherProvider = None,
     ) -> None:
         self.users = users
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -49,6 +52,7 @@ class WebhookHandler:
             if reminder_scheduler is not None
             else NoopReminderScheduler()
         )
+        self.weather_provider = weather_provider
 
     def handle(self, event: Mapping[str, Any]) -> LambdaResponse:
         try:
@@ -63,6 +67,7 @@ class WebhookHandler:
                 self.notes,
                 self.reminders,
                 self.reminder_scheduler,
+                self.weather_provider,
             )
         except UpdateParseError:
             return self._error_response("invalid update payload")
@@ -88,7 +93,10 @@ def build_default_handler(
         notes = InMemoryNoteRepository()
         reminders = InMemoryReminderRepository()
     reminder_scheduler = scheduler_from_env(environ)
-    return WebhookHandler(users, notes, reminders, reminder_scheduler)
+    weather_provider = weather_provider_from_env(environ)
+    return WebhookHandler(
+        users, notes, reminders, reminder_scheduler, weather_provider
+    )
 
 
 _handler = build_default_handler()

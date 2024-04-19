@@ -16,6 +16,9 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Path: /telegram/webhook", self.template)
         self.assertIn("Method: post", self.template)
 
+    def test_bounds_webhook_weather_requests(self):
+        self.assertIn("WEATHER_TIMEOUT_SECONDS: '5'", self.template)
+
     def test_defines_encrypted_on_demand_table(self):
         self.assertIn("Type: AWS::DynamoDB::Table", self.template)
         self.assertIn("BillingMode: PAY_PER_REQUEST", self.template)

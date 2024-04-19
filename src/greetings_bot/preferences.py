@@ -90,3 +90,10 @@ def set_weather_location(
 
 def clear_weather_location(user: User) -> User:
     return replace(user, weather_location=None)
+
+
+def set_weather_units(user: User, value: str) -> User:
+    units = value.lower()
+    if units not in ("metric", "imperial"):
+        raise ValueError("weather units must be metric or imperial")
+    return replace(user, weather_units=units)

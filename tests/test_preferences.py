@@ -9,6 +9,7 @@ from greetings_bot.preferences import (
     set_quiet_hours,
     set_timezone,
     set_weather_location,
+    set_weather_units,
     validate_greeting_time,
 )
 from greetings_bot.users import User
@@ -118,6 +119,19 @@ class GreetingTimeTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "invalid weather location"):
             set_weather_location(user, "Nowhere", "north", "west")
+
+    def test_sets_weather_units(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        updated = set_weather_units(user, "IMPERIAL")
+
+        self.assertEqual(updated.weather_units, "imperial")
+
+    def test_rejects_unknown_weather_units(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        with self.assertRaises(ValueError):
+            set_weather_units(user, "kelvin")
 
 
 if __name__ == "__main__":
