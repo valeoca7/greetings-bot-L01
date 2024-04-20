@@ -336,7 +336,7 @@ class AppTest(unittest.TestCase):
         self.assertEqual(provider.forecast_date.isoformat(), "2024-04-01")
         self.assertEqual(
             reply.text,
-            "Vancouver: rain, 3-9°C. Rain chance: 60%.",
+            "Vancouver: rain, 3-9°C. Precipitation chance: 60%.",
         )
 
     def test_returns_weather_in_saved_imperial_units(self):
@@ -360,7 +360,7 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(
             reply.text,
-            "Vancouver: clear, 32-50°F. Rain chance: 5%.",
+            "Vancouver: clear, 32-50°F. Precipitation chance: 5%.",
         )
 
     def test_requires_a_weather_location(self):

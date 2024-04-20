@@ -20,7 +20,7 @@ def format_daily_forecast(
     elif units != "metric":
         raise ValueError("unknown weather units")
     return (
-        "{}: {}, {:.0f}-{:.0f}{}. Rain chance: {}%."
+        "{}: {}, {:.0f}-{:.0f}{}. Precipitation chance: {}%."
     ).format(
         location.name,
         forecast.condition,

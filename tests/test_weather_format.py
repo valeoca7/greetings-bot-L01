@@ -15,13 +15,13 @@ class WeatherFormatTest(unittest.TestCase):
     def test_formats_metric_forecast(self):
         self.assertEqual(
             format_daily_forecast(self.location, self.forecast),
-            "Vancouver: light rain, 2-10°C. Rain chance: 70%.",
+            "Vancouver: light rain, 2-10°C. Precipitation chance: 70%.",
         )
 
     def test_formats_imperial_forecast(self):
         self.assertEqual(
             format_daily_forecast(self.location, self.forecast, "imperial"),
-            "Vancouver: light rain, 36-50°F. Rain chance: 70%.",
+            "Vancouver: light rain, 36-50°F. Precipitation chance: 70%.",
         )
 
     def test_rejects_unknown_units(self):
