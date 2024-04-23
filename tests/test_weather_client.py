@@ -24,8 +24,8 @@ class FakeOpener:
         self.value = value
         self.status = status
 
-    def __call__(self, url, timeout):
-        self.url = url
+    def __call__(self, request, timeout):
+        self.request = request
         self.timeout = timeout
         return FakeResponse(self.value, self.status)
 
@@ -39,8 +39,9 @@ class JsonHttpClientTest(unittest.TestCase):
         )
 
         self.assertEqual(value, {"daily": {}})
-        self.assertIn("latitude=49.2", opener.url)
-        self.assertIn("days=1", opener.url)
+        self.assertIn("latitude=49.2", opener.request.full_url)
+        self.assertIn("days=1", opener.request.full_url)
+        self.assertEqual(opener.request.headers["User-agent"], "greetings-bot")
         self.assertEqual(opener.timeout, 4)
 
     def test_rejects_http_errors(self):

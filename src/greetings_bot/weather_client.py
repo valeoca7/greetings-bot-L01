@@ -1,7 +1,7 @@
 import json
 from typing import Callable, Mapping
 from urllib.parse import urlencode
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 
 class JsonHttpClient:
@@ -13,7 +13,8 @@ class JsonHttpClient:
 
     def get(self, endpoint: str, params: Mapping[str, object]) -> Mapping[str, object]:
         url = "{}?{}".format(endpoint, urlencode(params))
-        with self.opener(url, timeout=self.timeout) as response:
+        request = Request(url, headers={"user-agent": "greetings-bot"})
+        with self.opener(request, timeout=self.timeout) as response:
             if response.status >= 300:
                 raise RuntimeError("weather request failed")
             value = json.loads(response.read().decode("utf-8"))
