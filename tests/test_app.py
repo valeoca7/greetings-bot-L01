@@ -394,6 +394,21 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Weather is temporarily unavailable.")
 
+    def test_handles_unconfigured_weather_provider(self):
+        users = InMemoryUserRepository()
+        users.save(
+            User(
+                42,
+                42,
+                "Mira",
+                weather_location=WeatherLocation("Vancouver", 49.2, -123.1),
+            )
+        )
+
+        reply = Application(users).handle(text_update("/weather"))
+
+        self.assertEqual(reply.text, "Weather is temporarily unavailable.")
+
     def test_shows_timezone(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)
