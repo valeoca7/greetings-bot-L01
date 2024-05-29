@@ -16,7 +16,7 @@ class ProfileTest(unittest.TestCase):
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
             "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
             "Quiet hours: off\nDaily digest: off\nWeather location: not set\n"
-            "Weather units: metric\nTimezone: UTC\nGreetings: on",
+            "Weather units: metric\nDaily weather: off\nTimezone: UTC\nGreetings: on",
         )
 
     def test_formats_a_disabled_user(self):
@@ -49,6 +49,16 @@ class ProfileTest(unittest.TestCase):
         )
 
         self.assertIn("Weather location: Vancouver", format_profile(user))
+
+    def test_formats_daily_weather_status(self):
+        user = User(
+            telegram_id=42,
+            chat_id=42,
+            first_name="Mira",
+            weather_summary=True,
+        )
+
+        self.assertIn("Daily weather: on", format_profile(user))
 
 
 if __name__ == "__main__":

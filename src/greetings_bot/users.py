@@ -21,6 +21,7 @@ class User:
     digest_mode: str = "off"
     weather_location: Optional[WeatherLocation] = None
     weather_units: str = "metric"
+    weather_summary: bool = False
 
 
 def user_to_dict(user: User) -> Dict[str, object]:
@@ -46,6 +47,7 @@ def user_to_dict(user: User) -> Dict[str, object]:
             }
         ),
         "weather_units": user.weather_units,
+        "weather_summary": user.weather_summary,
     }
 
 
@@ -73,6 +75,9 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
     weather_units = str(data.get("weather_units", "metric"))
     if weather_units not in ("metric", "imperial"):
         weather_units = "metric"
+    weather_summary = data.get("weather_summary", False)
+    if not isinstance(weather_summary, bool):
+        weather_summary = False
     return User(
         telegram_id=int(data["telegram_id"]),
         chat_id=int(data["chat_id"]),
@@ -87,6 +92,7 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
         digest_mode=digest_mode,
         weather_location=weather_location,
         weather_units=weather_units,
+        weather_summary=weather_summary,
     )
 
 

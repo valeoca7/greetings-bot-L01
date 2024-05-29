@@ -109,6 +109,7 @@ Resources:
           DISPATCH_BATCH_SIZE: '100'
           TARGETED_REMINDERS: 'true'
           DELIVERY_QUEUE_URL: !Ref DeliveryQueue
+          WEATHER_TIMEOUT_SECONDS: '5'
       Policies:
         - Statement:
             - Effect: Allow

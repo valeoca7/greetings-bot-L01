@@ -89,7 +89,7 @@ def set_weather_location(
 
 
 def clear_weather_location(user: User) -> User:
-    return replace(user, weather_location=None)
+    return replace(user, weather_location=None, weather_summary=False)
 
 
 def set_weather_units(user: User, value: str) -> User:
@@ -97,3 +97,10 @@ def set_weather_units(user: User, value: str) -> User:
     if units not in ("metric", "imperial"):
         raise ValueError("weather units must be metric or imperial")
     return replace(user, weather_units=units)
+
+
+def set_weather_summary(user: User, enabled: bool) -> User:
+    digest_mode = "daily" if enabled else user.digest_mode
+    return replace(
+        user, weather_summary=enabled, digest_mode=digest_mode
+    )

@@ -39,6 +39,7 @@ from greetings_bot.preferences import (
     set_quiet_hours,
     set_timezone,
     set_weather_location,
+    set_weather_summary,
     set_weather_units,
 )
 from greetings_bot.profiles import format_profile
@@ -107,7 +108,7 @@ class Application:
                 "/days [daily|weekdays|days...] - choose greeting days\n"
                 "/digest [daily|off] - manage the daily digest\n"
                 "/location [lat lon name|off] - manage weather location\n"
-                "/weather - show today's forecast\n"
+                "/weather [daily|off] - forecast or daily summary\n"
                 "/timezone [area/name] - show or change timezone\n"
                 "/quiet [start end|off] - manage quiet hours\n"
                 "/name [name] - show or change greeting name\n"
@@ -514,6 +515,23 @@ class Application:
                 update.message.chat_id,
                 "Weather units changed to {}.".format(user.weather_units),
             )
+        if command.name == "weather" and command.arguments == ("daily",):
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if user.weather_location is None:
+                return Reply(
+                    update.message.chat_id,
+                    "Set a weather location with /location first.",
+                )
+            self.users.save(set_weather_summary(user, True))
+            return Reply(update.message.chat_id, "Daily weather summary is on.")
+        if command.name == "weather" and command.arguments == ("off",):
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            self.users.save(set_weather_summary(user, False))
+            return Reply(update.message.chat_id, "Daily weather summary is off.")
         if command.name == "weather":
             user = self.users.get(update.message.sender.id)
             if user is None:

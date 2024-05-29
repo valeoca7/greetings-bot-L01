@@ -9,6 +9,7 @@ from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.observability import correlation_id, emit_metric, log_event
+from greetings_bot.open_meteo import weather_provider_from_env
 from greetings_bot.scheduled_event import event_time
 from greetings_bot.reminder_dispatcher import ReminderDispatcher
 from greetings_bot.reminder_store import (
@@ -19,6 +20,8 @@ from greetings_bot.scheduler import GreetingDispatcher
 from greetings_bot.telegram import reply_batch
 from greetings_bot.users import UserRepository
 from greetings_bot.users import InMemoryUserRepository
+from greetings_bot.weather import WeatherProvider
+from greetings_bot.weather_summary import add_weather_summaries
 
 
 ScheduledResponse = List[Dict[str, object]]
@@ -34,6 +37,7 @@ class ScheduledGreetingHandler:
         reminders: Optional[ReminderRepository] = None,
         include_reminders: bool = True,
         queue: Optional[DeliveryQueue] = None,
+        weather_provider: Optional[WeatherProvider] = None,
     ) -> None:
         self.users = users
         self.deliveries = deliveries
@@ -43,6 +47,7 @@ class ScheduledGreetingHandler:
         )
         self.include_reminders = include_reminders
         self.queue = queue
+        self.weather_provider = weather_provider
 
     def handle(self, event: Mapping[str, Any]) -> ScheduledResponse:
         clock = FixedClock(event_time(event))
@@ -52,7 +57,11 @@ class ScheduledGreetingHandler:
             self.deliveries,
             self.max_batch,
         )
-        replies = dispatcher.dispatch()
+        users = self.users.all()
+        replies = dispatcher.dispatch(users)
+        replies = add_weather_summaries(
+            replies, users, clock.now(), self.weather_provider
+        )
         if self.include_reminders:
             replies.extend(
                 ReminderDispatcher(
@@ -81,6 +90,7 @@ def build_default_handler(
     max_batch = int(environ.get("DISPATCH_BATCH_SIZE", "100"))
     include_reminders = environ.get("TARGETED_REMINDERS") != "true"
     queue = queue_from_env(environ)
+    weather_provider = weather_provider_from_env(environ)
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:
         return ScheduledGreetingHandler(
@@ -88,12 +98,19 @@ def build_default_handler(
             max_batch=max_batch,
             include_reminders=include_reminders,
             queue=queue,
+            weather_provider=weather_provider,
         )
     users = repository_for_table(table_name, dynamodb_resource)
     deliveries = DynamoDeliveryLedger(users.table)
     reminders = DynamoReminderRepository(users.table)
     return ScheduledGreetingHandler(
-        users, deliveries, max_batch, reminders, include_reminders, queue
+        users,
+        deliveries,
+        max_batch,
+        reminders,
+        include_reminders,
+        queue,
+        weather_provider,
     )
 
 

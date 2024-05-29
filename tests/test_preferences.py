@@ -10,6 +10,7 @@ from greetings_bot.preferences import (
     set_timezone,
     set_weather_location,
     set_weather_units,
+    set_weather_summary,
     validate_greeting_time,
 )
 from greetings_bot.users import User
@@ -106,13 +107,20 @@ class GreetingTimeTest(unittest.TestCase):
             set_digest_mode(user, "weekly")
 
     def test_sets_and_clears_weather_location(self):
-        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+        user = User(
+            telegram_id=1,
+            chat_id=1,
+            first_name="Mira",
+            weather_summary=True,
+        )
 
         located = set_weather_location(user, "Vancouver", "49.2827", "-123.1207")
 
         self.assertEqual(located.weather_location.name, "Vancouver")
         self.assertEqual(located.weather_location.latitude, 49.2827)
-        self.assertIsNone(clear_weather_location(located).weather_location)
+        cleared = clear_weather_location(located)
+        self.assertIsNone(cleared.weather_location)
+        self.assertFalse(cleared.weather_summary)
 
     def test_rejects_invalid_weather_location(self):
         user = User(telegram_id=1, chat_id=1, first_name="Mira")
@@ -132,6 +140,16 @@ class GreetingTimeTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             set_weather_units(user, "kelvin")
+
+    def test_enables_and_disables_daily_weather(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        enabled = set_weather_summary(user, True)
+        disabled = set_weather_summary(enabled, False)
+
+        self.assertTrue(enabled.weather_summary)
+        self.assertEqual(enabled.digest_mode, "daily")
+        self.assertFalse(disabled.weather_summary)
 
 
 if __name__ == "__main__":

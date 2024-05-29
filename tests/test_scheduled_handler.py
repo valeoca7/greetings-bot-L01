@@ -7,6 +7,7 @@ from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
+from greetings_bot.open_meteo import OpenMeteoWeatherProvider
 
 
 class FakeQueue:
@@ -21,9 +22,38 @@ from greetings_bot.scheduled_handler import (
     handle_event,
 )
 from greetings_bot.users import InMemoryUserRepository, User
+from greetings_bot.weather import DailyForecast, WeatherLocation
+
+
+class FakeWeatherProvider:
+    def daily_forecast(self, location, forecast_date):
+        return DailyForecast(forecast_date, 5, 12, "clear", 10)
 
 
 class ScheduledGreetingHandlerTest(unittest.TestCase):
+    def test_adds_weather_to_an_opted_in_greeting(self):
+        users = InMemoryUserRepository()
+        users.save(
+            User(
+                42,
+                84,
+                "Mira",
+                greeting_time="10:00",
+                weather_location=WeatherLocation("Vancouver", 49.2, -123.1),
+                weather_summary=True,
+                digest_mode="daily",
+            )
+        )
+        handler = ScheduledGreetingHandler(
+            users, weather_provider=FakeWeatherProvider()
+        )
+
+        replies = handler.handle({"time": "2024-05-10T10:00:00Z"})
+
+        self.assertEqual(len(replies), 1)
+        self.assertIn("Good day, Mira!", replies[0]["text"])
+        self.assertIn("Vancouver: clear, 5-12°C", replies[0]["text"])
+
     def test_returns_due_telegram_payloads(self):
         users = InMemoryUserRepository()
         users.save(User(42, 84, "Mira", greeting_time="10:00"))
@@ -57,6 +87,7 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         self.assertIsInstance(handler.reminders, DynamoReminderRepository)
         self.assertIs(handler.users.table, handler.deliveries.table)
         self.assertIs(handler.users.table, handler.reminders.table)
+        self.assertIsInstance(handler.weather_provider, OpenMeteoWeatherProvider)
 
     def test_reads_dispatch_batch_size(self):
         handler = build_default_handler({"DISPATCH_BATCH_SIZE": "25"})

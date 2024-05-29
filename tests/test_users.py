@@ -32,6 +32,7 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.digest_mode, "off")
         self.assertIsNone(user.weather_location)
         self.assertEqual(user.weather_units, "metric")
+        self.assertFalse(user.weather_summary)
 
     def test_normalizes_first_name(self):
         self.assertEqual(normalize_first_name("  Mira "), "Mira")
@@ -127,6 +128,28 @@ class UserTest(unittest.TestCase):
         }
 
         self.assertEqual(user_from_dict(data).weather_units, "metric")
+
+    def test_round_trips_daily_weather_subscription(self):
+        user = User(
+            telegram_id=1,
+            chat_id=2,
+            first_name="Mira",
+            weather_summary=True,
+        )
+
+        restored = user_from_dict(user_to_dict(user))
+
+        self.assertTrue(restored.weather_summary)
+
+    def test_repairs_invalid_weather_subscription(self):
+        data = {
+            "telegram_id": 1,
+            "chat_id": 2,
+            "first_name": "Mira",
+            "weather_summary": "yes",
+        }
+
+        self.assertFalse(user_from_dict(data).weather_summary)
 
     def test_restores_user_from_dict(self):
         original = User(telegram_id=42, chat_id=84, first_name="Mira")

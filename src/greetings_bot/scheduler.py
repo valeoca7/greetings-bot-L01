@@ -69,11 +69,15 @@ class GreetingDispatcher:
         self.deliveries = deliveries or InMemoryDeliveryLedger()
         self.max_batch = max_batch
 
-    def dispatch(self) -> List[Reply]:
+    def dispatch(
+        self, available_users: Optional[Iterable[User]] = None
+    ) -> List[Reply]:
         current_time = self.clock.now()
+        if available_users is None:
+            available_users = self.users.all()
         users = [
             user
-            for user in due_users(self.users.all(), current_time)
+            for user in due_users(available_users, current_time)
             if not self.deliveries.contains(greeting_delivery(user, current_time))
         ][: self.max_batch]
         LOGGER.info("dispatching %d scheduled greetings", len(users))

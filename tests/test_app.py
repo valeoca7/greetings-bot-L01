@@ -99,7 +99,7 @@ class AppTest(unittest.TestCase):
             "/days [daily|weekdays|days...] - choose greeting days\n"
             "/digest [daily|off] - manage the daily digest\n"
             "/location [lat lon name|off] - manage weather location\n"
-            "/weather - show today's forecast\n"
+            "/weather [daily|off] - forecast or daily summary\n"
             "/timezone [area/name] - show or change timezone\n"
             "/quiet [start end|off] - manage quiet hours\n"
             "/name [name] - show or change greeting name\n"
@@ -172,7 +172,7 @@ class AppTest(unittest.TestCase):
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
             "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
             "Quiet hours: off\nDaily digest: off\nWeather location: not set\n"
-            "Weather units: metric\nTimezone: UTC\nGreetings: on",
+            "Weather units: metric\nDaily weather: off\nTimezone: UTC\nGreetings: on",
         )
 
     def test_reports_missing_profile(self):
@@ -297,6 +297,38 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Weather units changed to imperial.")
         self.assertEqual(users.get(42).weather_units, "imperial")
+
+    def test_enables_daily_weather_summary(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        handle_update(text_update("/location 49 -123 Vancouver"), users)
+
+        reply = handle_update(text_update("/weather daily"), users)
+
+        self.assertEqual(reply.text, "Daily weather summary is on.")
+        self.assertTrue(users.get(42).weather_summary)
+
+    def test_daily_weather_requires_a_location(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/weather daily"), users)
+
+        self.assertEqual(
+            reply.text,
+            "Set a weather location with /location first.",
+        )
+
+    def test_turns_off_daily_weather_summary(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        handle_update(text_update("/location 49 -123 Vancouver"), users)
+        handle_update(text_update("/weather daily"), users)
+
+        reply = handle_update(text_update("/weather off"), users)
+
+        self.assertEqual(reply.text, "Daily weather summary is off.")
+        self.assertFalse(users.get(42).weather_summary)
 
     def test_rejects_unknown_weather_units(self):
         users = InMemoryUserRepository()

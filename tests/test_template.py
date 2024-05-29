@@ -17,7 +17,7 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Method: post", self.template)
 
     def test_bounds_webhook_weather_requests(self):
-        self.assertIn("WEATHER_TIMEOUT_SECONDS: '5'", self.template)
+        self.assertEqual(self.template.count("WEATHER_TIMEOUT_SECONDS: '5'"), 2)
 
     def test_defines_encrypted_on_demand_table(self):
         self.assertIn("Type: AWS::DynamoDB::Table", self.template)

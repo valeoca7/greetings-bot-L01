@@ -13,10 +13,12 @@ def format_profile(user: User) -> str:
         if user.weather_location is None
         else user.weather_location.name
     )
+    weather_summary = "on" if user.weather_summary else "off"
     return (
         "Name: {}\nTelegram ID: {}\nLanguage: {}\nGreeting time: {}\n"
         "Greeting days: {}\nQuiet hours: {}\nDaily digest: {}\n"
-        "Weather location: {}\nWeather units: {}\nTimezone: {}\nGreetings: {}"
+        "Weather location: {}\nWeather units: {}\nDaily weather: {}\n"
+        "Timezone: {}\nGreetings: {}"
     ).format(
         user.first_name,
         user.telegram_id,
@@ -27,6 +29,7 @@ def format_profile(user: User) -> str:
         user.digest_mode,
         weather_location,
         user.weather_units,
+        weather_summary,
         user.timezone,
         status,
     )

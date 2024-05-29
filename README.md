@@ -58,6 +58,7 @@ does not send them to Telegram.
 - `/digest [daily|off]` controls daily summary delivery
 - `/location [latitude longitude name|off]` manages the weather location
 - `/weather` shows today's forecast; `/weather units metric|imperial` changes units
+- `/weather daily` adds weather to the daily digest; `/weather off` unsubscribes
 - `/note add <text>` saves a private note and returns its short ID
 - `/notes` lists the current user's notes
 - `/note <id>` shows a note; `/note delete <id>` removes it
@@ -175,3 +176,8 @@ The `/weather` command calls the adapter only after a registered user saves a
 location. Provider and command tests use fake HTTP openers and saved dictionaries,
 so local verification performs no network requests. Failed or malformed provider
 responses return a short temporary-unavailable message without exposing internals.
+
+Daily weather is opt-in and requires a saved location. It is appended to the normal
+scheduled greeting using the profile's local date and units. `/digest off` pauses
+summary delivery while keeping the weather subscription; `/weather off` removes the
+subscription. A provider failure leaves the greeting unchanged.
