@@ -54,6 +54,30 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         self.assertIn("Good day, Mira!", replies[0]["text"])
         self.assertIn("Vancouver: clear, 5-12°C", replies[0]["text"])
 
+    def test_enqueues_combined_weather_summary(self):
+        users = InMemoryUserRepository()
+        users.save(
+            User(
+                42,
+                84,
+                "Mira",
+                greeting_time="10:00",
+                weather_location=WeatherLocation("Vancouver", 49.2, -123.1),
+                weather_summary=True,
+                digest_mode="daily",
+            )
+        )
+        queue = FakeQueue()
+        handler = ScheduledGreetingHandler(
+            users, queue=queue, weather_provider=FakeWeatherProvider()
+        )
+
+        handler.handle({"time": "2024-05-31T10:00:00Z"})
+
+        self.assertEqual(len(queue.messages), 1)
+        self.assertEqual(queue.messages[0].kind, "greeting")
+        self.assertIn("Vancouver: clear", queue.messages[0].text)
+
     def test_returns_due_telegram_payloads(self):
         users = InMemoryUserRepository()
         users.save(User(42, 84, "Mira", greeting_time="10:00"))
