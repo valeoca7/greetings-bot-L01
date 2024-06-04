@@ -457,7 +457,13 @@ class Application:
             if user is None:
                 return registration_required(update.message.chat_id)
             if command.arguments == ("off",):
+                had_summary = user.weather_summary
                 self.users.save(clear_weather_location(user))
+                if had_summary:
+                    return Reply(
+                        update.message.chat_id,
+                        "Weather location and daily summary removed.",
+                    )
                 return Reply(update.message.chat_id, "Weather location removed.")
             if len(command.arguments) >= 3:
                 try:

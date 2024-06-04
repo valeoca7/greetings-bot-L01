@@ -330,6 +330,19 @@ class AppTest(unittest.TestCase):
         self.assertEqual(reply.text, "Daily weather summary is off.")
         self.assertFalse(users.get(42).weather_summary)
 
+    def test_location_removal_confirms_daily_weather_cleanup(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        handle_update(text_update("/location 49 -123 Vancouver"), users)
+        handle_update(text_update("/weather daily"), users)
+
+        reply = handle_update(text_update("/location off"), users)
+
+        self.assertEqual(
+            reply.text,
+            "Weather location and daily summary removed.",
+        )
+
     def test_rejects_unknown_weather_units(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)
