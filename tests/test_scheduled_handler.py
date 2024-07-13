@@ -7,7 +7,7 @@ from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
-from greetings_bot.open_meteo import OpenMeteoWeatherProvider
+from greetings_bot.weather_cache import CachingWeatherProvider
 
 
 class FakeQueue:
@@ -111,7 +111,8 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         self.assertIsInstance(handler.reminders, DynamoReminderRepository)
         self.assertIs(handler.users.table, handler.deliveries.table)
         self.assertIs(handler.users.table, handler.reminders.table)
-        self.assertIsInstance(handler.weather_provider, OpenMeteoWeatherProvider)
+        self.assertIsInstance(handler.weather_provider, CachingWeatherProvider)
+        self.assertIs(handler.weather_provider.cache.table, handler.users.table)
 
     def test_reads_dispatch_batch_size(self):
         handler = build_default_handler({"DISPATCH_BATCH_SIZE": "25"})

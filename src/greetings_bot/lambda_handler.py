@@ -18,7 +18,6 @@ from greetings_bot.event_scheduler import (
 )
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.observability import correlation_id, emit_metric, log_event
-from greetings_bot.open_meteo import weather_provider_from_env
 from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
@@ -27,6 +26,7 @@ from greetings_bot.runtime import process_payload
 from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
 from greetings_bot.weather import WeatherProvider
+from greetings_bot.weather_runtime import reliable_weather_provider
 
 
 LambdaResponse = Dict[str, object]
@@ -93,7 +93,8 @@ def build_default_handler(
         notes = InMemoryNoteRepository()
         reminders = InMemoryReminderRepository()
     reminder_scheduler = scheduler_from_env(environ)
-    weather_provider = weather_provider_from_env(environ)
+    table = users.table if table_name else None
+    weather_provider = reliable_weather_provider(environ, table)
     return WebhookHandler(
         users, notes, reminders, reminder_scheduler, weather_provider
     )

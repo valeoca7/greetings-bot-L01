@@ -12,7 +12,7 @@ from greetings_bot.lambda_handler import (
     handle_event,
 )
 from greetings_bot.users import InMemoryUserRepository
-from greetings_bot.open_meteo import OpenMeteoWeatherProvider
+from greetings_bot.weather_cache import CachingWeatherProvider
 
 
 class LambdaHandlerTest(unittest.TestCase):
@@ -94,7 +94,8 @@ class LambdaHandlerTest(unittest.TestCase):
         self.assertIs(handler.users.table, handler.notes.table)
         self.assertIs(handler.users.table, handler.reminders.table)
         self.assertEqual(resource.name, "greetings-users")
-        self.assertIsInstance(handler.weather_provider, OpenMeteoWeatherProvider)
+        self.assertIsInstance(handler.weather_provider, CachingWeatherProvider)
+        self.assertIs(handler.weather_provider.cache.table, handler.users.table)
 
 
 if __name__ == "__main__":

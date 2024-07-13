@@ -18,12 +18,20 @@ class SamTemplateTest(unittest.TestCase):
 
     def test_bounds_webhook_weather_requests(self):
         self.assertEqual(self.template.count("WEATHER_TIMEOUT_SECONDS: '5'"), 2)
+        self.assertEqual(self.template.count("WEATHER_MAX_CALLS: '20'"), 2)
+        self.assertEqual(self.template.count("WEATHER_CACHE_MINUTES: '60'"), 2)
+        self.assertEqual(self.template.count("WEATHER_STALE_HOURS: '24'"), 2)
 
     def test_defines_encrypted_on_demand_table(self):
         self.assertIn("Type: AWS::DynamoDB::Table", self.template)
         self.assertIn("BillingMode: PAY_PER_REQUEST", self.template)
         self.assertIn("SSEEnabled: true", self.template)
         self.assertIn("USER_TABLE_NAME: !Ref DataTable", self.template)
+
+    def test_expires_weather_cache_records(self):
+        self.assertIn("TimeToLiveSpecification:", self.template)
+        self.assertIn("AttributeName: expires_at", self.template)
+        self.assertIn("Enabled: true", self.template)
 
     def test_limits_webhook_table_permissions(self):
         self.assertIn("dynamodb:GetItem", self.template)
@@ -63,17 +71,22 @@ class SamTemplateTest(unittest.TestCase):
         self.assertEqual(self.template.count("SqsManagedSseEnabled: true"), 2)
 
     def test_alarms_on_delivery_failures_and_dead_letters(self):
-        self.assertEqual(self.template.count("Type: AWS::CloudWatch::Alarm"), 3)
+        self.assertEqual(self.template.count("Type: AWS::CloudWatch::Alarm"), 4)
         self.assertIn("MetricName: Failed", self.template)
         self.assertIn("Value: delivery", self.template)
         self.assertIn("MetricName: ApproximateNumberOfMessagesVisible", self.template)
         self.assertIn("Value: !GetAtt DeliveryDeadLetterQueue.QueueName", self.template)
-        self.assertEqual(self.template.count("TreatMissingData: notBreaching"), 3)
+        self.assertEqual(self.template.count("TreatMissingData: notBreaching"), 4)
 
     def test_alarms_on_delivery_worker_errors(self):
         self.assertIn("Namespace: AWS/Lambda", self.template)
         self.assertIn("MetricName: Errors", self.template)
         self.assertIn("Value: !Ref DeliveryWorkerFunction", self.template)
+
+    def test_alarms_on_weather_provider_errors(self):
+        self.assertIn("WeatherProviderErrorAlarm:", self.template)
+        self.assertIn("MetricName: ProviderError", self.template)
+        self.assertIn("Value: weather", self.template)
 
 
 if __name__ == "__main__":

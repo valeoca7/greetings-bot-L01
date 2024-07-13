@@ -9,7 +9,6 @@ from greetings_bot.dynamo_deliveries import DynamoDeliveryLedger
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.observability import correlation_id, emit_metric, log_event
-from greetings_bot.open_meteo import weather_provider_from_env
 from greetings_bot.scheduled_event import event_time
 from greetings_bot.reminder_dispatcher import ReminderDispatcher
 from greetings_bot.reminder_store import (
@@ -22,6 +21,7 @@ from greetings_bot.users import UserRepository
 from greetings_bot.users import InMemoryUserRepository
 from greetings_bot.weather import WeatherProvider
 from greetings_bot.weather_summary import add_weather_summaries
+from greetings_bot.weather_runtime import reliable_weather_provider
 
 
 ScheduledResponse = List[Dict[str, object]]
@@ -90,9 +90,9 @@ def build_default_handler(
     max_batch = int(environ.get("DISPATCH_BATCH_SIZE", "100"))
     include_reminders = environ.get("TARGETED_REMINDERS") != "true"
     queue = queue_from_env(environ)
-    weather_provider = weather_provider_from_env(environ)
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:
+        weather_provider = reliable_weather_provider(environ)
         return ScheduledGreetingHandler(
             InMemoryUserRepository(),
             max_batch=max_batch,
@@ -101,6 +101,7 @@ def build_default_handler(
             weather_provider=weather_provider,
         )
     users = repository_for_table(table_name, dynamodb_resource)
+    weather_provider = reliable_weather_provider(environ, users.table)
     deliveries = DynamoDeliveryLedger(users.table)
     reminders = DynamoReminderRepository(users.table)
     return ScheduledGreetingHandler(

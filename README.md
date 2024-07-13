@@ -181,3 +181,10 @@ Daily weather is opt-in and requires a saved location. It is appended to the nor
 scheduled greeting using the profile's local date and units. `/digest off` pauses
 summary delivery while keeping the weather subscription; `/weather off` removes the
 subscription. A provider failure leaves the greeting unchanged.
+
+Forecasts are cached for one hour in the shared DynamoDB table. Provider failures
+can use a cached forecast up to 24 hours old, and cache records expire automatically
+after two days. A warm Lambda allows at most 20 uncached provider calls per minute.
+These defaults can be changed with `WEATHER_CACHE_MINUTES`, `WEATHER_STALE_HOURS`,
+and `WEATHER_MAX_CALLS`. Cache hits, provider calls, stale fallbacks, errors, and
+rate-limit events are emitted under the `GreetingsBot` metrics namespace.

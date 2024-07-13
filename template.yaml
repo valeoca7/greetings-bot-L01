@@ -14,6 +14,9 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
       AttributeDefinitions:
         - AttributeName: pk
           AttributeType: S
@@ -69,6 +72,9 @@ Resources:
           SCHEDULER_ROLE_ARN: !GetAtt SchedulerInvokeRole.Arn
           SCHEDULER_GROUP: !Ref ReminderScheduleGroup
           WEATHER_TIMEOUT_SECONDS: '5'
+          WEATHER_MAX_CALLS: '20'
+          WEATHER_CACHE_MINUTES: '60'
+          WEATHER_STALE_HOURS: '24'
       Policies:
         - Statement:
             - Effect: Allow
@@ -110,6 +116,9 @@ Resources:
           TARGETED_REMINDERS: 'true'
           DELIVERY_QUEUE_URL: !Ref DeliveryQueue
           WEATHER_TIMEOUT_SECONDS: '5'
+          WEATHER_MAX_CALLS: '20'
+          WEATHER_CACHE_MINUTES: '60'
+          WEATHER_STALE_HOURS: '24'
       Policies:
         - Statement:
             - Effect: Allow
@@ -249,5 +258,21 @@ Resources:
       Period: 300
       EvaluationPeriods: 1
       Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  WeatherProviderErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Weather provider calls are failing
+      Namespace: GreetingsBot
+      MetricName: ProviderError
+      Dimensions:
+        - Name: Service
+          Value: weather
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 3
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
