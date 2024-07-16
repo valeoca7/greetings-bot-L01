@@ -55,6 +55,16 @@ class DynamoWeatherCacheTest(unittest.TestCase):
         self.assertEqual(key["pk"], "WEATHER#49.2#-123.1")
         self.assertEqual(key["sk"], "FORECAST#2024-06-20")
 
+    def test_ignores_malformed_cached_item(self):
+        table = FakeTable()
+        location = WeatherLocation("Vancouver", 49.2, -123.1)
+        key = weather_cache_key(location, date(2024, 6, 20))
+        table.put_item(Item={**key, "condition": "rain"})
+
+        value = DynamoWeatherCache(table).get(location, date(2024, 6, 20))
+
+        self.assertIsNone(value)
+
 
 if __name__ == "__main__":
     unittest.main()
