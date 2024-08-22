@@ -20,6 +20,24 @@ class InformationProvider(Protocol):
         ...
 
 
+class InformationService:
+    def __init__(
+        self, provider: InformationProvider, max_answer_length: int = 600
+    ) -> None:
+        if max_answer_length < 1:
+            raise ValueError("answer length must be positive")
+        self.provider = provider
+        self.max_answer_length = max_answer_length
+
+    def answer(self, request: InformationRequest) -> str:
+        answer = self.provider.answer(request).strip()
+        if not answer:
+            raise ValueError("information answer is empty")
+        if len(answer) > self.max_answer_length:
+            raise ValueError("information answer is too long")
+        return answer
+
+
 def parse_information_request(arguments: Sequence[str]) -> InformationRequest:
     if not arguments:
         raise ValueError("information request kind is required")
