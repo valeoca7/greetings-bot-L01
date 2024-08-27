@@ -8,6 +8,11 @@ from greetings_bot.event_scheduler import (
 )
 from greetings_bot.commands import parse_command
 from greetings_bot.greetings import format_greeting
+from greetings_bot.information import (
+    InformationProviderError,
+    InformationService,
+    parse_information_request,
+)
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.notes import create_note, format_note_list
 from greetings_bot.reminder_store import (
@@ -72,6 +77,8 @@ class Application:
         clock: Optional[Clock] = None,
         reminder_scheduler: Optional[ReminderSchedulePort] = None,
         weather_provider: Optional[WeatherProvider] = None,
+        information_service: Optional[InformationService] = None,
+        information_enabled: bool = False,
     ) -> None:
         self.users = users if users is not None else InMemoryUserRepository()
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -85,6 +92,8 @@ class Application:
             else NoopReminderScheduler()
         )
         self.weather_provider = weather_provider
+        self.information_service = information_service
+        self.information_enabled = information_enabled
 
     def handle(self, update: Update) -> Optional[Reply]:
         if update.message is None:
@@ -120,6 +129,36 @@ class Application:
                 "/reminders - list reminders\n"
                 "/reminder <id> - view or manage a reminder",
             )
+        if command.name == "ask":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if not self.information_enabled:
+                return Reply(
+                    update.message.chat_id,
+                    "Information requests are not enabled.",
+                )
+            try:
+                request = parse_information_request(command.arguments)
+            except ValueError:
+                return Reply(
+                    update.message.chat_id,
+                    "Use /ask joke, /ask fact, /ask person <name>, "
+                    "or /ask place <name>.",
+                )
+            if self.information_service is None:
+                return Reply(
+                    update.message.chat_id,
+                    "Information service is temporarily unavailable.",
+                )
+            try:
+                answer = self.information_service.answer(request)
+            except (InformationProviderError, ValueError):
+                return Reply(
+                    update.message.chat_id,
+                    "Information service is temporarily unavailable.",
+                )
+            return Reply(update.message.chat_id, answer)
         if command.name == "note" and command.arguments[:1] == ("add",):
             user = self.users.get(update.message.sender.id)
             if user is None:
@@ -674,6 +713,8 @@ def handle_update(
     clock: Optional[Clock] = None,
     reminder_scheduler: Optional[ReminderSchedulePort] = None,
     weather_provider: Optional[WeatherProvider] = None,
+    information_service: Optional[InformationService] = None,
+    information_enabled: bool = False,
 ) -> Optional[Reply]:
     return Application(
         users,
@@ -682,4 +723,6 @@ def handle_update(
         clock,
         reminder_scheduler,
         weather_provider,
+        information_service,
+        information_enabled,
     ).handle(update)

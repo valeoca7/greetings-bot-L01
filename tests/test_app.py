@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from greetings_bot.app import Application, handle_update
 from greetings_bot.clock import FixedClock
+from greetings_bot.information import InformationProviderError
 from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
@@ -40,6 +41,18 @@ class FakeWeatherProvider:
         return self.forecast
 
 
+class FakeInformationService:
+    def __init__(self, answer="A useful fact.", error=None):
+        self.response = answer
+        self.error = error
+
+    def answer(self, request):
+        self.request = request
+        if self.error:
+            raise self.error
+        return self.response
+
+
 def text_update(text, language_code=None):
     sender = TelegramUser(
         id=42,
@@ -51,6 +64,62 @@ def text_update(text, language_code=None):
 
 
 class AppTest(unittest.TestCase):
+    def test_information_requests_are_disabled_by_default(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/ask joke"), users)
+
+        self.assertEqual(reply.text, "Information requests are not enabled.")
+
+    def test_handles_enabled_information_request(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        service = FakeInformationService("Ada wrote the first algorithm.")
+        app = Application(
+            users,
+            information_service=service,
+            information_enabled=True,
+        )
+
+        reply = app.handle(text_update("/ask person Ada Lovelace"))
+
+        self.assertEqual(reply.text, "Ada wrote the first algorithm.")
+        self.assertEqual(service.request.kind, "person")
+        self.assertEqual(service.request.query, "Ada Lovelace")
+
+    def test_rejects_invalid_information_request(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        app = Application(
+            users,
+            information_service=FakeInformationService(),
+            information_enabled=True,
+        )
+
+        reply = app.handle(text_update("/ask person"))
+
+        self.assertEqual(
+            reply.text,
+            "Use /ask joke, /ask fact, /ask person <name>, or /ask place <name>.",
+        )
+
+    def test_handles_information_provider_failure(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        service = FakeInformationService(
+            error=InformationProviderError("down")
+        )
+        app = Application(
+            users,
+            information_service=service,
+            information_enabled=True,
+        )
+
+        reply = app.handle(text_update("/ask fact"))
+
+        self.assertEqual(reply.text, "Information service is temporarily unavailable.")
+
     def test_application_keeps_its_user_repository(self):
         users = InMemoryUserRepository()
         application = Application(users)
