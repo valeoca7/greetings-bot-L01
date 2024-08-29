@@ -16,6 +16,8 @@ from greetings_bot.event_scheduler import (
     ReminderSchedulePort,
     scheduler_from_env,
 )
+from greetings_bot.information import InformationService
+from greetings_bot.information_runtime import information_requests_enabled
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.reminder_store import (
@@ -41,6 +43,8 @@ class WebhookHandler:
         reminders: ReminderRepository = None,
         reminder_scheduler: ReminderSchedulePort = None,
         weather_provider: WeatherProvider = None,
+        information_service: InformationService = None,
+        information_enabled: bool = False,
     ) -> None:
         self.users = users
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -53,6 +57,8 @@ class WebhookHandler:
             else NoopReminderScheduler()
         )
         self.weather_provider = weather_provider
+        self.information_service = information_service
+        self.information_enabled = information_enabled
 
     def handle(self, event: Mapping[str, Any]) -> LambdaResponse:
         try:
@@ -68,6 +74,8 @@ class WebhookHandler:
                 self.reminders,
                 self.reminder_scheduler,
                 self.weather_provider,
+                self.information_service,
+                self.information_enabled,
             )
         except UpdateParseError:
             return self._error_response("invalid update payload")
@@ -95,8 +103,14 @@ def build_default_handler(
     reminder_scheduler = scheduler_from_env(environ)
     table = users.table if table_name else None
     weather_provider = reliable_weather_provider(environ, table)
+    information_enabled = information_requests_enabled(environ)
     return WebhookHandler(
-        users, notes, reminders, reminder_scheduler, weather_provider
+        users,
+        notes,
+        reminders,
+        reminder_scheduler,
+        weather_provider,
+        information_enabled=information_enabled,
     )
 
 

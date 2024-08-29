@@ -97,6 +97,12 @@ class LambdaHandlerTest(unittest.TestCase):
         self.assertIsInstance(handler.weather_provider, CachingWeatherProvider)
         self.assertIs(handler.weather_provider.cache.table, handler.users.table)
 
+    def test_reads_information_feature_flag(self):
+        handler = build_default_handler({"INFO_REQUESTS_ENABLED": "true"})
+
+        self.assertTrue(handler.information_enabled)
+        self.assertIsNone(handler.information_service)
+
 
 if __name__ == "__main__":
     unittest.main()
