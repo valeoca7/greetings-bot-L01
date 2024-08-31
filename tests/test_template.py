@@ -22,6 +22,9 @@ class SamTemplateTest(unittest.TestCase):
         self.assertEqual(self.template.count("WEATHER_CACHE_MINUTES: '60'"), 2)
         self.assertEqual(self.template.count("WEATHER_STALE_HOURS: '24'"), 2)
 
+    def test_keeps_information_requests_disabled(self):
+        self.assertEqual(self.template.count("INFO_REQUESTS_ENABLED: 'false'"), 1)
+
     def test_defines_encrypted_on_demand_table(self):
         self.assertIn("Type: AWS::DynamoDB::Table", self.template)
         self.assertIn("BillingMode: PAY_PER_REQUEST", self.template)

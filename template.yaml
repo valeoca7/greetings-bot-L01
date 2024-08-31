@@ -75,6 +75,7 @@ Resources:
           WEATHER_MAX_CALLS: '20'
           WEATHER_CACHE_MINUTES: '60'
           WEATHER_STALE_HOURS: '24'
+          INFO_REQUESTS_ENABLED: 'false'
       Policies:
         - Statement:
             - Effect: Allow
