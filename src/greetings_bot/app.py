@@ -118,6 +118,7 @@ class Application:
                 "/digest [daily|off] - manage the daily digest\n"
                 "/location [lat lon name|off] - manage weather location\n"
                 "/weather [daily|off] - forecast or daily summary\n"
+                "/ask <joke|fact|person|place> - request short information\n"
                 "/timezone [area/name] - show or change timezone\n"
                 "/quiet [start end|off] - manage quiet hours\n"
                 "/name [name] - show or change greeting name\n"
