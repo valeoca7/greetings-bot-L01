@@ -188,3 +188,10 @@ after two days. A warm Lambda allows at most 20 uncached provider calls per minu
 These defaults can be changed with `WEATHER_CACHE_MINUTES`, `WEATHER_STALE_HOURS`,
 and `WEATHER_MAX_CALLS`. Cache hits, provider calls, stale fallbacks, errors, and
 rate-limit events are emitted under the `GreetingsBot` metrics namespace.
+
+## Information requests
+
+The provider-neutral `/ask` flow accepts `joke`, `fact`, `person <name>`, and
+`place <name>`. Queries are limited to 120 characters and answers to 600 characters.
+`INFO_REQUESTS_ENABLED` defaults to `false`, and no production provider is configured
+in this release. Tests use a fake provider; there are no model or Bedrock calls yet.
