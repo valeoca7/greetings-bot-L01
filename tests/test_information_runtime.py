@@ -1,6 +1,11 @@
 import unittest
 
-from greetings_bot.information_runtime import information_requests_enabled
+from greetings_bot.bedrock_information import BedrockInformationProvider
+from greetings_bot.information_runtime import (
+    DEFAULT_BEDROCK_MODEL_ID,
+    information_requests_enabled,
+    information_service_from_env,
+)
 
 
 class InformationRuntimeTest(unittest.TestCase):
@@ -15,6 +20,41 @@ class InformationRuntimeTest(unittest.TestCase):
     def test_rejects_ambiguous_feature_flag(self):
         with self.assertRaises(ValueError):
             information_requests_enabled({"INFO_REQUESTS_ENABLED": "sometimes"})
+
+    def test_does_not_build_a_client_when_feature_is_disabled(self):
+        self.assertIsNone(information_service_from_env({}, object()))
+
+    def test_builds_a_service_with_the_default_model(self):
+        client = object()
+
+        service = information_service_from_env(
+            {"INFO_REQUESTS_ENABLED": "true"}, client
+        )
+
+        self.assertIsInstance(service.provider, BedrockInformationProvider)
+        self.assertIs(service.provider.client, client)
+        self.assertEqual(service.provider.model_id, DEFAULT_BEDROCK_MODEL_ID)
+
+    def test_accepts_a_configured_model(self):
+        service = information_service_from_env(
+            {
+                "INFO_REQUESTS_ENABLED": "true",
+                "BEDROCK_MODEL_ID": "amazon.example-v1",
+            },
+            object(),
+        )
+
+        self.assertEqual(service.provider.model_id, "amazon.example-v1")
+
+    def test_rejects_a_blank_model(self):
+        with self.assertRaises(ValueError):
+            information_service_from_env(
+                {
+                    "INFO_REQUESTS_ENABLED": "true",
+                    "BEDROCK_MODEL_ID": " ",
+                },
+                object(),
+            )
 
 
 if __name__ == "__main__":

@@ -193,5 +193,10 @@ rate-limit events are emitted under the `GreetingsBot` metrics namespace.
 
 The provider-neutral `/ask` flow accepts `joke`, `fact`, `person <name>`, and
 `place <name>`. Queries are limited to 120 characters and answers to 600 characters.
-`INFO_REQUESTS_ENABLED` defaults to `false`, and no production provider is configured
-in this release. Tests use a fake provider; there are no model or Bedrock calls yet.
+`INFO_REQUESTS_ENABLED` defaults to `false`. When enabled in Lambda, requests use
+Amazon Titan Text Lite through Bedrock Runtime. `BEDROCK_MODEL_ID` can select another
+compatible Titan model, and the SAM role limits invocation to that model ARN.
+
+Prompts request short answers and do not include profile, note, or reminder data.
+Provider failures return a temporary-unavailable message. All local tests inject a
+fake Bedrock client and make no model, network, or AWS calls.

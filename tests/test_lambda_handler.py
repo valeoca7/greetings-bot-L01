@@ -98,10 +98,51 @@ class LambdaHandlerTest(unittest.TestCase):
         self.assertIs(handler.weather_provider.cache.table, handler.users.table)
 
     def test_reads_information_feature_flag(self):
-        handler = build_default_handler({"INFO_REQUESTS_ENABLED": "true"})
+        client = object()
+
+        handler = build_default_handler(
+            {"INFO_REQUESTS_ENABLED": "true"}, bedrock_client=client
+        )
 
         self.assertTrue(handler.information_enabled)
-        self.assertIsNone(handler.information_service)
+        self.assertIs(handler.information_service.provider.client, client)
+
+    def test_answers_information_request_through_bedrock_adapter(self):
+        class Body:
+            def read(self):
+                return b'{"results":[{"outputText":"Octopuses have three hearts."}]}'
+
+        class Client:
+            def invoke_model(self, **request):
+                self.request = request
+                return {"body": Body()}
+
+        client = Client()
+        handler = build_default_handler(
+            {"INFO_REQUESTS_ENABLED": "true"}, bedrock_client=client
+        )
+
+        handler.handle({"body": self._message_body("/start")})
+        response = handler.handle({"body": self._message_body("/ask fact")})
+
+        self.assertIn("Octopuses have three hearts.", response["body"])
+        self.assertEqual(
+            client.request["modelId"], "amazon.titan-text-lite-v1"
+        )
+
+    @staticmethod
+    def _message_body(text):
+        return json.dumps(
+            {
+                "update_id": 1,
+                "message": {
+                    "message_id": 2,
+                    "from": {"id": 42, "first_name": "Mira"},
+                    "chat": {"id": 42},
+                    "text": text,
+                },
+            }
+        )
 
 
 if __name__ == "__main__":

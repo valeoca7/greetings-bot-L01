@@ -17,7 +17,11 @@ from greetings_bot.event_scheduler import (
     scheduler_from_env,
 )
 from greetings_bot.information import InformationService
-from greetings_bot.information_runtime import information_requests_enabled
+from greetings_bot.bedrock_information import BedrockClient
+from greetings_bot.information_runtime import (
+    information_requests_enabled,
+    information_service_from_env,
+)
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.reminder_store import (
@@ -90,6 +94,7 @@ class WebhookHandler:
 def build_default_handler(
     environ: Mapping[str, str] = os.environ,
     dynamodb_resource: DynamoResource = None,
+    bedrock_client: BedrockClient = None,
 ) -> WebhookHandler:
     table_name = environ.get("USER_TABLE_NAME")
     if table_name:
@@ -104,12 +109,14 @@ def build_default_handler(
     table = users.table if table_name else None
     weather_provider = reliable_weather_provider(environ, table)
     information_enabled = information_requests_enabled(environ)
+    information_service = information_service_from_env(environ, bedrock_client)
     return WebhookHandler(
         users,
         notes,
         reminders,
         reminder_scheduler,
         weather_provider,
+        information_service,
         information_enabled=information_enabled,
     )
 

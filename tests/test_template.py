@@ -25,6 +25,18 @@ class SamTemplateTest(unittest.TestCase):
     def test_keeps_information_requests_disabled(self):
         self.assertEqual(self.template.count("INFO_REQUESTS_ENABLED: 'false'"), 1)
 
+    def test_configures_the_bedrock_information_model(self):
+        self.assertIn("BedrockModelId:", self.template)
+        self.assertIn("Default: amazon.titan-text-lite-v1", self.template)
+        self.assertIn("BEDROCK_MODEL_ID: !Ref BedrockModelId", self.template)
+
+    def test_limits_bedrock_access_to_the_selected_model(self):
+        self.assertIn("Action: bedrock:InvokeModel", self.template)
+        self.assertIn(
+            "bedrock:${AWS::Region}::foundation-model/${BedrockModelId}",
+            self.template,
+        )
+
     def test_defines_encrypted_on_demand_table(self):
         self.assertIn("Type: AWS::DynamoDB::Table", self.template)
         self.assertIn("BillingMode: PAY_PER_REQUEST", self.template)
