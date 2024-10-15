@@ -9,6 +9,12 @@ Parameters:
   BedrockModelId:
     Type: String
     Default: amazon.titan-text-lite-v1
+  InformationRequestsEnabled:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
 
 Resources:
   DataTable:
@@ -78,7 +84,7 @@ Resources:
           WEATHER_MAX_CALLS: '20'
           WEATHER_CACHE_MINUTES: '60'
           WEATHER_STALE_HOURS: '24'
-          INFO_REQUESTS_ENABLED: 'false'
+          INFO_REQUESTS_ENABLED: !Ref InformationRequestsEnabled
           BEDROCK_MODEL_ID: !Ref BedrockModelId
       Policies:
         - Statement:

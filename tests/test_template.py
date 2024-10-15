@@ -23,7 +23,12 @@ class SamTemplateTest(unittest.TestCase):
         self.assertEqual(self.template.count("WEATHER_STALE_HOURS: '24'"), 2)
 
     def test_keeps_information_requests_disabled(self):
-        self.assertEqual(self.template.count("INFO_REQUESTS_ENABLED: 'false'"), 1)
+        self.assertIn("InformationRequestsEnabled:", self.template)
+        self.assertIn("Default: 'false'", self.template)
+        self.assertIn(
+            "INFO_REQUESTS_ENABLED: !Ref InformationRequestsEnabled",
+            self.template,
+        )
 
     def test_configures_the_bedrock_information_model(self):
         self.assertIn("BedrockModelId:", self.template)
