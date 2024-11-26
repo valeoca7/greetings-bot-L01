@@ -6,11 +6,13 @@ from types import SimpleNamespace
 from greetings_bot.dynamo_users import DynamoUserRepository
 from greetings_bot.dynamo_notes import DynamoNoteRepository
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
+from greetings_bot.dynamo_information_quota import DynamoInformationQuota
 from greetings_bot.lambda_handler import (
     WebhookHandler,
     build_default_handler,
     handle_event,
 )
+from greetings_bot.information_quota import InMemoryInformationQuota
 from greetings_bot.users import InMemoryUserRepository
 from greetings_bot.weather_cache import CachingWeatherProvider
 
@@ -101,11 +103,39 @@ class LambdaHandlerTest(unittest.TestCase):
         client = object()
 
         handler = build_default_handler(
-            {"INFO_REQUESTS_ENABLED": "true"}, bedrock_client=client
+            {
+                "INFO_REQUESTS_ENABLED": "true",
+                "INFO_WEEKLY_LIMIT": "9",
+            },
+            bedrock_client=client,
         )
 
         self.assertTrue(handler.information_enabled)
         self.assertIs(handler.information_service.provider.client, client)
+        self.assertIsInstance(handler.information_quota, InMemoryInformationQuota)
+        self.assertEqual(handler.information_weekly_limit, 9)
+
+    def test_uses_the_shared_table_for_information_quota(self):
+        class Resource:
+            def __init__(self):
+                self.table = object()
+
+            def Table(self, name):
+                return self.table
+
+        resource = Resource()
+
+        handler = build_default_handler(
+            {
+                "USER_TABLE_NAME": "data",
+                "INFO_REQUESTS_ENABLED": "true",
+            },
+            resource,
+            object(),
+        )
+
+        self.assertIsInstance(handler.information_quota, DynamoInformationQuota)
+        self.assertIs(handler.information_quota.table, resource.table)
 
     def test_answers_information_request_through_bedrock_adapter(self):
         class Body:

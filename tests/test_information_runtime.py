@@ -5,6 +5,7 @@ from greetings_bot.information_runtime import (
     DEFAULT_BEDROCK_MODEL_ID,
     information_requests_enabled,
     information_service_from_env,
+    information_weekly_limit,
 )
 
 
@@ -55,6 +56,18 @@ class InformationRuntimeTest(unittest.TestCase):
                 },
                 object(),
             )
+
+    def test_reads_the_weekly_limit(self):
+        self.assertEqual(information_weekly_limit({}), 5)
+        self.assertEqual(
+            information_weekly_limit({"INFO_WEEKLY_LIMIT": "9"}), 9
+        )
+
+    def test_rejects_an_invalid_weekly_limit(self):
+        for value in ("0", "-1", "many"):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    information_weekly_limit({"INFO_WEEKLY_LIMIT": value})
 
 
 if __name__ == "__main__":

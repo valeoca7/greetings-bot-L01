@@ -200,3 +200,9 @@ compatible Titan model, and the SAM role limits invocation to that model ARN.
 Prompts request short answers and do not include profile, note, or reminder data.
 Provider failures return a temporary-unavailable message. All local tests inject a
 fake Bedrock client and make no model, network, or AWS calls.
+
+Each user can make five accepted information requests per UTC week by default. Set
+`INFO_WEEKLY_LIMIT` or the SAM `InformationWeeklyLimit` parameter to change the
+allowance. The counter is incremented atomically before calling Bedrock and resets on
+Monday; failed provider attempts remain counted because the remote invocation may
+already have started. Quota records expire from DynamoDB after their useful window.

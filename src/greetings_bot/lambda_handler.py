@@ -11,16 +11,22 @@ from greetings_bot.api_gateway import (
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.dynamo_notes import DynamoNoteRepository
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
+from greetings_bot.dynamo_information_quota import DynamoInformationQuota
 from greetings_bot.event_scheduler import (
     NoopReminderScheduler,
     ReminderSchedulePort,
     scheduler_from_env,
 )
 from greetings_bot.information import InformationService
+from greetings_bot.information_quota import (
+    InformationQuota,
+    InMemoryInformationQuota,
+)
 from greetings_bot.bedrock_information import BedrockClient
 from greetings_bot.information_runtime import (
     information_requests_enabled,
     information_service_from_env,
+    information_weekly_limit,
 )
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.observability import correlation_id, emit_metric, log_event
@@ -49,6 +55,8 @@ class WebhookHandler:
         weather_provider: WeatherProvider = None,
         information_service: InformationService = None,
         information_enabled: bool = False,
+        information_quota: InformationQuota = None,
+        information_weekly_limit: int = 5,
     ) -> None:
         self.users = users
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -63,6 +71,8 @@ class WebhookHandler:
         self.weather_provider = weather_provider
         self.information_service = information_service
         self.information_enabled = information_enabled
+        self.information_quota = information_quota
+        self.information_weekly_limit = information_weekly_limit
 
     def handle(self, event: Mapping[str, Any]) -> LambdaResponse:
         try:
@@ -80,6 +90,8 @@ class WebhookHandler:
                 self.weather_provider,
                 self.information_service,
                 self.information_enabled,
+                self.information_quota,
+                self.information_weekly_limit,
             )
         except UpdateParseError:
             return self._error_response("invalid update payload")
@@ -110,6 +122,14 @@ def build_default_handler(
     weather_provider = reliable_weather_provider(environ, table)
     information_enabled = information_requests_enabled(environ)
     information_service = information_service_from_env(environ, bedrock_client)
+    weekly_limit = information_weekly_limit(environ)
+    information_quota = None
+    if information_enabled:
+        information_quota = (
+            DynamoInformationQuota(table)
+            if table is not None
+            else InMemoryInformationQuota()
+        )
     return WebhookHandler(
         users,
         notes,
@@ -118,6 +138,8 @@ def build_default_handler(
         weather_provider,
         information_service,
         information_enabled=information_enabled,
+        information_quota=information_quota,
+        information_weekly_limit=weekly_limit,
     )
 
 

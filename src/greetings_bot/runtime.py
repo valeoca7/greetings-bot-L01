@@ -3,6 +3,7 @@ from typing import Any, Dict, Mapping, Optional, Union
 from greetings_bot.app import handle_update
 from greetings_bot.event_scheduler import ReminderSchedulePort
 from greetings_bot.information import InformationService
+from greetings_bot.information_quota import InformationQuota
 from greetings_bot.note_store import NoteRepository
 from greetings_bot.reminder_store import ReminderRepository
 from greetings_bot.telegram import reply_payload
@@ -20,6 +21,8 @@ def process_payload(
     weather_provider: Optional[WeatherProvider] = None,
     information_service: Optional[InformationService] = None,
     information_enabled: bool = False,
+    information_quota: Optional[InformationQuota] = None,
+    information_weekly_limit: int = 5,
 ) -> Optional[Dict[str, Union[int, str]]]:
     update = parse_update(payload)
     reply = handle_update(
@@ -31,6 +34,8 @@ def process_payload(
         weather_provider=weather_provider,
         information_service=information_service,
         information_enabled=information_enabled,
+        information_quota=information_quota,
+        information_weekly_limit=information_weekly_limit,
     )
     if reply is None:
         return None

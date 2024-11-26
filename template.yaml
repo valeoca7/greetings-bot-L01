@@ -15,6 +15,11 @@ Parameters:
     AllowedValues:
       - 'true'
       - 'false'
+  InformationWeeklyLimit:
+    Type: Number
+    Default: 5
+    MinValue: 1
+    MaxValue: 100
 
 Resources:
   DataTable:
@@ -85,6 +90,7 @@ Resources:
           WEATHER_CACHE_MINUTES: '60'
           WEATHER_STALE_HOURS: '24'
           INFO_REQUESTS_ENABLED: !Ref InformationRequestsEnabled
+          INFO_WEEKLY_LIMIT: !Ref InformationWeeklyLimit
           BEDROCK_MODEL_ID: !Ref BedrockModelId
       Policies:
         - Statement:
@@ -95,6 +101,7 @@ Resources:
                 - dynamodb:Scan
                 - dynamodb:Query
                 - dynamodb:DeleteItem
+                - dynamodb:UpdateItem
                 - scheduler:CreateSchedule
                 - scheduler:UpdateSchedule
                 - scheduler:DeleteSchedule

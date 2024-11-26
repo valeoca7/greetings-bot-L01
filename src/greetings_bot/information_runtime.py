@@ -9,6 +9,7 @@ from greetings_bot.information import InformationService
 
 
 DEFAULT_BEDROCK_MODEL_ID = "amazon.titan-text-lite-v1"
+DEFAULT_INFORMATION_WEEKLY_LIMIT = 5
 
 
 def information_requests_enabled(
@@ -18,6 +19,22 @@ def information_requests_enabled(
     if value not in ("true", "false"):
         raise ValueError("INFO_REQUESTS_ENABLED must be true or false")
     return value == "true"
+
+
+def information_weekly_limit(
+    environ: Mapping[str, str] = os.environ,
+) -> int:
+    try:
+        limit = int(
+            environ.get(
+                "INFO_WEEKLY_LIMIT", str(DEFAULT_INFORMATION_WEEKLY_LIMIT)
+            )
+        )
+    except ValueError as error:
+        raise ValueError("INFO_WEEKLY_LIMIT must be a positive integer") from error
+    if limit < 1:
+        raise ValueError("INFO_WEEKLY_LIMIT must be a positive integer")
+    return limit
 
 
 def information_service_from_env(

@@ -42,6 +42,15 @@ class SamTemplateTest(unittest.TestCase):
             self.template,
         )
 
+    def test_configures_weekly_information_allowance(self):
+        self.assertIn("InformationWeeklyLimit:", self.template)
+        self.assertIn("INFO_WEEKLY_LIMIT: !Ref InformationWeeklyLimit", self.template)
+        self.assertIn("MinValue: 1", self.template)
+        self.assertIn("MaxValue: 100", self.template)
+
+    def test_allows_atomic_quota_updates(self):
+        self.assertIn("dynamodb:UpdateItem", self.template)
+
     def test_defines_encrypted_on_demand_table(self):
         self.assertIn("Type: AWS::DynamoDB::Table", self.template)
         self.assertIn("BillingMode: PAY_PER_REQUEST", self.template)

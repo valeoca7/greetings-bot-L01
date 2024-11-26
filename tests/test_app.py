@@ -4,6 +4,10 @@ from datetime import datetime, timezone
 from greetings_bot.app import Application, handle_update
 from greetings_bot.clock import FixedClock
 from greetings_bot.information import InformationProviderError
+from greetings_bot.information_quota import (
+    InformationQuotaError,
+    InMemoryInformationQuota,
+)
 from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
@@ -119,6 +123,77 @@ class AppTest(unittest.TestCase):
         reply = app.handle(text_update("/ask fact"))
 
         self.assertEqual(reply.text, "Information service is temporarily unavailable.")
+
+    def test_stops_information_requests_at_the_weekly_limit(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        service = FakeInformationService()
+        app = Application(
+            users,
+            clock=FixedClock(
+                datetime(2024, 10, 22, 20, 0, tzinfo=timezone.utc)
+            ),
+            information_service=service,
+            information_enabled=True,
+            information_quota=InMemoryInformationQuota(),
+            information_weekly_limit=1,
+        )
+
+        first = app.handle(text_update("/ask fact"))
+        denied = app.handle(text_update("/ask joke"))
+
+        self.assertEqual(first.text, "A useful fact.")
+        self.assertEqual(
+            denied.text,
+            "Weekly information limit reached. It resets on 2024-10-28 UTC.",
+        )
+        self.assertEqual(service.request.kind, "fact")
+
+    def test_keeps_failed_provider_attempts_in_the_quota(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        app = Application(
+            users,
+            clock=FixedClock(
+                datetime(2024, 10, 22, 20, 0, tzinfo=timezone.utc)
+            ),
+            information_service=FakeInformationService(
+                error=InformationProviderError("timed out")
+            ),
+            information_enabled=True,
+            information_quota=InMemoryInformationQuota(),
+            information_weekly_limit=1,
+        )
+
+        failed = app.handle(text_update("/ask fact"))
+        denied = app.handle(text_update("/ask joke"))
+
+        self.assertEqual(
+            failed.text, "Information service is temporarily unavailable."
+        )
+        self.assertIn("Weekly information limit reached", denied.text)
+
+    def test_does_not_call_the_provider_when_quota_storage_fails(self):
+        class BrokenQuota:
+            def consume(self, telegram_id, current_time, limit):
+                raise InformationQuotaError("quota unavailable")
+
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        service = FakeInformationService()
+        app = Application(
+            users,
+            information_service=service,
+            information_enabled=True,
+            information_quota=BrokenQuota(),
+        )
+
+        reply = app.handle(text_update("/ask fact"))
+
+        self.assertEqual(
+            reply.text, "Information service is temporarily unavailable."
+        )
+        self.assertFalse(hasattr(service, "request"))
 
     def test_application_keeps_its_user_repository(self):
         users = InMemoryUserRepository()

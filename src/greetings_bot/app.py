@@ -13,6 +13,7 @@ from greetings_bot.information import (
     InformationService,
     parse_information_request,
 )
+from greetings_bot.information_quota import InformationQuota, InformationQuotaError
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.notes import create_note, format_note_list
 from greetings_bot.reminder_store import (
@@ -79,6 +80,8 @@ class Application:
         weather_provider: Optional[WeatherProvider] = None,
         information_service: Optional[InformationService] = None,
         information_enabled: bool = False,
+        information_quota: Optional[InformationQuota] = None,
+        information_weekly_limit: int = 5,
     ) -> None:
         self.users = users if users is not None else InMemoryUserRepository()
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -94,6 +97,8 @@ class Application:
         self.weather_provider = weather_provider
         self.information_service = information_service
         self.information_enabled = information_enabled
+        self.information_quota = information_quota
+        self.information_weekly_limit = information_weekly_limit
 
     def handle(self, update: Update) -> Optional[Reply]:
         if update.message is None:
@@ -152,6 +157,24 @@ class Application:
                     update.message.chat_id,
                     "Information service is temporarily unavailable.",
                 )
+            if self.information_quota is not None:
+                try:
+                    decision = self.information_quota.consume(
+                        user.telegram_id,
+                        self.clock.now(),
+                        self.information_weekly_limit,
+                    )
+                except InformationQuotaError:
+                    return Reply(
+                        update.message.chat_id,
+                        "Information service is temporarily unavailable.",
+                    )
+                if not decision.allowed:
+                    return Reply(
+                        update.message.chat_id,
+                        "Weekly information limit reached. It resets on "
+                        "{} UTC.".format(decision.resets_at.date().isoformat()),
+                    )
             try:
                 answer = self.information_service.answer(request)
             except (InformationProviderError, ValueError):
@@ -716,6 +739,8 @@ def handle_update(
     weather_provider: Optional[WeatherProvider] = None,
     information_service: Optional[InformationService] = None,
     information_enabled: bool = False,
+    information_quota: Optional[InformationQuota] = None,
+    information_weekly_limit: int = 5,
 ) -> Optional[Reply]:
     return Application(
         users,
@@ -726,4 +751,6 @@ def handle_update(
         weather_provider,
         information_service,
         information_enabled,
+        information_quota,
+        information_weekly_limit,
     ).handle(update)
