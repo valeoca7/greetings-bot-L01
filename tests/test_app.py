@@ -195,6 +195,23 @@ class AppTest(unittest.TestCase):
         )
         self.assertFalse(hasattr(service, "request"))
 
+    def test_does_not_charge_invalid_information_commands(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        app = Application(
+            users,
+            information_service=FakeInformationService(),
+            information_enabled=True,
+            information_quota=InMemoryInformationQuota(),
+            information_weekly_limit=1,
+        )
+
+        invalid = app.handle(text_update("/ask person"))
+        accepted = app.handle(text_update("/ask fact"))
+
+        self.assertIn("Use /ask joke", invalid.text)
+        self.assertEqual(accepted.text, "A useful fact.")
+
     def test_application_keeps_its_user_repository(self):
         users = InMemoryUserRepository()
         application = Application(users)
