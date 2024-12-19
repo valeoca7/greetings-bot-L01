@@ -3,6 +3,7 @@ import unittest
 from greetings_bot.bedrock_information import BedrockInformationProvider
 from greetings_bot.information_runtime import (
     DEFAULT_BEDROCK_MODEL_ID,
+    bedrock_timeout_seconds,
     information_requests_enabled,
     information_service_from_env,
     information_weekly_limit,
@@ -68,6 +69,36 @@ class InformationRuntimeTest(unittest.TestCase):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     information_weekly_limit({"INFO_WEEKLY_LIMIT": value})
+
+    def test_reads_a_bounded_bedrock_timeout(self):
+        self.assertEqual(bedrock_timeout_seconds({}), 8)
+        self.assertEqual(
+            bedrock_timeout_seconds({"BEDROCK_TIMEOUT_SECONDS": "12"}), 12
+        )
+
+    def test_rejects_an_unbounded_bedrock_timeout(self):
+        for value in ("0", "31", "slow"):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    bedrock_timeout_seconds({"BEDROCK_TIMEOUT_SECONDS": value})
+
+    def test_builds_the_lazy_client_with_the_configured_timeout(self):
+        calls = []
+
+        def build_client(timeout):
+            calls.append(timeout)
+            return object()
+
+        service = information_service_from_env(
+            {
+                "INFO_REQUESTS_ENABLED": "true",
+                "BEDROCK_TIMEOUT_SECONDS": "6",
+            },
+            client_builder=build_client,
+        )
+
+        self.assertEqual(calls, [6])
+        self.assertIs(service.provider.client.__class__, object)
 
 
 if __name__ == "__main__":

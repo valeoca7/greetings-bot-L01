@@ -37,8 +37,14 @@ class InformationRequestTest(unittest.TestCase):
             InformationRequest("place", "Victoria BC"),
         )
 
+    def test_parses_a_short_advice_topic(self):
+        self.assertEqual(
+            parse_information_request(("advice", "build", "a", "sleep", "routine")),
+            InformationRequest("advice", "build a sleep routine"),
+        )
+
     def test_rejects_missing_or_unknown_request_kind(self):
-        for arguments in ((), ("person",), ("advice",)):
+        for arguments in ((), ("person",), ("advice",), ("recipe", "soup")):
             with self.subTest(arguments=arguments):
                 with self.assertRaises(ValueError):
                     parse_information_request(arguments)

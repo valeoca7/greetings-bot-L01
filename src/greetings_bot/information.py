@@ -47,7 +47,7 @@ def parse_information_request(arguments: Sequence[str]) -> InformationRequest:
         if query:
             raise ValueError("request does not accept a query")
         return InformationRequest(kind)
-    if kind not in ("person", "place") or not query:
+    if kind not in ("person", "place", "advice") or not query:
         raise ValueError("unknown or incomplete information request")
     if len(query) > MAX_QUERY_LENGTH:
         raise ValueError("information query is too long")

@@ -9,6 +9,11 @@ Parameters:
   BedrockModelId:
     Type: String
     Default: amazon.titan-text-lite-v1
+  BedrockTimeoutSeconds:
+    Type: Number
+    Default: 8
+    MinValue: 1
+    MaxValue: 30
   InformationRequestsEnabled:
     Type: String
     Default: 'false'
@@ -92,6 +97,7 @@ Resources:
           INFO_REQUESTS_ENABLED: !Ref InformationRequestsEnabled
           INFO_WEEKLY_LIMIT: !Ref InformationWeeklyLimit
           BEDROCK_MODEL_ID: !Ref BedrockModelId
+          BEDROCK_TIMEOUT_SECONDS: !Ref BedrockTimeoutSeconds
       Policies:
         - Statement:
             - Effect: Allow

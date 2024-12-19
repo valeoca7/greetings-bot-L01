@@ -35,6 +35,14 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Default: amazon.titan-text-lite-v1", self.template)
         self.assertIn("BEDROCK_MODEL_ID: !Ref BedrockModelId", self.template)
 
+    def test_bounds_the_bedrock_runtime_timeout(self):
+        self.assertIn("BedrockTimeoutSeconds:", self.template)
+        self.assertIn(
+            "BEDROCK_TIMEOUT_SECONDS: !Ref BedrockTimeoutSeconds",
+            self.template,
+        )
+        self.assertIn("Default: 8", self.template)
+
     def test_limits_bedrock_access_to_the_selected_model(self):
         self.assertIn("Action: bedrock:InvokeModel", self.template)
         self.assertIn(

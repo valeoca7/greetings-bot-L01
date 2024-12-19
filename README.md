@@ -59,6 +59,7 @@ does not send them to Telegram.
 - `/location [latitude longitude name|off]` manages the weather location
 - `/weather` shows today's forecast; `/weather units metric|imperial` changes units
 - `/weather daily` adds weather to the daily digest; `/weather off` unsubscribes
+- `/ask joke|fact|person|place|advice` requests a short generated response
 - `/note add <text>` saves a private note and returns its short ID
 - `/notes` lists the current user's notes
 - `/note <id>` shows a note; `/note delete <id>` removes it
@@ -191,8 +192,9 @@ rate-limit events are emitted under the `GreetingsBot` metrics namespace.
 
 ## Information requests
 
-The provider-neutral `/ask` flow accepts `joke`, `fact`, `person <name>`, and
-`place <name>`. Queries are limited to 120 characters and answers to 600 characters.
+The provider-neutral `/ask` flow accepts `joke`, `fact`, `person <name>`,
+`place <name>`, and `advice <topic>`. Queries are limited to 120 characters and
+answers to 600 characters.
 `INFO_REQUESTS_ENABLED` defaults to `false`. When enabled in Lambda, requests use
 Amazon Titan Text Lite through Bedrock Runtime. `BEDROCK_MODEL_ID` can select another
 compatible Titan model, and the SAM role limits invocation to that model ARN.
@@ -206,3 +208,8 @@ Each user can make five accepted information requests per UTC week by default. S
 allowance. The counter is incremented atomically before calling Bedrock and resets on
 Monday; failed provider attempts remain counted because the remote invocation may
 already have started. Quota records expire from DynamoDB after their useful window.
+
+Advice prompts ask for at most three practical suggestions, treat the topic as data,
+and direct high-stakes medical, legal, financial, or emergency topics toward local
+professional help. Content-filtered or malformed model results are not returned.
+`BEDROCK_TIMEOUT_SECONDS` defaults to eight seconds and accepts values from 1 to 30.

@@ -105,8 +105,25 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(
             reply.text,
-            "Use /ask joke, /ask fact, /ask person <name>, or /ask place <name>.",
+            "Use /ask joke, /ask fact, /ask person <name>, /ask place <name>, "
+            "or /ask advice <topic>.",
         )
+
+    def test_handles_an_advice_request(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        service = FakeInformationService("Try a consistent bedtime.")
+        app = Application(
+            users,
+            information_service=service,
+            information_enabled=True,
+        )
+
+        reply = app.handle(text_update("/ask advice improve sleep"))
+
+        self.assertEqual(reply.text, "Try a consistent bedtime.")
+        self.assertEqual(service.request.kind, "advice")
+        self.assertEqual(service.request.query, "improve sleep")
 
     def test_handles_information_provider_failure(self):
         users = InMemoryUserRepository()
@@ -261,7 +278,7 @@ class AppTest(unittest.TestCase):
             "/digest [daily|off] - manage the daily digest\n"
             "/location [lat lon name|off] - manage weather location\n"
             "/weather [daily|off] - forecast or daily summary\n"
-            "/ask <joke|fact|person|place> - request short information\n"
+            "/ask <joke|fact|person|place|advice> - request short information\n"
             "/timezone [area/name] - show or change timezone\n"
             "/quiet [start end|off] - manage quiet hours\n"
             "/name [name] - show or change greeting name\n"
