@@ -6,6 +6,10 @@ Parameters:
   TelegramBotToken:
     Type: String
     NoEcho: true
+  AdminApiToken:
+    Type: String
+    NoEcho: true
+    MinLength: 24
   BedrockModelId:
     Type: String
     Default: amazon.titan-text-lite-v1
@@ -127,6 +131,35 @@ Resources:
           Properties:
             Path: /telegram/webhook
             Method: post
+
+  AdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: greetings_bot.admin_handler.handle_event
+      Runtime: python3.9
+      Timeout: 10
+      MemorySize: 128
+      Environment:
+        Variables:
+          ADMIN_API_TOKEN: !Ref AdminApiToken
+          USER_TABLE_NAME: !Ref DataTable
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: dynamodb:Scan
+              Resource: !GetAtt DataTable.Arn
+      Events:
+        Health:
+          Type: Api
+          Properties:
+            Path: /admin/health
+            Method: get
+        Stats:
+          Type: Api
+          Properties:
+            Path: /admin/stats
+            Method: get
 
   GreetingDispatcherFunction:
     Type: AWS::Serverless::Function

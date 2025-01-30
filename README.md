@@ -213,3 +213,15 @@ Advice prompts ask for at most three practical suggestions, treat the topic as d
 and direct high-stakes medical, legal, financial, or emergency topics toward local
 professional help. Content-filtered or malformed model results are not returned.
 `BEDROCK_TIMEOUT_SECONDS` defaults to eight seconds and accepts values from 1 to 30.
+
+## Admin API
+
+The SAM template includes a separate read-only admin Lambda with `GET /admin/health`
+and `GET /admin/stats`. Both routes require an `Authorization: Bearer <token>` header.
+`AdminApiToken` is a hidden deployment parameter with a 24-character minimum; the
+application compares it in constant time and never writes it to request logs.
+
+The health route reports service status and package version. The statistics route
+currently returns only the total user count and has DynamoDB scan permission, with no
+write actions. Responses disable caching and content sniffing. Handler tests use local
+repositories and synthetic API Gateway events, so they do not invoke AWS resources.

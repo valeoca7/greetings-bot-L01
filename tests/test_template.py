@@ -59,6 +59,19 @@ class SamTemplateTest(unittest.TestCase):
     def test_allows_atomic_quota_updates(self):
         self.assertIn("dynamodb:UpdateItem", self.template)
 
+    def test_defines_protected_admin_read_routes(self):
+        self.assertIn("AdminFunction:", self.template)
+        self.assertIn("greetings_bot.admin_handler.handle_event", self.template)
+        self.assertIn("Path: /admin/health", self.template)
+        self.assertIn("Path: /admin/stats", self.template)
+        self.assertGreaterEqual(self.template.count("Method: get"), 2)
+
+    def test_passes_the_hidden_admin_token_and_shared_table(self):
+        self.assertIn("AdminApiToken:", self.template)
+        self.assertIn("MinLength: 24", self.template)
+        self.assertIn("ADMIN_API_TOKEN: !Ref AdminApiToken", self.template)
+        self.assertIn("USER_TABLE_NAME: !Ref DataTable", self.template)
+
     def test_defines_encrypted_on_demand_table(self):
         self.assertIn("Type: AWS::DynamoDB::Table", self.template)
         self.assertIn("BillingMode: PAY_PER_REQUEST", self.template)
