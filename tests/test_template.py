@@ -64,7 +64,13 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("greetings_bot.admin_handler.handle_event", self.template)
         self.assertIn("Path: /admin/health", self.template)
         self.assertIn("Path: /admin/stats", self.template)
-        self.assertGreaterEqual(self.template.count("Method: get"), 2)
+        self.assertIn("Path: /admin/users", self.template)
+        self.assertIn("Path: /admin/users/{id}", self.template)
+        self.assertGreaterEqual(self.template.count("Method: get"), 4)
+
+    def test_limits_admin_table_access_to_reads(self):
+        self.assertIn("- dynamodb:Scan", self.template)
+        self.assertIn("- dynamodb:GetItem", self.template)
 
     def test_passes_the_hidden_admin_token_and_shared_table(self):
         self.assertIn("AdminApiToken:", self.template)

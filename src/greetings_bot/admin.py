@@ -1,6 +1,7 @@
 from greetings_bot import __version__
 from greetings_bot.admin_api import AdminRequest, AdminResponse
 from greetings_bot.admin_auth import AdminAuthorizer
+from greetings_bot.admin_users import parse_user_query, search_users, user_detail
 from greetings_bot.users import UserRepository
 
 
@@ -20,4 +21,29 @@ class AdminApplication:
             return AdminResponse(200, {"status": "ok", "version": __version__})
         if request.path == "/admin/stats":
             return AdminResponse(200, {"users": self.users.count()})
+        if request.path == "/admin/users":
+            try:
+                query = parse_user_query(request.query)
+            except ValueError as error:
+                return AdminResponse(400, {"error": str(error)})
+            page = search_users(self.users.all(), query)
+            return AdminResponse(
+                200,
+                {
+                    "items": list(page.items),
+                    "next_cursor": page.next_cursor,
+                },
+            )
+        if request.path.startswith("/admin/users/"):
+            raw_id = request.path[len("/admin/users/") :]
+            try:
+                telegram_id = int(raw_id)
+                if telegram_id < 1:
+                    raise ValueError
+            except ValueError:
+                return AdminResponse(400, {"error": "invalid user id"})
+            user = self.users.get(telegram_id)
+            if user is None:
+                return AdminResponse(404, {"error": "user not found"})
+            return AdminResponse(200, user_detail(user))
         return AdminResponse(404, {"error": "not found"})

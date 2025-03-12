@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping
 
 
@@ -12,6 +12,7 @@ class AdminRequest:
     method: str
     path: str
     headers: Mapping[str, str]
+    query: Mapping[str, str] = field(default_factory=dict)
 
     @classmethod
     def from_event(cls, event: Mapping[str, Any]) -> "AdminRequest":
@@ -24,11 +25,15 @@ class AdminRequest:
         raw_headers = event.get("headers") or {}
         if not isinstance(raw_headers, dict):
             raise AdminRequestError("admin headers must be an object")
+        raw_query = event.get("queryStringParameters") or {}
+        if not isinstance(raw_query, dict):
+            raise AdminRequestError("admin query parameters must be an object")
         headers = {
             str(name).lower(): str(value)
             for name, value in raw_headers.items()
         }
-        return cls(method.upper(), path, headers)
+        query = {str(name): str(value) for name, value in raw_query.items()}
+        return cls(method.upper(), path, headers, query)
 
 
 @dataclass(frozen=True)

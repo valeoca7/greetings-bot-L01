@@ -216,8 +216,9 @@ professional help. Content-filtered or malformed model results are not returned.
 
 ## Admin API
 
-The SAM template includes a separate read-only admin Lambda with `GET /admin/health`
-and `GET /admin/stats`. Both routes require an `Authorization: Bearer <token>` header.
+The SAM template includes a separate read-only admin Lambda with `GET /admin/health`,
+`GET /admin/stats`, `GET /admin/users`, and `GET /admin/users/{id}`. All routes
+require an `Authorization: Bearer <token>` header.
 `AdminApiToken` is a hidden deployment parameter with a 24-character minimum; the
 application compares it in constant time and never writes it to request logs.
 
@@ -225,3 +226,9 @@ The health route reports service status and package version. The statistics rout
 currently returns only the total user count and has DynamoDB scan permission, with no
 write actions. Responses disable caching and content sniffing. Handler tests use local
 repositories and synthetic API Gateway events, so they do not invoke AWS resources.
+
+The user list accepts a case-insensitive `q` name or exact Telegram ID, a `status` of
+`all`, `active`, or `disabled`, and a `limit` from 1 to 50. Responses are ordered by
+user ID and return an opaque `next_cursor` when another page is available. Detail
+responses expose scheduling and delivery preferences but omit chat IDs and location
+coordinates. Audit logs record only the read category, request ID, and outcome.

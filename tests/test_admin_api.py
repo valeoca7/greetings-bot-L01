@@ -10,6 +10,7 @@ class AdminRequestTest(unittest.TestCase):
             {
                 "rawPath": "/admin/health",
                 "headers": {"Authorization": "Bearer secret"},
+                "queryStringParameters": {"status": "active", "limit": "10"},
                 "requestContext": {"http": {"method": "GET"}},
             }
         )
@@ -17,6 +18,7 @@ class AdminRequestTest(unittest.TestCase):
         self.assertEqual(request.method, "GET")
         self.assertEqual(request.path, "/admin/health")
         self.assertEqual(request.headers["authorization"], "Bearer secret")
+        self.assertEqual(request.query, {"status": "active", "limit": "10"})
 
     def test_supports_rest_api_request_fields(self):
         request = AdminRequest.from_event(
@@ -31,6 +33,16 @@ class AdminRequestTest(unittest.TestCase):
             with self.subTest(event=event):
                 with self.assertRaises(AdminRequestError):
                     AdminRequest.from_event(event)
+
+    def test_rejects_non_object_query_parameters(self):
+        with self.assertRaises(AdminRequestError):
+            AdminRequest.from_event(
+                {
+                    "path": "/admin/users",
+                    "httpMethod": "GET",
+                    "queryStringParameters": "status=active",
+                }
+            )
 
 
 class AdminResponseTest(unittest.TestCase):

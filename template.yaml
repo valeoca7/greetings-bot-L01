@@ -147,7 +147,9 @@ Resources:
       Policies:
         - Statement:
             - Effect: Allow
-              Action: dynamodb:Scan
+              Action:
+                - dynamodb:Scan
+                - dynamodb:GetItem
               Resource: !GetAtt DataTable.Arn
       Events:
         Health:
@@ -159,6 +161,16 @@ Resources:
           Type: Api
           Properties:
             Path: /admin/stats
+            Method: get
+        Users:
+          Type: Api
+          Properties:
+            Path: /admin/users
+            Method: get
+        UserDetail:
+          Type: Api
+          Properties:
+            Path: /admin/users/{id}
             Method: get
 
   GreetingDispatcherFunction:

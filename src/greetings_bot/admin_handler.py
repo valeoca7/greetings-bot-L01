@@ -61,7 +61,21 @@ def handle_event(
         LOGGER,
         "admin_request_complete",
         logging.WARNING if status_code >= 400 else logging.INFO,
+        action=_audit_action(event),
         request_id=correlation_id(event, context),
         status_code=status_code,
     )
     return response
+
+
+def _audit_action(event: Mapping[str, Any]) -> str:
+    path = event.get("rawPath") or event.get("path")
+    if path == "/admin/health":
+        return "health_read"
+    if path == "/admin/stats":
+        return "stats_read"
+    if path == "/admin/users":
+        return "users_list"
+    if isinstance(path, str) and path.startswith("/admin/users/"):
+        return "user_detail"
+    return "unknown"

@@ -41,6 +41,25 @@ class AdminHandlerTest(unittest.TestCase):
 
         self.assertEqual(response["statusCode"], 401)
 
+    def test_lists_filtered_users_through_gateway_event(self):
+        self.handler.application.users.save(User(42, 42, "Mira"))
+        self.handler.application.users.save(User(7, 7, "Sam", enabled=False))
+
+        response = self.handler.handle(
+            {
+                "path": "/admin/users",
+                "httpMethod": "GET",
+                "headers": {
+                    "authorization": "Bearer a-long-local-admin-token"
+                },
+                "queryStringParameters": {"status": "active"},
+            }
+        )
+
+        body = json.loads(response["body"])
+        self.assertEqual(response["statusCode"], 200)
+        self.assertEqual([item["id"] for item in body["items"]], [42])
+
     def test_rejects_malformed_gateway_events(self):
         response = self.handler.handle({})
 
@@ -95,8 +114,28 @@ class AdminHandlerTest(unittest.TestCase):
         self.assertEqual(response["statusCode"], 200)
         output = " ".join(logs.output)
         self.assertIn('"event":"admin_request_complete"', output)
+        self.assertIn('"action":"health_read"', output)
         self.assertIn('"request_id":"admin-request-1"', output)
         self.assertNotIn("a-long-local-admin-token", output)
+
+    def test_audits_user_detail_without_logging_the_user_id(self):
+        event = {
+            "path": "/admin/users/987654321",
+            "httpMethod": "GET",
+            "headers": {
+                "authorization": "Bearer a-long-local-admin-token"
+            },
+        }
+
+        with patch("greetings_bot.admin_handler._handler", self.handler):
+            with self.assertLogs(
+                "greetings_bot.admin_handler", level="WARNING"
+            ) as logs:
+                handle_event(event)
+
+        output = " ".join(logs.output)
+        self.assertIn('"action":"user_detail"', output)
+        self.assertNotIn("987654321", output)
 
 
 if __name__ == "__main__":
