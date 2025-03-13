@@ -25,6 +25,17 @@ class AdminApplicationTest(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.body, {"error": "unauthorized"})
 
+    def test_denies_user_lists_before_repository_access(self):
+        class UntouchedUsers:
+            def all(self):
+                raise AssertionError("repository should not be read")
+
+        response = AdminApplication(
+            FixedAuthorizer(False), UntouchedUsers()
+        ).handle(AdminRequest("GET", "/admin/users", {}))
+
+        self.assertEqual(response.status_code, 401)
+
     def test_reports_service_health(self):
         response = AdminApplication(
             FixedAuthorizer(True), InMemoryUserRepository()
