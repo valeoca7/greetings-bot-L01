@@ -11,6 +11,7 @@ class AdminRequestTest(unittest.TestCase):
                 "rawPath": "/admin/health",
                 "headers": {"Authorization": "Bearer secret"},
                 "queryStringParameters": {"status": "active", "limit": "10"},
+                "body": '{"confirm":"redrive","rate":25}',
                 "requestContext": {"http": {"method": "GET"}},
             }
         )
@@ -19,6 +20,9 @@ class AdminRequestTest(unittest.TestCase):
         self.assertEqual(request.path, "/admin/health")
         self.assertEqual(request.headers["authorization"], "Bearer secret")
         self.assertEqual(request.query, {"status": "active", "limit": "10"})
+        self.assertEqual(
+            request.json_body(), {"confirm": "redrive", "rate": 25}
+        )
 
     def test_supports_rest_api_request_fields(self):
         request = AdminRequest.from_event(
@@ -43,6 +47,13 @@ class AdminRequestTest(unittest.TestCase):
                     "queryStringParameters": "status=active",
                 }
             )
+
+    def test_rejects_invalid_json_objects(self):
+        for body in ("not json", "[]"):
+            with self.subTest(body=body):
+                request = AdminRequest("POST", "/admin/action", {}, {}, body)
+                with self.assertRaises(AdminRequestError):
+                    request.json_body()
 
 
 class AdminResponseTest(unittest.TestCase):

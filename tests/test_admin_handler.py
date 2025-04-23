@@ -8,6 +8,7 @@ from greetings_bot.admin_handler import (
     build_default_handler,
     handle_event,
 )
+from greetings_bot.admin_delivery import SqsDeliveryAdmin
 from greetings_bot.dynamo_users import DynamoUserRepository
 from greetings_bot.users import User
 
@@ -94,6 +95,23 @@ class AdminHandlerTest(unittest.TestCase):
         self.assertIs(handler.application.users.table, resource.table)
         self.assertEqual(resource.name, "greetings-data")
 
+    def test_builds_configured_delivery_operations(self):
+        client = object()
+
+        handler = build_default_handler(
+            {
+                "ADMIN_API_TOKEN": "a-long-local-admin-token",
+                "DELIVERY_QUEUE_URL": "queue-url",
+                "DELIVERY_DLQ_URL": "dlq-url",
+                "DELIVERY_QUEUE_ARN": "queue-arn",
+                "DELIVERY_DLQ_ARN": "dlq-arn",
+            },
+            sqs_client=client,
+        )
+
+        self.assertIsInstance(handler.application.delivery, SqsDeliveryAdmin)
+        self.assertIs(handler.application.delivery.client, client)
+
     def test_logs_status_without_exposing_the_admin_token(self):
         event = {
             "path": "/admin/health",
@@ -136,6 +154,25 @@ class AdminHandlerTest(unittest.TestCase):
         output = " ".join(logs.output)
         self.assertIn('"action":"user_detail"', output)
         self.assertNotIn("987654321", output)
+
+    def test_audits_redrive_without_logging_action_body(self):
+        event = {
+            "path": "/admin/delivery/redrive",
+            "httpMethod": "POST",
+            "headers": {},
+            "body": '{"confirm":"redrive_failed_deliveries","rate":25}',
+        }
+
+        with patch("greetings_bot.admin_handler._handler", self.handler):
+            with self.assertLogs(
+                "greetings_bot.admin_handler", level="WARNING"
+            ) as logs:
+                handle_event(event)
+
+        output = " ".join(logs.output)
+        self.assertIn('"action":"delivery_redrive"', output)
+        self.assertNotIn("redrive_failed_deliveries", output)
+        self.assertNotIn('"rate"', output)
 
 
 if __name__ == "__main__":

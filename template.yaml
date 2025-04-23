@@ -144,6 +144,10 @@ Resources:
         Variables:
           ADMIN_API_TOKEN: !Ref AdminApiToken
           USER_TABLE_NAME: !Ref DataTable
+          DELIVERY_QUEUE_URL: !Ref DeliveryQueue
+          DELIVERY_DLQ_URL: !Ref DeliveryDeadLetterQueue
+          DELIVERY_QUEUE_ARN: !GetAtt DeliveryQueue.Arn
+          DELIVERY_DLQ_ARN: !GetAtt DeliveryDeadLetterQueue.Arn
       Policies:
         - Statement:
             - Effect: Allow
@@ -151,6 +155,13 @@ Resources:
                 - dynamodb:Scan
                 - dynamodb:GetItem
               Resource: !GetAtt DataTable.Arn
+            - Effect: Allow
+              Action:
+                - sqs:GetQueueAttributes
+                - sqs:StartMessageMoveTask
+              Resource:
+                - !GetAtt DeliveryQueue.Arn
+                - !GetAtt DeliveryDeadLetterQueue.Arn
       Events:
         Health:
           Type: Api
@@ -172,6 +183,16 @@ Resources:
           Properties:
             Path: /admin/users/{id}
             Method: get
+        DeliveryStatus:
+          Type: Api
+          Properties:
+            Path: /admin/delivery
+            Method: get
+        DeliveryRedrive:
+          Type: Api
+          Properties:
+            Path: /admin/delivery/redrive
+            Method: post
 
   GreetingDispatcherFunction:
     Type: AWS::Serverless::Function

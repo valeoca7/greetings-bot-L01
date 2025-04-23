@@ -9,6 +9,7 @@ from greetings_bot.admin_api import (
     AdminResponse,
 )
 from greetings_bot.admin_auth import BearerTokenAuthorizer
+from greetings_bot.admin_delivery import SqsAdminClient, delivery_admin_from_env
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.observability import correlation_id, log_event
 from greetings_bot.users import InMemoryUserRepository
@@ -32,6 +33,7 @@ class AdminLambdaHandler:
 def build_default_handler(
     environ: Mapping[str, str] = os.environ,
     dynamodb_resource: DynamoResource = None,
+    sqs_client: SqsAdminClient = None,
 ) -> AdminLambdaHandler:
     token = environ.get("ADMIN_API_TOKEN", "")
     if not token.strip():
@@ -42,7 +44,8 @@ def build_default_handler(
         if table_name
         else InMemoryUserRepository()
     )
-    application = AdminApplication(BearerTokenAuthorizer(token), users)
+    delivery = delivery_admin_from_env(environ, sqs_client)
+    application = AdminApplication(BearerTokenAuthorizer(token), users, delivery)
     return AdminLambdaHandler(application)
 
 
@@ -78,4 +81,8 @@ def _audit_action(event: Mapping[str, Any]) -> str:
         return "users_list"
     if isinstance(path, str) and path.startswith("/admin/users/"):
         return "user_detail"
+    if path == "/admin/delivery":
+        return "delivery_status"
+    if path == "/admin/delivery/redrive":
+        return "delivery_redrive"
     return "unknown"

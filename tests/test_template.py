@@ -72,6 +72,14 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("- dynamodb:Scan", self.template)
         self.assertIn("- dynamodb:GetItem", self.template)
 
+    def test_defines_delivery_admin_routes_and_queue_access(self):
+        self.assertIn("Path: /admin/delivery", self.template)
+        self.assertIn("Path: /admin/delivery/redrive", self.template)
+        self.assertIn("DELIVERY_DLQ_URL: !Ref DeliveryDeadLetterQueue", self.template)
+        self.assertIn("DELIVERY_DLQ_ARN: !GetAtt DeliveryDeadLetterQueue.Arn", self.template)
+        self.assertIn("sqs:GetQueueAttributes", self.template)
+        self.assertIn("sqs:StartMessageMoveTask", self.template)
+
     def test_passes_the_hidden_admin_token_and_shared_table(self):
         self.assertIn("AdminApiToken:", self.template)
         self.assertIn("MinLength: 24", self.template)

@@ -2,6 +2,7 @@ import unittest
 
 from greetings_bot.admin import AdminApplication
 from greetings_bot.admin_api import AdminRequest
+from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryQueueSummary
 from greetings_bot.users import InMemoryUserRepository, User
 
 
@@ -12,6 +13,15 @@ class FixedAuthorizer:
     def authorize(self, request):
         self.request = request
         return self.allowed
+
+
+class FakeDeliveryOperations:
+    def summary(self):
+        return DeliveryQueueSummary(12, 3, 2)
+
+    def start_redrive(self, max_rate):
+        self.max_rate = max_rate
+        return "task-123"
 
 
 class AdminApplicationTest(unittest.TestCase):
@@ -102,6 +112,67 @@ class AdminApplicationTest(unittest.TestCase):
 
         self.assertEqual(missing.status_code, 404)
         self.assertEqual(invalid.status_code, 400)
+
+    def test_reports_delivery_queue_health(self):
+        app = AdminApplication(
+            FixedAuthorizer(True),
+            InMemoryUserRepository(),
+            FakeDeliveryOperations(),
+        )
+
+        response = app.handle(AdminRequest("GET", "/admin/delivery", {}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.body["failed"], 2)
+
+    def test_handles_delivery_provider_failure(self):
+        class FailedOperations(FakeDeliveryOperations):
+            def summary(self):
+                raise DeliveryAdminError("offline")
+
+        app = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository(), FailedOperations()
+        )
+
+        response = app.handle(AdminRequest("GET", "/admin/delivery", {}))
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.body, {"error": "delivery admin unavailable"})
+
+    def test_starts_an_explicitly_confirmed_redrive(self):
+        operations = FakeDeliveryOperations()
+        app = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository(), operations
+        )
+        request = AdminRequest(
+            "POST",
+            "/admin/delivery/redrive",
+            {},
+            {},
+            '{"confirm":"redrive_failed_deliveries","rate":25}',
+        )
+
+        response = app.handle(request)
+
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(response.body, {"task": "task-123", "rate": 25})
+        self.assertEqual(operations.max_rate, 25)
+
+    def test_rejects_unconfirmed_redrive_requests(self):
+        app = AdminApplication(
+            FixedAuthorizer(True),
+            InMemoryUserRepository(),
+            FakeDeliveryOperations(),
+        )
+
+        for body in ('{"rate":25}', '{"confirm":"redrive_failed_deliveries"}'):
+            with self.subTest(body=body):
+                response = app.handle(
+                    AdminRequest(
+                        "POST", "/admin/delivery/redrive", {}, {}, body
+                    )
+                )
+                self.assertEqual(response.status_code, 400)
 
     def test_rejects_unknown_routes_and_write_methods(self):
         app = AdminApplication(FixedAuthorizer(True), InMemoryUserRepository())

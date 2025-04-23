@@ -232,3 +232,10 @@ The user list accepts a case-insensitive `q` name or exact Telegram ID, a `statu
 user ID and return an opaque `next_cursor` when another page is available. Detail
 responses expose scheduling and delivery preferences but omit chat IDs and location
 coordinates. Audit logs record only the read category, request ID, and outcome.
+
+`GET /admin/delivery` reports approximate pending, in-flight, and dead-letter queue
+counts. `POST /admin/delivery/redrive` starts an SQS message move task only when its
+JSON body contains `{"confirm":"redrive_failed_deliveries","rate":25}`. The rate may
+be 1 through 500 messages per second. Redrive returns `202` with the SQS task handle;
+it does not wait for completion. Queue errors return `503`, and action bodies are not
+written to audit logs. Tests use a fake SQS client and never move real messages.

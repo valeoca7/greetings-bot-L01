@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass, field
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, Mapping, Optional
 
 
 class AdminRequestError(ValueError):
@@ -13,6 +13,7 @@ class AdminRequest:
     path: str
     headers: Mapping[str, str]
     query: Mapping[str, str] = field(default_factory=dict)
+    body: Optional[str] = None
 
     @classmethod
     def from_event(cls, event: Mapping[str, Any]) -> "AdminRequest":
@@ -28,12 +29,26 @@ class AdminRequest:
         raw_query = event.get("queryStringParameters") or {}
         if not isinstance(raw_query, dict):
             raise AdminRequestError("admin query parameters must be an object")
+        body = event.get("body")
+        if body is not None and not isinstance(body, str):
+            raise AdminRequestError("admin body must be text")
+        if event.get("isBase64Encoded"):
+            raise AdminRequestError("encoded admin bodies are not supported")
         headers = {
             str(name).lower(): str(value)
             for name, value in raw_headers.items()
         }
         query = {str(name): str(value) for name, value in raw_query.items()}
-        return cls(method.upper(), path, headers, query)
+        return cls(method.upper(), path, headers, query, body)
+
+    def json_body(self) -> Mapping[str, object]:
+        try:
+            value = json.loads(self.body or "{}")
+        except json.JSONDecodeError as error:
+            raise AdminRequestError("admin body must be valid JSON") from error
+        if not isinstance(value, dict):
+            raise AdminRequestError("admin body must be a JSON object")
+        return value
 
 
 @dataclass(frozen=True)
