@@ -156,12 +156,19 @@ Resources:
                 - dynamodb:GetItem
               Resource: !GetAtt DataTable.Arn
             - Effect: Allow
-              Action:
-                - sqs:GetQueueAttributes
-                - sqs:StartMessageMoveTask
+              Action: sqs:GetQueueAttributes
               Resource:
                 - !GetAtt DeliveryQueue.Arn
                 - !GetAtt DeliveryDeadLetterQueue.Arn
+            - Effect: Allow
+              Action:
+                - sqs:StartMessageMoveTask
+                - sqs:ReceiveMessage
+                - sqs:DeleteMessage
+              Resource: !GetAtt DeliveryDeadLetterQueue.Arn
+            - Effect: Allow
+              Action: sqs:SendMessage
+              Resource: !GetAtt DeliveryQueue.Arn
       Events:
         Health:
           Type: Api

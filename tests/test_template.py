@@ -79,6 +79,9 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("DELIVERY_DLQ_ARN: !GetAtt DeliveryDeadLetterQueue.Arn", self.template)
         self.assertIn("sqs:GetQueueAttributes", self.template)
         self.assertIn("sqs:StartMessageMoveTask", self.template)
+        self.assertIn("sqs:ReceiveMessage", self.template)
+        self.assertIn("sqs:DeleteMessage", self.template)
+        self.assertIn("sqs:SendMessage", self.template)
 
     def test_passes_the_hidden_admin_token_and_shared_table(self):
         self.assertIn("AdminApiToken:", self.template)
