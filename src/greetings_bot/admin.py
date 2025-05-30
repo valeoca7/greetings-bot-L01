@@ -1,8 +1,14 @@
 from greetings_bot import __version__
-from typing import Optional
+from typing import Optional, Union
 
-from greetings_bot.admin_api import AdminRequest, AdminRequestError, AdminResponse
+from greetings_bot.admin_api import (
+    AdminRequest,
+    AdminRequestError,
+    AdminResponse,
+    HtmlResponse,
+)
 from greetings_bot.admin_auth import AdminAuthorizer
+from greetings_bot.admin_dashboard import DashboardSnapshot, render_dashboard
 from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryAdminOperations
 from greetings_bot.admin_users import parse_user_query, search_users, user_detail
 from greetings_bot.users import UserRepository
@@ -19,7 +25,9 @@ class AdminApplication:
         self.users = users
         self.delivery = delivery
 
-    def handle(self, request: AdminRequest) -> AdminResponse:
+    def handle(
+        self, request: AdminRequest
+    ) -> Union[AdminResponse, HtmlResponse]:
         if not self.authorizer.authorize(request):
             return AdminResponse(401, {"error": "unauthorized"})
         if request.path == "/admin/delivery/redrive":
@@ -30,6 +38,8 @@ class AdminApplication:
             return AdminResponse(200, {"status": "ok", "version": __version__})
         if request.path == "/admin/stats":
             return AdminResponse(200, {"users": self.users.count()})
+        if request.path == "/admin/dashboard":
+            return self._dashboard()
         if request.path == "/admin/delivery":
             if self.delivery is None:
                 return AdminResponse(503, {"error": "delivery admin unavailable"})
@@ -83,3 +93,24 @@ class AdminApplication:
         except (AdminRequestError, ValueError) as error:
             return AdminResponse(400, {"error": str(error)})
         return AdminResponse(202, {"task": task, "rate": rate})
+
+    def _dashboard(self) -> HtmlResponse:
+        users = self.users.all()
+        active = sum(1 for user in users if user.enabled)
+        values = {
+            "users": len(users),
+            "active_users": active,
+            "disabled_users": len(users) - active,
+        }
+        if self.delivery is not None:
+            try:
+                delivery = self.delivery.summary()
+                values.update(
+                    pending=delivery.pending,
+                    in_flight=delivery.in_flight,
+                    failed=delivery.failed,
+                )
+            except DeliveryAdminError:
+                pass
+        snapshot = DashboardSnapshot(**values)
+        return HtmlResponse(200, render_dashboard(__version__, snapshot))

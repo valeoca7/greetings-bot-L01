@@ -62,11 +62,12 @@ class SamTemplateTest(unittest.TestCase):
     def test_defines_protected_admin_read_routes(self):
         self.assertIn("AdminFunction:", self.template)
         self.assertIn("greetings_bot.admin_handler.handle_event", self.template)
+        self.assertIn("Path: /admin/dashboard", self.template)
         self.assertIn("Path: /admin/health", self.template)
         self.assertIn("Path: /admin/stats", self.template)
         self.assertIn("Path: /admin/users", self.template)
         self.assertIn("Path: /admin/users/{id}", self.template)
-        self.assertGreaterEqual(self.template.count("Method: get"), 4)
+        self.assertGreaterEqual(self.template.count("Method: get"), 5)
 
     def test_limits_admin_table_access_to_reads(self):
         self.assertIn("- dynamodb:Scan", self.template)

@@ -1,7 +1,7 @@
 import unittest
 
 from greetings_bot.admin import AdminApplication
-from greetings_bot.admin_api import AdminRequest
+from greetings_bot.admin_api import AdminRequest, HtmlResponse
 from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryQueueSummary
 from greetings_bot.users import InMemoryUserRepository, User
 
@@ -138,6 +138,36 @@ class AdminApplicationTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.body, {"error": "delivery admin unavailable"})
+
+    def test_renders_the_authorized_dashboard_summary(self):
+        users = InMemoryUserRepository()
+        users.save(User(42, 42, "Mira"))
+        users.save(User(7, 7, "Sam", enabled=False))
+        app = AdminApplication(
+            FixedAuthorizer(True), users, FakeDeliveryOperations()
+        )
+
+        response = app.handle(AdminRequest("GET", "/admin/dashboard", {}))
+
+        self.assertIsInstance(response, HtmlResponse)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('data-metric="users">2<', response.body)
+        self.assertIn('data-metric="active-users">1<', response.body)
+        self.assertIn('data-metric="failed">2<', response.body)
+
+    def test_dashboard_survives_delivery_summary_failure(self):
+        class FailedOperations(FakeDeliveryOperations):
+            def summary(self):
+                raise DeliveryAdminError("offline")
+
+        app = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository(), FailedOperations()
+        )
+
+        response = app.handle(AdminRequest("GET", "/admin/dashboard", {}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Delivery summary unavailable", response.body)
 
     def test_starts_an_explicitly_confirmed_redrive(self):
         operations = FakeDeliveryOperations()

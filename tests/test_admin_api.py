@@ -1,7 +1,12 @@
 import json
 import unittest
 
-from greetings_bot.admin_api import AdminRequest, AdminRequestError, AdminResponse
+from greetings_bot.admin_api import (
+    AdminRequest,
+    AdminRequestError,
+    AdminResponse,
+    HtmlResponse,
+)
 
 
 class AdminRequestTest(unittest.TestCase):
@@ -67,6 +72,16 @@ class AdminResponseTest(unittest.TestCase):
         self.assertEqual(
             response["headers"]["x-content-type-options"], "nosniff"
         )
+
+    def test_serializes_a_non_cacheable_html_response(self):
+        response = HtmlResponse(200, "<!doctype html><title>Status</title>").to_dict()
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertEqual(response["headers"]["content-type"], "text/html; charset=utf-8")
+        self.assertEqual(response["headers"]["cache-control"], "no-store")
+        self.assertEqual(response["headers"]["x-frame-options"], "DENY")
+        self.assertIn("default-src 'none'", response["headers"]["content-security-policy"])
+        self.assertIn("<title>Status</title>", response["body"])
 
 
 if __name__ == "__main__":

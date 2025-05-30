@@ -61,6 +61,31 @@ class AdminHandlerTest(unittest.TestCase):
         self.assertEqual(response["statusCode"], 200)
         self.assertEqual([item["id"] for item in body["items"]], [42])
 
+    def test_serves_the_dashboard_through_gateway_event(self):
+        self.handler.application.users.save(User(42, 42, "Mira"))
+        event = {
+            "path": "/admin/dashboard",
+            "httpMethod": "GET",
+            "headers": {
+                "authorization": "Bearer a-long-local-admin-token"
+            },
+        }
+
+        response = self.handler.handle(event)
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertEqual(
+            response["headers"]["content-type"], "text/html; charset=utf-8"
+        )
+        self.assertIn("Greetings Bot Admin", response["body"])
+
+        with patch("greetings_bot.admin_handler._handler", self.handler):
+            with self.assertLogs(
+                "greetings_bot.admin_handler", level="INFO"
+            ) as logs:
+                handle_event(event)
+        self.assertIn('"action":"dashboard_view"', " ".join(logs.output))
+
     def test_rejects_malformed_gateway_events(self):
         response = self.handler.handle({})
 

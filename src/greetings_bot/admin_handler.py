@@ -77,6 +77,8 @@ def _audit_action(event: Mapping[str, Any]) -> str:
         return "health_read"
     if path == "/admin/stats":
         return "stats_read"
+    if path == "/admin/dashboard":
+        return "dashboard_view"
     if path == "/admin/users":
         return "users_list"
     if isinstance(path, str) and path.startswith("/admin/users/"):

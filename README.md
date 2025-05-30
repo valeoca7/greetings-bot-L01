@@ -239,3 +239,10 @@ JSON body contains `{"confirm":"redrive_failed_deliveries","rate":25}`. The rate
 be 1 through 500 messages per second. Redrive returns `202` with the SQS task handle;
 it does not wait for completion. Queue errors return `503`, and action bodies are not
 written to audit logs. Tests use a fake SQS client and never move real messages.
+
+`GET /admin/dashboard` renders a responsive, server-side overview using the same
+bearer authorization. It shows package health, active and disabled user counts, and
+delivery queue counts when SQS is available. The page uses no JavaScript or external
+frontend assets. Responses disable caching, framing, referrers, and content sniffing,
+and apply a restrictive content security policy. The JSON endpoints remain available
+for scripts and later interactive dashboard features.

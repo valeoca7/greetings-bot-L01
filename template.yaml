@@ -170,6 +170,11 @@ Resources:
               Action: sqs:SendMessage
               Resource: !GetAtt DeliveryQueue.Arn
       Events:
+        Dashboard:
+          Type: Api
+          Properties:
+            Path: /admin/dashboard
+            Method: get
         Health:
           Type: Api
           Properties:

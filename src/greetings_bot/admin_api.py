@@ -66,3 +66,27 @@ class AdminResponse:
             },
             "body": json.dumps(self.body, separators=(",", ":")),
         }
+
+
+@dataclass(frozen=True)
+class HtmlResponse:
+    status_code: int
+    body: str
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "statusCode": self.status_code,
+            "headers": {
+                "content-type": "text/html; charset=utf-8",
+                "cache-control": "no-store",
+                "content-security-policy": (
+                    "default-src 'none'; style-src 'unsafe-inline'; "
+                    "img-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
+                    "form-action 'none'"
+                ),
+                "referrer-policy": "no-referrer",
+                "x-content-type-options": "nosniff",
+                "x-frame-options": "DENY",
+            },
+            "body": self.body,
+        }
