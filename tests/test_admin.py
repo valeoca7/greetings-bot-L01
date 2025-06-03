@@ -46,6 +46,17 @@ class AdminApplicationTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    def test_denies_dashboard_before_loading_summary_data(self):
+        class UntouchedUsers:
+            def all(self):
+                raise AssertionError("dashboard data should not be read")
+
+        response = AdminApplication(
+            FixedAuthorizer(False), UntouchedUsers(), FakeDeliveryOperations()
+        ).handle(AdminRequest("GET", "/admin/dashboard", {}))
+
+        self.assertEqual(response.status_code, 401)
+
     def test_reports_service_health(self):
         response = AdminApplication(
             FixedAuthorizer(True), InMemoryUserRepository()
