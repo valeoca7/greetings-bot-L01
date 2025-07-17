@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional
+from urllib.parse import parse_qs
 
 
 class AdminRequestError(ValueError):
@@ -50,6 +51,17 @@ class AdminRequest:
             raise AdminRequestError("admin body must be a JSON object")
         return value
 
+    def form_body(self) -> Mapping[str, str]:
+        content_type = self.headers.get("content-type", "")
+        if content_type.split(";", 1)[0].strip().lower() != (
+            "application/x-www-form-urlencoded"
+        ):
+            raise AdminRequestError("admin body must be form encoded")
+        values = parse_qs(self.body or "", keep_blank_values=True)
+        if any(len(items) != 1 for items in values.values()):
+            raise AdminRequestError("admin form fields must be unique")
+        return {name: items[0] for name, items in values.items()}
+
 
 @dataclass(frozen=True)
 class AdminResponse:
@@ -82,7 +94,7 @@ class HtmlResponse:
                 "content-security-policy": (
                     "default-src 'none'; style-src 'unsafe-inline'; "
                     "img-src 'self'; base-uri 'none'; frame-ancestors 'none'; "
-                    "form-action 'none'"
+                    "form-action 'self'"
                 ),
                 "referrer-policy": "no-referrer",
                 "x-content-type-options": "nosniff",

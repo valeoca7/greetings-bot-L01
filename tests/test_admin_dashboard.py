@@ -1,6 +1,16 @@
 import unittest
 
-from greetings_bot.admin_dashboard import DashboardSnapshot, render_dashboard
+from greetings_bot.admin_dashboard import (
+    DashboardSnapshot,
+    render_dashboard,
+    render_user_detail,
+    render_user_list,
+    render_config,
+    render_delivery,
+)
+from greetings_bot.admin_config import DashboardConfig
+from greetings_bot.admin_delivery import DeliveryQueueSummary
+from greetings_bot.admin_users import AdminUserPage, AdminUserQuery
 
 
 class AdminDashboardTest(unittest.TestCase):
@@ -45,6 +55,105 @@ class AdminDashboardTest(unittest.TestCase):
         )
 
         self.assertIn("Delivery summary unavailable", page)
+
+    def test_renders_filtered_user_table_and_next_link(self):
+        users = AdminUserPage(
+            (
+                {
+                    "id": 42,
+                    "name": "Mira <Admin>",
+                    "status": "active",
+                    "timezone": "America/Vancouver",
+                    "greeting_time": "18:30",
+                },
+            ),
+            True,
+            "next-page-token",
+        )
+        query = AdminUserQuery(term="Mira", status="active", limit=10)
+
+        page = render_user_list("0.31.0", users, query)
+
+        self.assertIn("User administration", page)
+        self.assertIn("Mira &lt;Admin&gt;", page)
+        self.assertNotIn("Mira <Admin>", page)
+        self.assertIn('value="Mira"', page)
+        self.assertIn('<option value="active" selected>', page)
+        self.assertIn("cursor=next-page-token", page)
+        self.assertIn('/admin/dashboard/users/42', page)
+        self.assertNotIn("chat_id", page)
+
+    def test_renders_escaped_user_preference_details(self):
+        detail = {
+            "id": 42,
+            "name": "Mira <Owner>",
+            "status": "active",
+            "preferences": {
+                "locale": "en",
+                "timezone": "America/Vancouver",
+                "greeting_time": "18:30",
+                "greeting_days": ["mon", "wed", "fri"],
+                "quiet_hours": {"start": "22:00", "end": "07:00"},
+                "digest_mode": "daily",
+                "weather_units": "metric",
+                "weather_summary": True,
+                "weather_location": "Home",
+            },
+        }
+
+        page = render_user_detail("0.31.0", detail)
+
+        self.assertIn("Mira &lt;Owner&gt;", page)
+        self.assertIn("America/Vancouver", page)
+        self.assertIn("mon, wed, fri", page)
+        self.assertIn("22:00–07:00", page)
+        self.assertIn("Daily", page)
+        self.assertIn("Enabled", page)
+        self.assertNotIn("chat_id", page)
+
+    def test_renders_safe_deployment_configuration(self):
+        config = DashboardConfig(
+            True,
+            8,
+            "amazon.titan-text-lite-v1",
+            15,
+            30,
+            12,
+            True,
+        )
+
+        page = render_config("0.31.0", config)
+
+        self.assertIn("Configuration", page)
+        self.assertIn("Enabled", page)
+        self.assertIn("8 requests per week", page)
+        self.assertIn("amazon.titan-text-lite-v1", page)
+        self.assertIn("15 per minute", page)
+        self.assertIn("Deployment managed", page)
+        self.assertNotIn("ADMIN_API_TOKEN", page)
+        self.assertNotIn("QUEUE_URL", page)
+
+    def test_renders_delivery_status_and_confirmed_redrive_form(self):
+        page = render_delivery(
+            "0.31.0", DeliveryQueueSummary(12, 3, 2)
+        )
+
+        self.assertIn('data-metric="pending">12<', page)
+        self.assertIn('data-metric="failed">2<', page)
+        self.assertIn('action="/admin/dashboard/delivery/redrive"', page)
+        self.assertIn('name="confirm"', page)
+        self.assertIn('name="rate"', page)
+        self.assertIn('max="500"', page)
+
+    def test_escapes_delivery_action_feedback(self):
+        page = render_delivery(
+            "0.31.0",
+            DeliveryQueueSummary(0, 0, 0),
+            "Task <started>",
+        )
+
+        self.assertIn("Task &lt;started&gt;", page)
+        self.assertNotIn("Task <started>", page)
 
 
 if __name__ == "__main__":

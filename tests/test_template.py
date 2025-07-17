@@ -69,6 +69,15 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Path: /admin/users/{id}", self.template)
         self.assertGreaterEqual(self.template.count("Method: get"), 5)
 
+    def test_exposes_dashboard_operation_pages(self):
+        self.assertIn("Path: /admin/dashboard/users", self.template)
+        self.assertIn("Path: /admin/dashboard/users/{id}", self.template)
+        self.assertIn("Path: /admin/dashboard/config", self.template)
+        self.assertIn("Path: /admin/dashboard/delivery", self.template)
+        self.assertIn(
+            "Path: /admin/dashboard/delivery/redrive", self.template
+        )
+
     def test_limits_admin_table_access_to_reads(self):
         self.assertIn("- dynamodb:Scan", self.template)
         self.assertIn("- dynamodb:GetItem", self.template)

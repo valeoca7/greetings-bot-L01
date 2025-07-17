@@ -9,6 +9,7 @@ from greetings_bot.admin_api import (
     AdminResponse,
 )
 from greetings_bot.admin_auth import BearerTokenAuthorizer
+from greetings_bot.admin_config import dashboard_config_from_env
 from greetings_bot.admin_delivery import SqsAdminClient, delivery_admin_from_env
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.observability import correlation_id, log_event
@@ -45,7 +46,10 @@ def build_default_handler(
         else InMemoryUserRepository()
     )
     delivery = delivery_admin_from_env(environ, sqs_client)
-    application = AdminApplication(BearerTokenAuthorizer(token), users, delivery)
+    dashboard_config = dashboard_config_from_env(environ)
+    application = AdminApplication(
+        BearerTokenAuthorizer(token), users, delivery, dashboard_config
+    )
     return AdminLambdaHandler(application)
 
 
@@ -79,6 +83,18 @@ def _audit_action(event: Mapping[str, Any]) -> str:
         return "stats_read"
     if path == "/admin/dashboard":
         return "dashboard_view"
+    if path == "/admin/dashboard/users":
+        return "dashboard_users"
+    if isinstance(path, str) and path.startswith(
+        "/admin/dashboard/users/"
+    ):
+        return "dashboard_user_detail"
+    if path == "/admin/dashboard/config":
+        return "dashboard_config"
+    if path == "/admin/dashboard/delivery":
+        return "dashboard_delivery_status"
+    if path == "/admin/dashboard/delivery/redrive":
+        return "dashboard_delivery_redrive"
     if path == "/admin/users":
         return "users_list"
     if isinstance(path, str) and path.startswith("/admin/users/"):

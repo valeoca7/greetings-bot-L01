@@ -137,6 +137,20 @@ class AdminHandlerTest(unittest.TestCase):
         self.assertIsInstance(handler.application.delivery, SqsDeliveryAdmin)
         self.assertIs(handler.application.delivery.client, client)
 
+    def test_builds_safe_dashboard_configuration(self):
+        handler = build_default_handler(
+            {
+                "ADMIN_API_TOKEN": "a-long-local-admin-token",
+                "INFO_REQUESTS_ENABLED": "true",
+                "INFO_WEEKLY_LIMIT": "7",
+            }
+        )
+
+        self.assertTrue(handler.application.dashboard_config.information_enabled)
+        self.assertEqual(
+            handler.application.dashboard_config.information_weekly_limit, 7
+        )
+
     def test_logs_status_without_exposing_the_admin_token(self):
         event = {
             "path": "/admin/health",
@@ -198,6 +212,39 @@ class AdminHandlerTest(unittest.TestCase):
         self.assertIn('"action":"delivery_redrive"', output)
         self.assertNotIn("redrive_failed_deliveries", output)
         self.assertNotIn('"rate"', output)
+
+    def test_labels_dashboard_actions_without_user_details(self):
+        cases = (
+            ("/admin/dashboard/users", "GET", "dashboard_users"),
+            (
+                "/admin/dashboard/users/987654321",
+                "GET",
+                "dashboard_user_detail",
+            ),
+            ("/admin/dashboard/config", "GET", "dashboard_config"),
+            (
+                "/admin/dashboard/delivery",
+                "GET",
+                "dashboard_delivery_status",
+            ),
+            (
+                "/admin/dashboard/delivery/redrive",
+                "POST",
+                "dashboard_delivery_redrive",
+            ),
+        )
+
+        for path, method, action in cases:
+            event = {"path": path, "httpMethod": method, "headers": {}}
+            with self.subTest(path=path):
+                with patch("greetings_bot.admin_handler._handler", self.handler):
+                    with self.assertLogs(
+                        "greetings_bot.admin_handler", level="WARNING"
+                    ) as logs:
+                        handle_event(event)
+                output = " ".join(logs.output)
+                self.assertIn('"action":"{}"'.format(action), output)
+                self.assertNotIn("987654321", output)
 
 
 if __name__ == "__main__":

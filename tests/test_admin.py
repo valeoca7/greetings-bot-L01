@@ -3,6 +3,7 @@ import unittest
 from greetings_bot.admin import AdminApplication
 from greetings_bot.admin_api import AdminRequest, HtmlResponse
 from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryQueueSummary
+from greetings_bot.admin_config import DashboardConfig
 from greetings_bot.users import InMemoryUserRepository, User
 
 
@@ -179,6 +180,126 @@ class AdminApplicationTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("Delivery summary unavailable", response.body)
+
+    def test_renders_filtered_dashboard_user_page(self):
+        users = InMemoryUserRepository()
+        users.save(User(42, 42, "Mira"))
+        users.save(User(7, 7, "Sam", enabled=False))
+        app = AdminApplication(FixedAuthorizer(True), users)
+
+        response = app.handle(
+            AdminRequest(
+                "GET",
+                "/admin/dashboard/users",
+                {},
+                {"status": "active"},
+            )
+        )
+
+        self.assertIsInstance(response, HtmlResponse)
+        self.assertIn("Mira", response.body)
+        self.assertNotIn(">Sam<", response.body)
+
+    def test_rejects_invalid_dashboard_user_filters(self):
+        response = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository()
+        ).handle(
+            AdminRequest(
+                "GET", "/admin/dashboard/users", {}, {"limit": "lots"}
+            )
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_renders_dashboard_user_details(self):
+        users = InMemoryUserRepository()
+        users.save(User(42, 42, "Mira", greeting_time="18:30"))
+
+        response = AdminApplication(FixedAuthorizer(True), users).handle(
+            AdminRequest("GET", "/admin/dashboard/users/42", {})
+        )
+
+        self.assertIsInstance(response, HtmlResponse)
+        self.assertIn("Mira", response.body)
+        self.assertIn("18:30", response.body)
+
+    def test_handles_missing_dashboard_user_details(self):
+        app = AdminApplication(FixedAuthorizer(True), InMemoryUserRepository())
+
+        missing = app.handle(
+            AdminRequest("GET", "/admin/dashboard/users/42", {})
+        )
+        invalid = app.handle(
+            AdminRequest("GET", "/admin/dashboard/users/nope", {})
+        )
+
+        self.assertEqual(missing.status_code, 404)
+        self.assertEqual(invalid.status_code, 400)
+
+    def test_renders_dashboard_configuration(self):
+        config = DashboardConfig(False, 5, "model-v1", 20, 60, 24, False)
+        app = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository(), None, config
+        )
+
+        response = app.handle(
+            AdminRequest("GET", "/admin/dashboard/config", {})
+        )
+
+        self.assertIsInstance(response, HtmlResponse)
+        self.assertIn("model-v1", response.body)
+        self.assertIn("Disabled", response.body)
+
+    def test_renders_dashboard_delivery_operations(self):
+        app = AdminApplication(
+            FixedAuthorizer(True),
+            InMemoryUserRepository(),
+            FakeDeliveryOperations(),
+        )
+
+        response = app.handle(
+            AdminRequest("GET", "/admin/dashboard/delivery", {})
+        )
+
+        self.assertIsInstance(response, HtmlResponse)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('data-metric="failed">2<', response.body)
+
+    def test_starts_redrive_from_the_dashboard_form(self):
+        operations = FakeDeliveryOperations()
+        app = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository(), operations
+        )
+        request = AdminRequest(
+            "POST",
+            "/admin/dashboard/delivery/redrive",
+            {"content-type": "application/x-www-form-urlencoded"},
+            body="rate=25&confirm=redrive_failed_deliveries",
+        )
+
+        response = app.handle(request)
+
+        self.assertIsInstance(response, HtmlResponse)
+        self.assertEqual(response.status_code, 202)
+        self.assertIn("Redrive task started", response.body)
+        self.assertEqual(operations.max_rate, 25)
+
+    def test_rejects_an_unconfirmed_dashboard_redrive(self):
+        app = AdminApplication(
+            FixedAuthorizer(True),
+            InMemoryUserRepository(),
+            FakeDeliveryOperations(),
+        )
+        request = AdminRequest(
+            "POST",
+            "/admin/dashboard/delivery/redrive",
+            {"content-type": "application/x-www-form-urlencoded"},
+            body="rate=25",
+        )
+
+        response = app.handle(request)
+
+        self.assertEqual(response.status_code, 400)
 
     def test_starts_an_explicitly_confirmed_redrive(self):
         operations = FakeDeliveryOperations()

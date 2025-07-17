@@ -60,6 +60,40 @@ class AdminRequestTest(unittest.TestCase):
                 with self.assertRaises(AdminRequestError):
                     request.json_body()
 
+    def test_reads_a_urlencoded_form(self):
+        request = AdminRequest(
+            "POST",
+            "/admin/dashboard/delivery/redrive",
+            {"content-type": "application/x-www-form-urlencoded"},
+            body="rate=25&confirm=redrive_failed_deliveries",
+        )
+
+        self.assertEqual(
+            request.form_body(),
+            {"rate": "25", "confirm": "redrive_failed_deliveries"},
+        )
+
+    def test_rejects_duplicate_or_non_form_fields(self):
+        requests = (
+            AdminRequest(
+                "POST",
+                "/admin/action",
+                {"content-type": "application/x-www-form-urlencoded"},
+                body="rate=10&rate=20",
+            ),
+            AdminRequest(
+                "POST",
+                "/admin/action",
+                {"content-type": "application/json"},
+                body='{"rate":25}',
+            ),
+        )
+
+        for request in requests:
+            with self.subTest(request=request):
+                with self.assertRaises(AdminRequestError):
+                    request.form_body()
+
 
 class AdminResponseTest(unittest.TestCase):
     def test_serializes_a_json_response(self):
@@ -81,6 +115,7 @@ class AdminResponseTest(unittest.TestCase):
         self.assertEqual(response["headers"]["cache-control"], "no-store")
         self.assertEqual(response["headers"]["x-frame-options"], "DENY")
         self.assertIn("default-src 'none'", response["headers"]["content-security-policy"])
+        self.assertIn("form-action 'self'", response["headers"]["content-security-policy"])
         self.assertIn("<title>Status</title>", response["body"])
 
 

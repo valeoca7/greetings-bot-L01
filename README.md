@@ -244,5 +244,10 @@ written to audit logs. Tests use a fake SQS client and never move real messages.
 bearer authorization. It shows package health, active and disabled user counts, and
 delivery queue counts when SQS is available. The page uses no JavaScript or external
 frontend assets. Responses disable caching, framing, referrers, and content sniffing,
-and apply a restrictive content security policy. The JSON endpoints remain available
-for scripts and later interactive dashboard features.
+and apply a restrictive content security policy.
+
+The dashboard links to searchable user and preference pages, a safe configuration
+snapshot, and delivery operations. Configuration output is limited to feature states,
+model names, and numeric limits; tokens, queue URLs, ARNs, and weather coordinates are
+not rendered. A failed-message redrive requires the same explicit confirmation and
+bounded rate as the JSON API. The JSON endpoints remain available for scripts.

@@ -175,6 +175,31 @@ Resources:
           Properties:
             Path: /admin/dashboard
             Method: get
+        DashboardUsers:
+          Type: Api
+          Properties:
+            Path: /admin/dashboard/users
+            Method: get
+        DashboardUserDetail:
+          Type: Api
+          Properties:
+            Path: /admin/dashboard/users/{id}
+            Method: get
+        DashboardConfig:
+          Type: Api
+          Properties:
+            Path: /admin/dashboard/config
+            Method: get
+        DashboardDelivery:
+          Type: Api
+          Properties:
+            Path: /admin/dashboard/delivery
+            Method: get
+        DashboardDeliveryRedrive:
+          Type: Api
+          Properties:
+            Path: /admin/dashboard/delivery/redrive
+            Method: post
         Health:
           Type: Api
           Properties:
