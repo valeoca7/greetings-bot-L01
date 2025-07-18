@@ -177,6 +177,7 @@ class AdminApplication:
         if self.delivery is None:
             return AdminResponse(503, {"error": "delivery admin unavailable"})
         try:
+            summary = self.delivery.summary()
             body = request.form_body()
             if body.get("confirm") != "redrive_failed_deliveries":
                 raise ValueError("redrive confirmation is required")
@@ -186,4 +187,13 @@ class AdminApplication:
             return AdminResponse(503, {"error": "delivery admin unavailable"})
         except (AdminRequestError, ValueError) as error:
             return AdminResponse(400, {"error": str(error)})
-        return self._dashboard_delivery("Redrive task started.", 202)
+        try:
+            summary = self.delivery.summary()
+        except DeliveryAdminError:
+            pass
+        return HtmlResponse(
+            202,
+            render_delivery(
+                __version__, summary, "Redrive task started."
+            ),
+        )

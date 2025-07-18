@@ -301,6 +301,34 @@ class AdminApplicationTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_keeps_an_accepted_redrive_success_when_refresh_fails(self):
+        class FailingRefreshOperations(FakeDeliveryOperations):
+            def __init__(self):
+                self.summary_calls = 0
+
+            def summary(self):
+                self.summary_calls += 1
+                if self.summary_calls > 1:
+                    raise DeliveryAdminError("offline")
+                return super().summary()
+
+        operations = FailingRefreshOperations()
+        app = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository(), operations
+        )
+        request = AdminRequest(
+            "POST",
+            "/admin/dashboard/delivery/redrive",
+            {"content-type": "application/x-www-form-urlencoded"},
+            body="rate=25&confirm=redrive_failed_deliveries",
+        )
+
+        response = app.handle(request)
+
+        self.assertEqual(response.status_code, 202)
+        self.assertIn("Redrive task started", response.body)
+        self.assertEqual(operations.max_rate, 25)
+
     def test_starts_an_explicitly_confirmed_redrive(self):
         operations = FakeDeliveryOperations()
         app = AdminApplication(
