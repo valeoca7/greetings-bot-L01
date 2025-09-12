@@ -132,6 +132,8 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn("Deployment managed", page)
         self.assertNotIn("ADMIN_API_TOKEN", page)
         self.assertNotIn("QUEUE_URL", page)
+        self.assertIn("90 days", page)
+        self.assertIn("14 days", page)
 
     def test_renders_delivery_status_and_confirmed_redrive_form(self):
         page = render_delivery(

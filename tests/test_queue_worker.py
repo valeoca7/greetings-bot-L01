@@ -149,6 +149,22 @@ class DeliveryQueueWorkerTest(unittest.TestCase):
         self.assertEqual(resource.name, "data")
         self.assertIsInstance(worker.receipts, DynamoDeliveryReceiptLedger)
 
+    def test_reads_delivery_receipt_retention(self):
+        class Resource:
+            def Table(self, name):
+                return object()
+
+        worker = build_default_worker(
+            {
+                "USER_TABLE_NAME": "data",
+                "DELIVERY_RECEIPT_DAYS": "7",
+            },
+            Resource(),
+            FakeSender(),
+        )
+
+        self.assertEqual(worker.receipts.retention_days, 7)
+
 
 if __name__ == "__main__":
     unittest.main()

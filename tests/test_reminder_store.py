@@ -55,6 +55,17 @@ class InMemoryReminderRepositoryTest(unittest.TestCase):
 
         self.assertEqual([value.id for value in due], ["due"])
 
+    def test_deletes_a_bounded_owner_batch(self):
+        reminders = InMemoryReminderRepository()
+        reminders.save(reminder(reminder_id="a"))
+        reminders.save(reminder(reminder_id="b"))
+        reminders.save(reminder(owner_id=7, reminder_id="other"))
+
+        self.assertEqual(reminders.delete_all_for(42, limit=1), 1)
+        self.assertEqual(len(reminders.all_for(42)), 1)
+        self.assertEqual(reminders.delete_all_for(42), 1)
+        self.assertEqual(len(reminders.all_for(7)), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

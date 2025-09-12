@@ -53,6 +53,10 @@ class DynamoDeliveryLedgerTest(unittest.TestCase):
             table.items[("USER#42", "DELIVERY#2023-01-16")]["entity"],
             "delivery",
         )
+        self.assertIn(
+            "expires_at",
+            table.items[("USER#42", "DELIVERY#2023-01-16")],
+        )
 
 
 if __name__ == "__main__":

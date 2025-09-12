@@ -119,6 +119,9 @@ class UserRepository(Protocol):
     def all(self) -> Sequence[User]:
         ...
 
+    def delete(self, telegram_id: int) -> bool:
+        ...
+
 
 class InMemoryUserRepository:
     def __init__(self) -> None:
@@ -135,3 +138,6 @@ class InMemoryUserRepository:
 
     def all(self) -> Sequence[User]:
         return [self._users[user_id] for user_id in sorted(self._users)]
+
+    def delete(self, telegram_id: int) -> bool:
+        return self._users.pop(telegram_id, None) is not None

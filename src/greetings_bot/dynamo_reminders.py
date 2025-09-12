@@ -96,3 +96,24 @@ class DynamoReminderRepository:
             for item in result.get("Items", [])
             if isinstance(item, dict) and item.get("entity") == "reminder"
         ]
+
+    def delete_all_for(self, owner_id: int, limit: int = 100) -> int:
+        if not 1 <= limit <= 100:
+            raise ValueError("reminder deletion limit must be between 1 and 100")
+        result = self.table.query(
+            KeyConditionExpression="pk = :pk AND begins_with(sk, :prefix)",
+            ExpressionAttributeValues={
+                ":pk": "USER#{}".format(owner_id),
+                ":prefix": "REMINDER#",
+            },
+            Limit=limit,
+        )
+        items = [
+            item for item in result.get("Items", [])
+            if isinstance(item, dict) and item.get("entity") == "reminder"
+        ]
+        for item in items:
+            self.table.delete_item(
+                Key={"pk": item["pk"], "sk": item["sk"]}
+            )
+        return len(items)

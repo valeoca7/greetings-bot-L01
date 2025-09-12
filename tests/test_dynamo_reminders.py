@@ -32,12 +32,15 @@ class FakeTable:
             ]
             return {"Items": sorted(items, key=lambda item: item["gsi1sk"])[:kwargs["Limit"]]}
         owner = kwargs["ExpressionAttributeValues"][":pk"]
-        return {
-            "Items": [
-                item for (pk, sk), item in self.items.items()
-                if pk == owner and sk.startswith("REMINDER#")
-            ]
-        }
+        items = [
+            item for (pk, sk), item in self.items.items()
+            if pk == owner and sk.startswith("REMINDER#")
+        ]
+        return {"Items": items[:kwargs.get("Limit")]}
+
+    def delete_item(self, *, Key):
+        self.items.pop((Key["pk"], Key["sk"]), None)
+        return {}
 
 
 class ReminderMappingTest(unittest.TestCase):
@@ -129,6 +132,26 @@ class DynamoReminderRepositoryTest(unittest.TestCase):
         )
 
         self.assertEqual(selected, [due])
+
+    def test_deletes_one_bounded_owner_batch(self):
+        reminders = DynamoReminderRepository(FakeTable())
+        reminders.save(
+            Reminder(
+                "a", 42, 84, "First",
+                datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc),
+                datetime(2023, 3, 7, 18, 0, tzinfo=timezone.utc),
+            )
+        )
+        reminders.save(
+            Reminder(
+                "b", 42, 84, "Second",
+                datetime(2023, 4, 2, 18, 0, tzinfo=timezone.utc),
+                datetime(2023, 3, 7, 18, 0, tzinfo=timezone.utc),
+            )
+        )
+
+        self.assertEqual(reminders.delete_all_for(42, limit=1), 1)
+        self.assertEqual(len(reminders.all_for(42)), 1)
 
 
 if __name__ == "__main__":

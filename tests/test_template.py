@@ -67,7 +67,25 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Path: /admin/stats", self.template)
         self.assertIn("Path: /admin/users", self.template)
         self.assertIn("Path: /admin/users/{id}", self.template)
+        self.assertIn("Path: /admin/users/{id}/export", self.template)
         self.assertGreaterEqual(self.template.count("Method: get"), 5)
+
+    def test_defines_confirmed_user_deletion_routes(self):
+        self.assertIn("Path: /admin/users/{id}/deletion", self.template)
+        self.assertIn(
+            "Path: /admin/users/{id}/deletion/confirm", self.template
+        )
+        self.assertIn(
+            "Path: /admin/users/{id}/deletion/execute", self.template
+        )
+        admin = self.template.split("AdminFunction:", 1)[1].split(
+            "GreetingDispatcherFunction:", 1
+        )[0]
+        self.assertIn("dynamodb:PutItem", admin)
+        self.assertIn("dynamodb:Query", admin)
+        self.assertIn("dynamodb:DeleteItem", admin)
+        self.assertIn("scheduler:DeleteSchedule", admin)
+        self.assertIn("SCHEDULER_GROUP: !Ref ReminderScheduleGroup", admin)
 
     def test_exposes_dashboard_operation_pages(self):
         self.assertIn("Path: /admin/dashboard/users", self.template)
@@ -109,6 +127,12 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("TimeToLiveSpecification:", self.template)
         self.assertIn("AttributeName: expires_at", self.template)
         self.assertIn("Enabled: true", self.template)
+
+    def test_bounds_delivery_record_retention(self):
+        self.assertIn("DeliveryHistoryDays:", self.template)
+        self.assertIn("DELIVERY_HISTORY_DAYS: !Ref DeliveryHistoryDays", self.template)
+        self.assertIn("DeliveryReceiptDays:", self.template)
+        self.assertIn("DELIVERY_RECEIPT_DAYS: !Ref DeliveryReceiptDays", self.template)
 
     def test_limits_webhook_table_permissions(self):
         self.assertIn("dynamodb:GetItem", self.template)

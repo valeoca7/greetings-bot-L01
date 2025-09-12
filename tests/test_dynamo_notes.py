@@ -28,9 +28,9 @@ class FakeTable:
             item for (pk, sk), item in self.items.items()
             if pk == owner and sk.startswith("NOTE#")
         ]
-        return {"Items": items}
+        return {"Items": items[:kwargs.get("Limit")]}
 
-    def delete_item(self, *, Key, ReturnValues):
+    def delete_item(self, *, Key, ReturnValues=None):
         item = self.items.pop((Key["pk"], Key["sk"]), None)
         return {} if item is None else {"Attributes": item}
 
@@ -86,6 +86,20 @@ class DynamoNoteRepositoryTest(unittest.TestCase):
         self.assertTrue(notes.delete(42, "abcd1234"))
         self.assertIsNone(notes.get(42, "abcd1234"))
         self.assertFalse(notes.delete(7, "abcd1234"))
+
+    def test_deletes_one_bounded_owner_batch(self):
+        notes = DynamoNoteRepository(FakeTable())
+        now = datetime.now(timezone.utc)
+        for note in (
+            Note("a", 42, "First", now),
+            Note("b", 42, "Second", now),
+            Note("other", 7, "Keep", now),
+        ):
+            notes.save(note)
+
+        self.assertEqual(notes.delete_all_for(42, limit=1), 1)
+        self.assertEqual(len(notes.all_for(42)), 1)
+        self.assertEqual(len(notes.all_for(7)), 1)
 
 
 if __name__ == "__main__":

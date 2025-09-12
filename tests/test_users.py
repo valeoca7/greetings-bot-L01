@@ -183,6 +183,14 @@ class InMemoryUserRepositoryTest(unittest.TestCase):
 
         self.assertEqual([user.telegram_id for user in users], [42, 77])
 
+    def test_deletes_an_existing_user(self):
+        repository = InMemoryUserRepository()
+        repository.save(User(42, 42, "Mira"))
+
+        self.assertTrue(repository.delete(42))
+        self.assertFalse(repository.delete(42))
+        self.assertIsNone(repository.get(42))
+
 
 if __name__ == "__main__":
     unittest.main()

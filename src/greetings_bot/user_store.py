@@ -25,6 +25,16 @@ class FileUserRepository:
 
     def save(self, user: User) -> None:
         self._users[user.telegram_id] = user
+        self._write()
+
+    def delete(self, telegram_id: int) -> bool:
+        if telegram_id not in self._users:
+            return False
+        del self._users[telegram_id]
+        self._write()
+        return True
+
+    def _write(self) -> None:
         values = [
             user_to_dict(self._users[telegram_id])
             for telegram_id in sorted(self._users)

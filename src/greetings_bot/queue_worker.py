@@ -6,6 +6,7 @@ from greetings_bot.delivery_queue import DeliveryMessage, message_from_body
 from greetings_bot.dynamo_receipts import DynamoDeliveryReceiptLedger
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.observability import correlation_id, emit_metric, log_event
+from greetings_bot.retention import retention_from_env
 from greetings_bot.telegram_client import TelegramBotClient
 
 logger = logging.getLogger(__name__)
@@ -94,7 +95,10 @@ def build_default_worker(
     if not table_name or (not token and sender is None):
         raise ValueError("worker configuration is incomplete")
     users = repository_for_table(table_name, dynamodb_resource)
-    receipts = DynamoDeliveryReceiptLedger(users.table)
+    retention = retention_from_env(environ)
+    receipts = DynamoDeliveryReceiptLedger(
+        users.table, retention.receipt_days
+    )
     return DeliveryQueueWorker(sender or TelegramBotClient(token), receipts)
 
 

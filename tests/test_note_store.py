@@ -48,6 +48,21 @@ class InMemoryNoteRepositoryTest(unittest.TestCase):
         self.assertFalse(notes.delete(7, "abcd1234"))
         self.assertEqual(notes.get(42, "abcd1234"), note)
 
+    def test_deletes_a_bounded_owner_batch(self):
+        notes = InMemoryNoteRepository()
+        now = datetime.now(timezone.utc)
+        for note in (
+            Note("a", 42, "First", now),
+            Note("b", 42, "Second", now),
+            Note("other", 7, "Keep", now),
+        ):
+            notes.save(note)
+
+        self.assertEqual(notes.delete_all_for(42, limit=1), 1)
+        self.assertEqual(len(notes.all_for(42)), 1)
+        self.assertEqual(notes.delete_all_for(42, limit=100), 1)
+        self.assertEqual(len(notes.all_for(7)), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

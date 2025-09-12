@@ -1,9 +1,18 @@
 import unittest
+from datetime import datetime, timezone
 
 from greetings_bot.admin import AdminApplication
-from greetings_bot.admin_api import AdminRequest, HtmlResponse
+from greetings_bot.admin_api import (
+    AdminRequest,
+    HtmlResponse,
+    JsonDownloadResponse,
+)
 from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryQueueSummary
 from greetings_bot.admin_config import DashboardConfig
+from greetings_bot.clock import FixedClock
+from greetings_bot.note_store import InMemoryNoteRepository
+from greetings_bot.reminder_store import InMemoryReminderRepository
+from greetings_bot.user_data import UserDataExporter
 from greetings_bot.users import InMemoryUserRepository, User
 
 
@@ -23,6 +32,20 @@ class FakeDeliveryOperations:
     def start_redrive(self, max_rate):
         self.max_rate = max_rate
         return "task-123"
+
+
+class FakeDeletionService:
+    def request(self, telegram_id):
+        self.requested_id = telegram_id
+        return "confirmation-token-value"
+
+    def confirm(self, telegram_id, token):
+        self.confirmed = (telegram_id, token)
+        return type("Request", (), {"status": "confirmed"})()
+
+    def execute(self, telegram_id):
+        self.executed_id = telegram_id
+        return type("Request", (), {"status": "completed"})()
 
 
 class AdminApplicationTest(unittest.TestCase):
@@ -115,6 +138,117 @@ class AdminApplicationTest(unittest.TestCase):
         self.assertEqual(response.body["id"], 42)
         self.assertEqual(response.body["preferences"]["greeting_time"], "18:30")
         self.assertNotIn("chat_id", response.body)
+
+    def test_downloads_one_users_export(self):
+        users = InMemoryUserRepository()
+        users.save(User(42, 4200, "Mira"))
+        exporter = UserDataExporter(
+            users,
+            InMemoryNoteRepository(),
+            InMemoryReminderRepository(),
+        )
+        app = AdminApplication(
+            FixedAuthorizer(True),
+            users,
+            exporter=exporter,
+            clock=FixedClock(
+                datetime(2025, 9, 8, 3, 0, tzinfo=timezone.utc)
+            ),
+        )
+
+        response = app.handle(
+            AdminRequest("GET", "/admin/users/42/export", {})
+        )
+
+        self.assertIsInstance(response, JsonDownloadResponse)
+        self.assertIn('"schema_version":1', response.body)
+        self.assertIn('"telegram_id":42', response.body)
+        self.assertNotIn("4200", response.body)
+
+    def test_handles_missing_and_invalid_user_exports(self):
+        users = InMemoryUserRepository()
+        exporter = UserDataExporter(
+            users,
+            InMemoryNoteRepository(),
+            InMemoryReminderRepository(),
+        )
+        app = AdminApplication(
+            FixedAuthorizer(True), users, exporter=exporter
+        )
+
+        missing = app.handle(
+            AdminRequest("GET", "/admin/users/42/export", {})
+        )
+        invalid = app.handle(
+            AdminRequest("GET", "/admin/users/nope/export", {})
+        )
+
+        self.assertEqual(missing.status_code, 404)
+        self.assertEqual(invalid.status_code, 400)
+
+    def test_requests_confirms_and_executes_user_deletion(self):
+        deletion = FakeDeletionService()
+        app = AdminApplication(
+            FixedAuthorizer(True),
+            InMemoryUserRepository(),
+            deletion=deletion,
+        )
+
+        requested = app.handle(
+            AdminRequest("POST", "/admin/users/42/deletion", {})
+        )
+        confirmed = app.handle(
+            AdminRequest(
+                "POST",
+                "/admin/users/42/deletion/confirm",
+                {},
+                body='{"confirmation_token":"confirmation-token-value"}',
+            )
+        )
+        completed = app.handle(
+            AdminRequest(
+                "POST", "/admin/users/42/deletion/execute", {}
+            )
+        )
+
+        self.assertEqual(requested.status_code, 201)
+        self.assertEqual(
+            requested.body["confirmation_token"],
+            "confirmation-token-value",
+        )
+        self.assertEqual(confirmed.body, {"status": "confirmed"})
+        self.assertEqual(completed.body, {"status": "completed"})
+        self.assertEqual(deletion.requested_id, 42)
+        self.assertEqual(
+            deletion.confirmed, (42, "confirmation-token-value")
+        )
+        self.assertEqual(deletion.executed_id, 42)
+
+    def test_rejects_invalid_deletion_routes_and_confirmation(self):
+        app = AdminApplication(
+            FixedAuthorizer(True),
+            InMemoryUserRepository(),
+            deletion=FakeDeletionService(),
+        )
+
+        invalid_id = app.handle(
+            AdminRequest("POST", "/admin/users/nope/deletion", {})
+        )
+        missing_token = app.handle(
+            AdminRequest(
+                "POST",
+                "/admin/users/42/deletion/confirm",
+                {},
+                body="{}",
+            )
+        )
+        wrong_method = app.handle(
+            AdminRequest("GET", "/admin/users/42/deletion", {})
+        )
+
+        self.assertEqual(invalid_id.status_code, 400)
+        self.assertEqual(missing_token.status_code, 400)
+        self.assertEqual(wrong_method.status_code, 405)
 
     def test_handles_missing_and_invalid_user_ids(self):
         app = AdminApplication(FixedAuthorizer(True), InMemoryUserRepository())

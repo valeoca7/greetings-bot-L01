@@ -15,6 +15,7 @@ from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
 )
+from greetings_bot.retention import retention_from_env
 from greetings_bot.scheduler import GreetingDispatcher
 from greetings_bot.telegram import reply_batch
 from greetings_bot.users import UserRepository
@@ -102,7 +103,8 @@ def build_default_handler(
         )
     users = repository_for_table(table_name, dynamodb_resource)
     weather_provider = reliable_weather_provider(environ, users.table)
-    deliveries = DynamoDeliveryLedger(users.table)
+    retention = retention_from_env(environ)
+    deliveries = DynamoDeliveryLedger(users.table, retention.delivery_days)
     reminders = DynamoReminderRepository(users.table)
     return ScheduledGreetingHandler(
         users,

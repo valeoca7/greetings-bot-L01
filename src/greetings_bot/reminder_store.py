@@ -17,6 +17,9 @@ class ReminderRepository(Protocol):
     def due_before(self, current_time: datetime, limit: int) -> Sequence[Reminder]:
         ...
 
+    def delete_all_for(self, owner_id: int, limit: int = 100) -> int:
+        ...
+
 
 class InMemoryReminderRepository:
     def __init__(self) -> None:
@@ -41,3 +44,13 @@ class InMemoryReminderRepository:
             if reminder.status == "pending" and reminder.due_at <= current_time
         ]
         return sorted(due, key=lambda reminder: reminder.due_at)[:limit]
+
+    def delete_all_for(self, owner_id: int, limit: int = 100) -> int:
+        if not 1 <= limit <= 100:
+            raise ValueError("reminder deletion limit must be between 1 and 100")
+        keys = sorted(
+            key for key in self._reminders if key[0] == owner_id
+        )[:limit]
+        for key in keys:
+            del self._reminders[key]
+        return len(keys)

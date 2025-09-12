@@ -29,6 +29,16 @@ Parameters:
     Default: 5
     MinValue: 1
     MaxValue: 100
+  DeliveryHistoryDays:
+    Type: Number
+    Default: 90
+    MinValue: 7
+    MaxValue: 365
+  DeliveryReceiptDays:
+    Type: Number
+    Default: 14
+    MinValue: 1
+    MaxValue: 30
 
 Resources:
   DataTable:
@@ -85,7 +95,7 @@ Resources:
       CodeUri: src/
       Handler: greetings_bot.lambda_handler.handle_event
       Runtime: python3.9
-      Timeout: 10
+      Timeout: 30
       MemorySize: 128
       Environment:
         Variables:
@@ -144,17 +154,28 @@ Resources:
         Variables:
           ADMIN_API_TOKEN: !Ref AdminApiToken
           USER_TABLE_NAME: !Ref DataTable
+          DELIVERY_HISTORY_DAYS: !Ref DeliveryHistoryDays
+          DELIVERY_RECEIPT_DAYS: !Ref DeliveryReceiptDays
           DELIVERY_QUEUE_URL: !Ref DeliveryQueue
           DELIVERY_DLQ_URL: !Ref DeliveryDeadLetterQueue
           DELIVERY_QUEUE_ARN: !GetAtt DeliveryQueue.Arn
           DELIVERY_DLQ_ARN: !GetAtt DeliveryDeadLetterQueue.Arn
+          SCHEDULER_TARGET_ARN: !GetAtt ReminderDeliveryFunction.Arn
+          SCHEDULER_ROLE_ARN: !GetAtt SchedulerInvokeRole.Arn
+          SCHEDULER_GROUP: !Ref ReminderScheduleGroup
       Policies:
         - Statement:
             - Effect: Allow
               Action:
                 - dynamodb:Scan
                 - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Query
+                - dynamodb:DeleteItem
               Resource: !GetAtt DataTable.Arn
+            - Effect: Allow
+              Action: scheduler:DeleteSchedule
+              Resource: !Sub 'arn:${AWS::Partition}:scheduler:${AWS::Region}:${AWS::AccountId}:schedule/${ReminderScheduleGroup}/*'
             - Effect: Allow
               Action: sqs:GetQueueAttributes
               Resource:
@@ -220,6 +241,26 @@ Resources:
           Properties:
             Path: /admin/users/{id}
             Method: get
+        UserExport:
+          Type: Api
+          Properties:
+            Path: /admin/users/{id}/export
+            Method: get
+        UserDeletionRequest:
+          Type: Api
+          Properties:
+            Path: /admin/users/{id}/deletion
+            Method: post
+        UserDeletionConfirm:
+          Type: Api
+          Properties:
+            Path: /admin/users/{id}/deletion/confirm
+            Method: post
+        UserDeletionExecute:
+          Type: Api
+          Properties:
+            Path: /admin/users/{id}/deletion/execute
+            Method: post
         DeliveryStatus:
           Type: Api
           Properties:
@@ -245,6 +286,7 @@ Resources:
           DISPATCH_BATCH_SIZE: '100'
           TARGETED_REMINDERS: 'true'
           DELIVERY_QUEUE_URL: !Ref DeliveryQueue
+          DELIVERY_HISTORY_DAYS: !Ref DeliveryHistoryDays
           WEATHER_TIMEOUT_SECONDS: '5'
           WEATHER_MAX_CALLS: '20'
           WEATHER_CACHE_MINUTES: '60'
@@ -327,6 +369,7 @@ Resources:
         Variables:
           TELEGRAM_BOT_TOKEN: !Ref TelegramBotToken
           USER_TABLE_NAME: !Ref DataTable
+          DELIVERY_RECEIPT_DAYS: !Ref DeliveryReceiptDays
       Policies:
         - Statement:
             - Effect: Allow

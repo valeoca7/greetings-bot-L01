@@ -80,6 +80,17 @@ class DynamoUserRepository:
     def count(self) -> int:
         return len(self.all())
 
+    def delete(self, telegram_id: int) -> bool:
+        result = self.table.delete_item(
+            Key=user_key(telegram_id),
+            ReturnValues="ALL_OLD",
+        )
+        attributes = result.get("Attributes")
+        return (
+            isinstance(attributes, dict)
+            and attributes.get("entity") == "user"
+        )
+
 
 def repository_for_table(
     table_name: str, resource: Optional[DynamoResource] = None

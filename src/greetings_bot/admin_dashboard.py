@@ -249,6 +249,8 @@ def render_config(version: str, config: DashboardConfig) -> str:
         <dt>Weather cache</dt><dd>{cache_minutes} minutes</dd>
         <dt>Weather stale fallback</dt><dd>{stale_hours} hours</dd>
         <dt>Delivery administration</dt><dd>{delivery}</dd>
+        <dt>Delivery history retention</dt><dd>{history_days} days</dd>
+        <dt>Receipt retention</dt><dd>{receipt_days} days</dd>
       </dl>
     </section>""".format(
         information="Enabled" if config.information_enabled else "Disabled",
@@ -258,6 +260,8 @@ def render_config(version: str, config: DashboardConfig) -> str:
         cache_minutes=config.weather_cache_minutes,
         stale_hours=config.weather_stale_hours,
         delivery="Available" if config.delivery_admin_configured else "Unavailable",
+        history_days=config.delivery_history_days,
+        receipt_days=config.delivery_receipt_days,
     )
     return _render_layout(
         "Configuration · Greetings Bot Admin",

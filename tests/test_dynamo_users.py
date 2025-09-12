@@ -32,6 +32,11 @@ class FakeTable:
             return result
         return {"Items": list(self.items.values())}
 
+    def delete_item(self, **kwargs):
+        key = kwargs["Key"]
+        item = self.items.pop((key["pk"], key["sk"]), None)
+        return {} if item is None else {"Attributes": item}
+
 
 class FakeResource:
     def __init__(self, table):
@@ -120,6 +125,14 @@ class DynamoUserRepositoryTest(unittest.TestCase):
         users = DynamoUserRepository(table).all()
 
         self.assertEqual([user.telegram_id for user in users], [7, 42])
+
+    def test_deletes_a_user_profile(self):
+        users = DynamoUserRepository(FakeTable())
+        users.save(User(42, 84, "Mira"))
+
+        self.assertTrue(users.delete(42))
+        self.assertFalse(users.delete(42))
+        self.assertIsNone(users.get(42))
 
     def test_builds_repository_from_named_table(self):
         resource = FakeResource(FakeTable())

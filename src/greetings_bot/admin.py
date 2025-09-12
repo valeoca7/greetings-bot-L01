@@ -6,6 +6,7 @@ from greetings_bot.admin_api import (
     AdminRequestError,
     AdminResponse,
     HtmlResponse,
+    JsonDownloadResponse,
 )
 from greetings_bot.admin_auth import AdminAuthorizer
 from greetings_bot.admin_config import DashboardConfig
@@ -19,6 +20,12 @@ from greetings_bot.admin_dashboard import (
 )
 from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryAdminOperations
 from greetings_bot.admin_users import parse_user_query, search_users, user_detail
+from greetings_bot.clock import Clock, SystemClock
+from greetings_bot.user_data import UserDataExporter, UserDataExportError
+from greetings_bot.user_deletion_service import (
+    UserDeletionError,
+    UserDeletionService,
+)
 from greetings_bot.users import UserRepository
 
 
@@ -29,17 +36,25 @@ class AdminApplication:
         users: UserRepository,
         delivery: Optional[DeliveryAdminOperations] = None,
         dashboard_config: Optional[DashboardConfig] = None,
+        exporter: Optional[UserDataExporter] = None,
+        clock: Optional[Clock] = None,
+        deletion: Optional[UserDeletionService] = None,
     ) -> None:
         self.authorizer = authorizer
         self.users = users
         self.delivery = delivery
         self.dashboard_config = dashboard_config
+        self.exporter = exporter
+        self.clock = clock or SystemClock()
+        self.deletion = deletion
 
     def handle(
         self, request: AdminRequest
-    ) -> Union[AdminResponse, HtmlResponse]:
+    ) -> Union[AdminResponse, HtmlResponse, JsonDownloadResponse]:
         if not self.authorizer.authorize(request):
             return AdminResponse(401, {"error": "unauthorized"})
+        if request.path.startswith("/admin/users/") and "/deletion" in request.path:
+            return self._user_deletion(request)
         if request.path == "/admin/delivery/redrive":
             return self._redrive(request)
         if request.path == "/admin/dashboard/delivery/redrive":
@@ -102,6 +117,10 @@ class AdminApplication:
                     "next_cursor": page.next_cursor,
                 },
             )
+        if request.path.startswith("/admin/users/") and request.path.endswith(
+            "/export"
+        ):
+            return self._export_user(request.path)
         if request.path.startswith("/admin/users/"):
             raw_id = request.path[len("/admin/users/") :]
             try:
@@ -115,6 +134,79 @@ class AdminApplication:
                 return AdminResponse(404, {"error": "user not found"})
             return AdminResponse(200, user_detail(user))
         return AdminResponse(404, {"error": "not found"})
+
+    def _user_deletion(self, request: AdminRequest) -> AdminResponse:
+        if request.method != "POST":
+            return AdminResponse(405, {"error": "method not allowed"})
+        parts = request.path.strip("/").split("/")
+        if len(parts) not in (4, 5) or parts[:2] != ["admin", "users"]:
+            return AdminResponse(404, {"error": "not found"})
+        if parts[3] != "deletion":
+            return AdminResponse(404, {"error": "not found"})
+        try:
+            telegram_id = int(parts[2])
+            if telegram_id < 1:
+                raise ValueError
+        except ValueError:
+            return AdminResponse(400, {"error": "invalid user id"})
+        if self.deletion is None:
+            return AdminResponse(503, {"error": "user deletion unavailable"})
+        action = "request" if len(parts) == 4 else parts[4]
+        try:
+            if action == "request":
+                token = self.deletion.request(telegram_id)
+                return AdminResponse(
+                    201,
+                    {
+                        "status": "requested",
+                        "confirmation_token": token,
+                        "expires_in_seconds": 1800,
+                    },
+                )
+            if action == "confirm":
+                body = request.json_body()
+                token = body.get("confirmation_token")
+                if not isinstance(token, str):
+                    raise ValueError("confirmation token is required")
+                confirmed = self.deletion.confirm(telegram_id, token)
+                return AdminResponse(200, {"status": confirmed.status})
+            if action == "execute":
+                completed = self.deletion.execute(telegram_id)
+                return AdminResponse(200, {"status": completed.status})
+            return AdminResponse(404, {"error": "not found"})
+        except UserDeletionError as error:
+            message = str(error)
+            if message == "user not found":
+                status = 404
+            elif message in (
+                "user deletion is unavailable",
+                "user deletion needs another pass",
+            ):
+                status = 503
+            else:
+                status = 400
+            return AdminResponse(status, {"error": message})
+        except (AdminRequestError, ValueError) as error:
+            return AdminResponse(400, {"error": str(error)})
+
+    def _export_user(
+        self, path: str
+    ) -> Union[AdminResponse, JsonDownloadResponse]:
+        raw_id = path[len("/admin/users/") : -len("/export")]
+        try:
+            telegram_id = int(raw_id)
+            if telegram_id < 1:
+                raise ValueError
+        except ValueError:
+            return AdminResponse(400, {"error": "invalid user id"})
+        if self.exporter is None:
+            return AdminResponse(503, {"error": "user export unavailable"})
+        try:
+            body = self.exporter.export(telegram_id, self.clock.now())
+        except UserDataExportError as error:
+            status = 404 if str(error) == "user not found" else 413
+            return AdminResponse(status, {"error": str(error)})
+        return JsonDownloadResponse(200, body)
 
     def _redrive(self, request: AdminRequest) -> AdminResponse:
         if request.method != "POST":

@@ -11,6 +11,8 @@ class AdminConfigTest(unittest.TestCase):
         self.assertEqual(config.information_weekly_limit, 5)
         self.assertEqual(config.bedrock_model, "amazon.titan-text-lite-v1")
         self.assertEqual(config.weather_max_calls, 20)
+        self.assertEqual(config.delivery_history_days, 90)
+        self.assertEqual(config.delivery_receipt_days, 14)
         self.assertFalse(config.delivery_admin_configured)
 
     def test_reads_selected_runtime_configuration(self):
@@ -27,6 +29,8 @@ class AdminConfigTest(unittest.TestCase):
                 "DELIVERY_QUEUE_ARN": "secret-arn",
                 "DELIVERY_DLQ_ARN": "secret-dlq-arn",
                 "ADMIN_API_TOKEN": "do-not-expose",
+                "DELIVERY_HISTORY_DAYS": "120",
+                "DELIVERY_RECEIPT_DAYS": "7",
             }
         )
 
@@ -35,6 +39,8 @@ class AdminConfigTest(unittest.TestCase):
         self.assertEqual(config.weather_cache_minutes, 30)
         self.assertEqual(config.weather_stale_hours, 12)
         self.assertTrue(config.delivery_admin_configured)
+        self.assertEqual(config.delivery_history_days, 120)
+        self.assertEqual(config.delivery_receipt_days, 7)
         self.assertNotIn("secret", repr(config))
 
     def test_rejects_invalid_numeric_configuration(self):

@@ -93,6 +93,19 @@ class FileUserRepositoryTest(unittest.TestCase):
 
             self.assertTrue(path.exists())
 
+    def test_deletes_and_rewrites_a_user(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "users.json"
+            repository = FileUserRepository(path)
+            repository.save(User(42, 42, "Mira"))
+            repository.save(User(77, 77, "Lee"))
+
+            self.assertTrue(repository.delete(42))
+            self.assertFalse(repository.delete(42))
+
+            stored = json.loads(path.read_text())
+            self.assertEqual([item["telegram_id"] for item in stored], [77])
+
 
 if __name__ == "__main__":
     unittest.main()

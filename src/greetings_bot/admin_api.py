@@ -102,3 +102,23 @@ class HtmlResponse:
             },
             "body": self.body,
         }
+
+
+@dataclass(frozen=True)
+class JsonDownloadResponse:
+    status_code: int
+    body: str
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "statusCode": self.status_code,
+            "headers": {
+                "content-type": "application/json; charset=utf-8",
+                "content-disposition": (
+                    'attachment; filename="greetings-bot-user-data.json"'
+                ),
+                "cache-control": "no-store",
+                "x-content-type-options": "nosniff",
+            },
+            "body": self.body,
+        }

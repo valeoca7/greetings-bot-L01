@@ -16,6 +16,9 @@ class NoteRepository(Protocol):
     def delete(self, owner_id: int, note_id: str) -> bool:
         ...
 
+    def delete_all_for(self, owner_id: int, limit: int = 100) -> int:
+        ...
+
 
 class InMemoryNoteRepository:
     def __init__(self) -> None:
@@ -40,3 +43,13 @@ class InMemoryNoteRepository:
             return False
         del self._notes[key]
         return True
+
+    def delete_all_for(self, owner_id: int, limit: int = 100) -> int:
+        if not 1 <= limit <= 100:
+            raise ValueError("note deletion limit must be between 1 and 100")
+        keys = sorted(
+            key for key in self._notes if key[0] == owner_id
+        )[:limit]
+        for key in keys:
+            del self._notes[key]
+        return len(keys)

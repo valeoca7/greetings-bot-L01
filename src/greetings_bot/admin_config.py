@@ -6,6 +6,7 @@ from greetings_bot.information_runtime import (
     information_requests_enabled,
     information_weekly_limit,
 )
+from greetings_bot.retention import retention_from_env
 
 
 @dataclass(frozen=True)
@@ -17,6 +18,8 @@ class DashboardConfig:
     weather_cache_minutes: int
     weather_stale_hours: int
     delivery_admin_configured: bool
+    delivery_history_days: int = 90
+    delivery_receipt_days: int = 14
 
 
 def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
@@ -38,6 +41,7 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         "DELIVERY_DLQ_ARN",
     )
     delivery_configured = all(environ.get(name, "").strip() for name in queue_names)
+    retention = retention_from_env(environ)
     return DashboardConfig(
         information_requests_enabled(environ),
         information_weekly_limit(environ),
@@ -46,4 +50,6 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         weather_cache_minutes,
         weather_stale_hours,
         delivery_configured,
+        retention.delivery_days,
+        retention.receipt_days,
     )

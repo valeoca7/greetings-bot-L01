@@ -114,6 +114,21 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         self.assertIsInstance(handler.weather_provider, CachingWeatherProvider)
         self.assertIs(handler.weather_provider.cache.table, handler.users.table)
 
+    def test_reads_delivery_history_retention(self):
+        class Resource:
+            def Table(self, name):
+                return object()
+
+        handler = build_default_handler(
+            {
+                "USER_TABLE_NAME": "data",
+                "DELIVERY_HISTORY_DAYS": "120",
+            },
+            Resource(),
+        )
+
+        self.assertEqual(handler.deliveries.retention_days, 120)
+
     def test_reads_dispatch_batch_size(self):
         handler = build_default_handler({"DISPATCH_BATCH_SIZE": "25"})
 

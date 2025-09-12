@@ -89,10 +89,14 @@ class EventBridgeReminderScheduler:
         )
 
     def delete(self, reminder: Reminder) -> None:
-        self.client.delete_schedule(
-            Name=reminder_schedule_name(reminder),
-            GroupName=self.group_name,
-        )
+        try:
+            self.client.delete_schedule(
+                Name=reminder_schedule_name(reminder),
+                GroupName=self.group_name,
+            )
+        except Exception as error:
+            if not _is_missing_schedule(error):
+                raise
 
     def update(self, reminder: Reminder) -> None:
         self.client.update_schedule(
@@ -116,4 +120,14 @@ def scheduler_from_env(
         client,
         ScheduleTarget(target_arn, role_arn),
         environ.get("SCHEDULER_GROUP", "greetings-bot"),
+    )
+
+
+def _is_missing_schedule(error: Exception) -> bool:
+    response = getattr(error, "response", None)
+    if not isinstance(response, Mapping):
+        return False
+    details = response.get("Error")
+    return isinstance(details, Mapping) and details.get("Code") == (
+        "ResourceNotFoundException"
     )

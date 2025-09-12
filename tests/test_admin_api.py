@@ -6,6 +6,7 @@ from greetings_bot.admin_api import (
     AdminRequestError,
     AdminResponse,
     HtmlResponse,
+    JsonDownloadResponse,
 )
 
 
@@ -117,6 +118,23 @@ class AdminResponseTest(unittest.TestCase):
         self.assertIn("default-src 'none'", response["headers"]["content-security-policy"])
         self.assertIn("form-action 'self'", response["headers"]["content-security-policy"])
         self.assertIn("<title>Status</title>", response["body"])
+
+    def test_serializes_a_non_cacheable_json_download(self):
+        response = JsonDownloadResponse(
+            200, '{"schema_version":1}'
+        ).to_dict()
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertEqual(
+            response["headers"]["content-type"],
+            "application/json; charset=utf-8",
+        )
+        self.assertEqual(response["headers"]["cache-control"], "no-store")
+        self.assertEqual(
+            response["headers"]["content-disposition"],
+            'attachment; filename="greetings-bot-user-data.json"',
+        )
+        self.assertNotIn("42", response["headers"]["content-disposition"])
 
 
 if __name__ == "__main__":

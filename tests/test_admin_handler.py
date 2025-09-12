@@ -61,6 +61,85 @@ class AdminHandlerTest(unittest.TestCase):
         self.assertEqual(response["statusCode"], 200)
         self.assertEqual([item["id"] for item in body["items"]], [42])
 
+    def test_downloads_user_data_through_gateway_event(self):
+        self.handler.application.users.save(User(42, 4200, "Mira"))
+        event = {
+            "path": "/admin/users/42/export",
+            "httpMethod": "GET",
+            "headers": {
+                "authorization": "Bearer a-long-local-admin-token"
+            },
+        }
+
+        response = self.handler.handle(event)
+
+        self.assertEqual(response["statusCode"], 200)
+        self.assertIn("attachment", response["headers"]["content-disposition"])
+        self.assertNotIn("4200", response["body"])
+
+        with patch("greetings_bot.admin_handler._handler", self.handler):
+            with self.assertLogs(
+                "greetings_bot.admin_handler", level="INFO"
+            ) as logs:
+                handle_event(event)
+        output = " ".join(logs.output)
+        self.assertIn('"action":"user_export"', output)
+        self.assertNotIn("42", output)
+
+    def test_runs_confirmed_user_deletion_through_gateway_events(self):
+        self.handler.application.users.save(User(42, 4200, "Mira"))
+        headers = {
+            "authorization": "Bearer a-long-local-admin-token"
+        }
+        requested = self.handler.handle(
+            {
+                "path": "/admin/users/42/deletion",
+                "httpMethod": "POST",
+                "headers": headers,
+            }
+        )
+        token = json.loads(requested["body"])["confirmation_token"]
+        confirmed = self.handler.handle(
+            {
+                "path": "/admin/users/42/deletion/confirm",
+                "httpMethod": "POST",
+                "headers": headers,
+                "body": json.dumps({"confirmation_token": token}),
+            }
+        )
+        completed = self.handler.handle(
+            {
+                "path": "/admin/users/42/deletion/execute",
+                "httpMethod": "POST",
+                "headers": headers,
+            }
+        )
+
+        self.assertEqual(requested["statusCode"], 201)
+        self.assertEqual(confirmed["statusCode"], 200)
+        self.assertEqual(completed["statusCode"], 200)
+        self.assertIsNone(self.handler.application.users.get(42))
+
+    def test_audits_deletion_confirmation_without_its_token_or_user(self):
+        token = "private-confirmation-token"
+        event = {
+            "path": "/admin/users/987654321/deletion/confirm",
+            "httpMethod": "POST",
+            "headers": {},
+            "body": json.dumps({"confirmation_token": token}),
+        }
+
+        with patch("greetings_bot.admin_handler._handler", self.handler):
+            with self.assertLogs(
+                "greetings_bot.admin_handler", level="WARNING"
+            ) as logs:
+                handle_event(event)
+
+        output = " ".join(logs.output)
+        self.assertIn('"action":"user_deletion_confirm"', output)
+        self.assertNotIn(token, output)
+        self.assertNotIn("987654321", output)
+
     def test_serves_the_dashboard_through_gateway_event(self):
         self.handler.application.users.save(User(42, 42, "Mira"))
         event = {

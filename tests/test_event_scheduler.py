@@ -82,6 +82,32 @@ class EventBridgeReminderSchedulerTest(unittest.TestCase):
             {"Name": "reminder-42-abcd1234", "GroupName": "greetings-bot"},
         )
 
+    def test_treats_an_already_missing_schedule_as_deleted(self):
+        class MissingSchedule(Exception):
+            response = {"Error": {"Code": "ResourceNotFoundException"}}
+
+        class MissingClient(FakeSchedulerClient):
+            def delete_schedule(self, **kwargs):
+                raise MissingSchedule()
+
+        scheduler = EventBridgeReminderScheduler(
+            MissingClient(), ScheduleTarget("target-arn", "role-arn")
+        )
+
+        scheduler.delete(reminder())
+
+    def test_keeps_unexpected_schedule_delete_failures(self):
+        class FailedClient(FakeSchedulerClient):
+            def delete_schedule(self, **kwargs):
+                raise RuntimeError("offline")
+
+        scheduler = EventBridgeReminderScheduler(
+            FailedClient(), ScheduleTarget("target-arn", "role-arn")
+        )
+
+        with self.assertRaises(RuntimeError):
+            scheduler.delete(reminder())
+
     def test_updates_schedule_time(self):
         client = FakeSchedulerClient()
         scheduler = EventBridgeReminderScheduler(

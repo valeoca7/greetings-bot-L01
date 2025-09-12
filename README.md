@@ -251,3 +251,20 @@ snapshot, and delivery operations. Configuration output is limited to feature st
 model names, and numeric limits; tokens, queue URLs, ARNs, and weather coordinates are
 not rendered. A failed-message redrive requires the same explicit confirmation and
 bounded rate as the JSON API. The JSON endpoints remain available for scripts.
+
+### User data controls
+
+`GET /admin/users/{id}/export` downloads a deterministic, versioned JSON document
+containing the user's profile, notes, and reminders. Chat delivery IDs and DynamoDB
+keys are excluded, records are ownership checked, and oversized exports fail instead
+of producing an unbounded response.
+
+Deletion uses three protected POST requests: `/admin/users/{id}/deletion` creates a
+30-minute confirmation challenge, `/deletion/confirm` verifies the returned token,
+and `/deletion/execute` removes the confirmed account. Only the token digest is
+stored. Cleanup removes active one-time schedules and bounded owner-data batches,
+leaving the profile until the remaining records are gone.
+
+Daily delivery markers expire after 90 days and opaque delivery receipts after 14
+days by default. `DeliveryHistoryDays` and `DeliveryReceiptDays` set bounded retention
+periods in the SAM template. Receipt records contain no message text or user ID.
