@@ -14,6 +14,7 @@ from greetings_bot.information import (
     parse_information_request,
 )
 from greetings_bot.information_quota import InformationQuota, InformationQuotaError
+from greetings_bot.messages import MessageCatalog
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.notes import create_note, format_note_list
 from greetings_bot.reminder_store import (
@@ -82,6 +83,7 @@ class Application:
         information_enabled: bool = False,
         information_quota: Optional[InformationQuota] = None,
         information_weekly_limit: int = 5,
+        messages: Optional[MessageCatalog] = None,
     ) -> None:
         self.users = users if users is not None else InMemoryUserRepository()
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -99,6 +101,7 @@ class Application:
         self.information_enabled = information_enabled
         self.information_quota = information_quota
         self.information_weekly_limit = information_weekly_limit
+        self.messages = messages or MessageCatalog()
 
     def handle(self, update: Update) -> Optional[Reply]:
         if update.message is None:
@@ -114,26 +117,7 @@ class Application:
         if command.name == "help":
             return Reply(
                 update.message.chat_id,
-                "Available commands:\n"
-                "/start - get a greeting\n"
-                "/register - create a profile\n"
-                "/me - show your profile\n"
-                "/time [HH:MM] - show or change greeting time\n"
-                "/days [daily|weekdays|days...] - choose greeting days\n"
-                "/digest [daily|off] - manage the daily digest\n"
-                "/location [lat lon name|off] - manage weather location\n"
-                "/weather [daily|off] - forecast or daily summary\n"
-                "/ask <joke|fact|person|place|advice> - request short information\n"
-                "/timezone [area/name] - show or change timezone\n"
-                "/quiet [start end|off] - manage quiet hours\n"
-                "/name [name] - show or change greeting name\n"
-                "/note add <text> - save a note\n"
-                "/notes - list saved notes\n"
-                "/remind YYYY-MM-DD HH:MM <text> - set a reminder\n"
-                "/remind every day HH:MM <text> - repeat daily\n"
-                "/remind every <weekday> HH:MM <text> - repeat weekly\n"
-                "/reminders - list reminders\n"
-                "/reminder <id> - view or manage a reminder",
+                self.messages.text("help", self._message_locale(update)),
             )
         if command.name == "ask":
             user = self.users.get(update.message.sender.id)
@@ -702,31 +686,47 @@ class Application:
             if command.name == "register" and existing_user is not None:
                 return Reply(
                     update.message.chat_id,
-                    "You are already registered, {}.".format(
-                        existing_user.first_name
+                    self.messages.text(
+                        "already_registered",
+                        existing_user.locale,
+                        name=existing_user.first_name,
                     ),
                 )
             first_name = normalize_first_name(update.message.sender.first_name)
+            locale = normalize_locale(update.message.sender.language_code)
             self.users.save(
                 User(
                     telegram_id=update.message.sender.id,
                     chat_id=update.message.chat_id,
                     first_name=first_name,
-                    locale=normalize_locale(update.message.sender.language_code),
+                    locale=locale,
                 )
             )
             if command.name == "register":
                 return Reply(
                     update.message.chat_id,
-                    "Thanks, {}. You are registered.".format(
-                        first_name
+                    self.messages.text(
+                        "registration_complete",
+                        locale,
+                        name=first_name,
                     ),
                 )
             return Reply(
                 update.message.chat_id,
                 format_greeting(update.message.sender),
             )
-        return Reply(update.message.chat_id, "I don't know that command. Try /help.")
+        return Reply(
+            update.message.chat_id,
+            self.messages.text(
+                "unknown_command", self._message_locale(update)
+            ),
+        )
+
+    def _message_locale(self, update: Update) -> str:
+        user = self.users.get(update.message.sender.id)
+        if user is not None:
+            return user.locale
+        return normalize_locale(update.message.sender.language_code)
 
 
 def handle_update(
@@ -741,6 +741,7 @@ def handle_update(
     information_enabled: bool = False,
     information_quota: Optional[InformationQuota] = None,
     information_weekly_limit: int = 5,
+    messages: Optional[MessageCatalog] = None,
 ) -> Optional[Reply]:
     return Application(
         users,
@@ -753,4 +754,5 @@ def handle_update(
         information_enabled,
         information_quota,
         information_weekly_limit,
+        messages,
     ).handle(update)

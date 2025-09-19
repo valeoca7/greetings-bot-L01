@@ -8,6 +8,7 @@ from greetings_bot.information_quota import (
     InformationQuotaError,
     InMemoryInformationQuota,
 )
+from greetings_bot.messages import MessageCatalog
 from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import Reminder
@@ -292,6 +293,15 @@ class AppTest(unittest.TestCase):
         )
         self.assertEqual(reply.chat_id, 42)
 
+    def test_uses_sender_locale_for_help_before_registration(self):
+        messages = MessageCatalog({"fr": {"help": "Commandes disponibles"}})
+
+        reply = Application(messages=messages).handle(
+            text_update("/help", "fr-CA")
+        )
+
+        self.assertEqual(reply.text, "Commandes disponibles")
+
     def test_ignores_other_messages(self):
         self.assertIsNone(handle_update(text_update("hello")))
 
@@ -322,6 +332,21 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Thanks, Mira. You are registered.")
         self.assertIsNotNone(users.get(42))
+
+    def test_localizes_registration_confirmation(self):
+        messages = MessageCatalog(
+            {
+                "fr": {
+                    "registration_complete": "Merci, {name}. Inscription terminée."
+                }
+            }
+        )
+
+        reply = Application(messages=messages).handle(
+            text_update("/register", "fr")
+        )
+
+        self.assertEqual(reply.text, "Merci, Mira. Inscription terminée.")
 
     def test_does_not_duplicate_an_existing_user(self):
         users = InMemoryUserRepository()
