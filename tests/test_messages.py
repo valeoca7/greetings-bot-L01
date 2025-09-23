@@ -11,7 +11,7 @@ class MessageCatalogTest(unittest.TestCase):
             catalog.text("registration_complete", name="Mira"),
             "Thanks, Mira. You are registered.",
         )
-        self.assertEqual(catalog.supported_locales, ("en",))
+        self.assertEqual(catalog.supported_locales, ("en", "uk"))
 
     def test_falls_back_from_region_to_language_then_english(self):
         catalog = MessageCatalog(
@@ -39,6 +39,15 @@ class MessageCatalogTest(unittest.TestCase):
     def test_rejects_missing_render_values(self):
         with self.assertRaises(ValueError):
             MessageCatalog().text("registration_complete")
+
+    def test_includes_ukrainian_and_regional_fallback(self):
+        catalog = MessageCatalog()
+
+        self.assertEqual(
+            catalog.text("registration_complete", "uk-UA", name="Міра"),
+            "Дякую, Міра. Реєстрацію завершено.",
+        )
+        self.assertIn("Доступні команди", catalog.text("help", "uk"))
 
 
 if __name__ == "__main__":

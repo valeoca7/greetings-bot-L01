@@ -31,12 +31,46 @@ ENGLISH_MESSAGES = {
     ),
 }
 
+UKRAINIAN_MESSAGES = {
+    "registration_required": (
+        "Ви не зареєстровані. Спочатку надішліть /register."
+    ),
+    "already_registered": "Ви вже зареєстровані, {name}.",
+    "registration_complete": "Дякую, {name}. Реєстрацію завершено.",
+    "unknown_command": "Я не знаю такої команди. Спробуйте /help.",
+    "help": (
+        "Доступні команди:\n"
+        "/start - отримати привітання\n"
+        "/register - створити профіль\n"
+        "/me - показати профіль\n"
+        "/time [HH:MM] - переглянути або змінити час привітання\n"
+        "/days [daily|weekdays|days...] - вибрати дні привітань\n"
+        "/digest [daily|off] - керувати щоденним оглядом\n"
+        "/location [lat lon name|off] - керувати місцем для погоди\n"
+        "/weather [daily|off] - прогноз або щоденний огляд\n"
+        "/ask <joke|fact|person|place|advice> - короткий запит\n"
+        "/timezone [area/name] - переглянути або змінити часовий пояс\n"
+        "/quiet [start end|off] - керувати тихими годинами\n"
+        "/name [name] - переглянути або змінити ім'я\n"
+        "/note add <text> - зберегти нотатку\n"
+        "/notes - показати нотатки\n"
+        "/remind YYYY-MM-DD HH:MM <text> - створити нагадування\n"
+        "/remind every day HH:MM <text> - повторювати щодня\n"
+        "/remind every <weekday> HH:MM <text> - повторювати щотижня\n"
+        "/reminders - показати нагадування\n"
+        "/reminder <id> - переглянути або змінити нагадування"
+    ),
+}
+
 
 class MessageCatalog:
     def __init__(
         self, catalogs: Mapping[str, Mapping[str, str]] = None
     ) -> None:
-        values: Dict[str, Mapping[str, str]] = {"en": ENGLISH_MESSAGES}
+        values: Dict[str, Mapping[str, str]] = {
+            "en": ENGLISH_MESSAGES,
+            "uk": UKRAINIAN_MESSAGES,
+        }
         if catalogs:
             values.update(
                 {_locale_key(locale): messages for locale, messages in catalogs.items()}

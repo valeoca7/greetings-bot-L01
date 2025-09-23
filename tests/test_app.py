@@ -321,9 +321,10 @@ class AppTest(unittest.TestCase):
     def test_uses_telegram_language_during_registration(self):
         users = InMemoryUserRepository()
 
-        handle_update(text_update("/register", "uk"), users)
+        reply = handle_update(text_update("/register", "uk"), users)
 
         self.assertEqual(users.get(42).locale, "uk")
+        self.assertEqual(reply.text, "Дякую, Mira. Реєстрацію завершено.")
 
     def test_handles_register_command(self):
         users = InMemoryUserRepository()
