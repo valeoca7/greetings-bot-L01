@@ -3,7 +3,12 @@ from dataclasses import replace
 from typing import Sequence
 
 from greetings_bot.timezones import validate_timezone
-from greetings_bot.users import EVERY_DAY, User, normalize_first_name
+from greetings_bot.users import (
+    EVERY_DAY,
+    User,
+    normalize_first_name,
+    normalize_locale,
+)
 from greetings_bot.weather import WeatherLocation
 
 
@@ -40,6 +45,17 @@ def set_first_name(user: User, value: str) -> User:
 
 def set_timezone(user: User, value: str) -> User:
     return replace(user, timezone=validate_timezone(value))
+
+
+def set_locale(
+    user: User,
+    value: str,
+    supported: Sequence[str] = ("en", "uk"),
+) -> User:
+    locale = normalize_locale(value)
+    if locale not in supported:
+        raise ValueError("unsupported locale")
+    return replace(user, locale=locale)
 
 
 def set_quiet_hours(user: User, start: str, end: str) -> User:

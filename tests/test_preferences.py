@@ -7,6 +7,7 @@ from greetings_bot.preferences import (
     set_greeting_days,
     set_greeting_time,
     set_quiet_hours,
+    set_locale,
     set_timezone,
     set_weather_location,
     set_weather_units,
@@ -54,6 +55,19 @@ class GreetingTimeTest(unittest.TestCase):
         updated = set_timezone(user, "America/Toronto")
 
         self.assertEqual("America/Toronto", updated.timezone)
+
+    def test_updates_a_supported_locale(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        updated = set_locale(user, "uk-UA")
+
+        self.assertEqual(updated.locale, "uk")
+
+    def test_rejects_an_unsupported_locale(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        with self.assertRaises(ValueError):
+            set_locale(user, "fr")
 
     def test_sets_quiet_hours(self):
         user = User(telegram_id=1, chat_id=1, first_name="Mira")
