@@ -274,6 +274,7 @@ class AppTest(unittest.TestCase):
             "/start - get a greeting\n"
             "/register - create a profile\n"
             "/me - show your profile\n"
+            "/language [en|uk] - show or change language\n"
             "/time [HH:MM] - show or change greeting time\n"
             "/days [daily|weekdays|days...] - choose greeting days\n"
             "/digest [daily|off] - manage the daily digest\n"
@@ -379,6 +380,28 @@ class AppTest(unittest.TestCase):
             "Quiet hours: off\nDaily digest: off\nWeather location: not set\n"
             "Weather units: metric\nDaily weather: off\nTimezone: UTC\nGreetings: on",
         )
+
+    def test_shows_and_changes_language(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        current = handle_update(text_update("/language"), users)
+        changed = handle_update(text_update("/language uk"), users)
+        localized = handle_update(text_update("/language"), users)
+
+        self.assertEqual(current.text, "Your language is en.")
+        self.assertEqual(changed.text, "Мову змінено на uk.")
+        self.assertEqual(localized.text, "Ваша мова: uk.")
+        self.assertEqual(users.get(42).locale, "uk")
+
+    def test_rejects_an_unsupported_language(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/language fr"), users)
+
+        self.assertEqual(reply.text, "Use /language en or /language uk.")
+        self.assertEqual(users.get(42).locale, "en")
 
     def test_reports_missing_profile(self):
         reply = handle_update(text_update("/me"), InMemoryUserRepository())

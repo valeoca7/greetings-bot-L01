@@ -43,6 +43,7 @@ from greetings_bot.preferences import (
     set_first_name,
     set_greeting_days,
     set_greeting_time,
+    set_locale,
     set_quiet_hours,
     set_timezone,
     set_weather_location,
@@ -423,6 +424,40 @@ class Application:
             if user is None:
                 return registration_required(update.message.chat_id)
             return Reply(update.message.chat_id, format_profile(user))
+        if command.name == "language":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return registration_required(update.message.chat_id)
+            if len(command.arguments) == 1:
+                try:
+                    user = set_locale(
+                        user,
+                        command.arguments[0],
+                        self.messages.supported_locales,
+                    )
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        self.messages.text("language_usage", user.locale),
+                    )
+                self.users.save(user)
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text(
+                        "language_changed", user.locale, locale=user.locale
+                    ),
+                )
+            if command.arguments:
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("language_usage", user.locale),
+                )
+            return Reply(
+                update.message.chat_id,
+                self.messages.text(
+                    "language_current", user.locale, locale=user.locale
+                ),
+            )
         if command.name == "time":
             user = self.users.get(update.message.sender.id)
             if user is None:

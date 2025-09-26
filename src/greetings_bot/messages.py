@@ -7,11 +7,15 @@ ENGLISH_MESSAGES = {
     "already_registered": "You are already registered, {name}.",
     "registration_complete": "Thanks, {name}. You are registered.",
     "unknown_command": "I don't know that command. Try /help.",
+    "language_current": "Your language is {locale}.",
+    "language_changed": "Language changed to {locale}.",
+    "language_usage": "Use /language en or /language uk.",
     "help": (
         "Available commands:\n"
         "/start - get a greeting\n"
         "/register - create a profile\n"
         "/me - show your profile\n"
+        "/language [en|uk] - show or change language\n"
         "/time [HH:MM] - show or change greeting time\n"
         "/days [daily|weekdays|days...] - choose greeting days\n"
         "/digest [daily|off] - manage the daily digest\n"
@@ -38,11 +42,15 @@ UKRAINIAN_MESSAGES = {
     "already_registered": "Ви вже зареєстровані, {name}.",
     "registration_complete": "Дякую, {name}. Реєстрацію завершено.",
     "unknown_command": "Я не знаю такої команди. Спробуйте /help.",
+    "language_current": "Ваша мова: {locale}.",
+    "language_changed": "Мову змінено на {locale}.",
+    "language_usage": "Використайте /language en або /language uk.",
     "help": (
         "Доступні команди:\n"
         "/start - отримати привітання\n"
         "/register - створити профіль\n"
         "/me - показати профіль\n"
+        "/language [en|uk] - переглянути або змінити мову\n"
         "/time [HH:MM] - переглянути або змінити час привітання\n"
         "/days [daily|weekdays|days...] - вибрати дні привітань\n"
         "/digest [daily|off] - керувати щоденним оглядом\n"
@@ -82,11 +90,13 @@ class MessageCatalog:
     def supported_locales(self) -> Tuple[str, ...]:
         return tuple(sorted(self.catalogs))
 
-    def text(self, key: str, locale: str = "en", **values: object) -> str:
+    def text(
+        self, key: str, locale_code: str = "en", **values: object
+    ) -> str:
         if key not in self.catalogs["en"]:
             raise KeyError("unknown message key: {}".format(key))
         template = self.catalogs["en"][key]
-        for candidate in locale_candidates(locale):
+        for candidate in locale_candidates(locale_code):
             messages = self.catalogs.get(candidate)
             if messages is not None and key in messages:
                 template = messages[key]
