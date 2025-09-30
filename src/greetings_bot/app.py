@@ -67,10 +67,6 @@ from greetings_bot.weather_format import format_daily_forecast
 LOGGER = logging.getLogger(__name__)
 
 
-def registration_required(chat_id: int) -> Reply:
-    return Reply(chat_id, "You are not registered. Send /register first.")
-
-
 class Application:
     def __init__(
         self,
@@ -123,7 +119,7 @@ class Application:
         if command.name == "ask":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if not self.information_enabled:
                 return Reply(
                     update.message.chat_id,
@@ -171,7 +167,7 @@ class Application:
         if command.name == "note" and command.arguments[:1] == ("add",):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             try:
                 note = create_note(user.telegram_id, " ".join(command.arguments[1:]))
             except ValueError as error:
@@ -189,7 +185,7 @@ class Application:
         if command.name == "note" and command.arguments[:1] == ("delete",):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if len(command.arguments) != 2:
                 return Reply(update.message.chat_id, "Use /note delete <id>.")
             if not self.notes.delete(user.telegram_id, command.arguments[1]):
@@ -198,7 +194,7 @@ class Application:
         if command.name == "note" and len(command.arguments) == 1:
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             note = self.notes.get(user.telegram_id, command.arguments[0])
             if note is None:
                 return Reply(update.message.chat_id, "Note not found.")
@@ -211,7 +207,7 @@ class Application:
         if command.name == "notes":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             notes = self.notes.all_for(user.telegram_id)
             if not notes:
                 return Reply(update.message.chat_id, "You have no notes.")
@@ -219,7 +215,7 @@ class Application:
         if command.name == "remind":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if command.arguments[:2] == ("every", "day") and len(command.arguments) >= 4:
                 try:
                     reminder = create_daily_reminder(
@@ -290,7 +286,7 @@ class Application:
         if command.name == "reminders":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             reminders = self.reminders.all_for(user.telegram_id)
             if not reminders:
                 return Reply(update.message.chat_id, "You have no reminders.")
@@ -305,7 +301,7 @@ class Application:
         ):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             reminder = self.reminders.get(user.telegram_id, command.arguments[1])
             if reminder is None:
                 return Reply(update.message.chat_id, "Reminder not found.")
@@ -341,7 +337,7 @@ class Application:
         ):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             reminder = self.reminders.get(user.telegram_id, command.arguments[1])
             if reminder is None:
                 return Reply(update.message.chat_id, "Reminder not found.")
@@ -360,7 +356,7 @@ class Application:
         ):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             reminder = self.reminders.get(user.telegram_id, command.arguments[1])
             if reminder is None:
                 return Reply(update.message.chat_id, "Reminder not found.")
@@ -386,7 +382,7 @@ class Application:
         if command.name == "reminder" and command.arguments[:1] == ("edit",):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if len(command.arguments) < 3:
                 return Reply(
                     update.message.chat_id,
@@ -406,7 +402,7 @@ class Application:
         if command.name == "reminder" and len(command.arguments) == 1:
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             reminder = self.reminders.get(user.telegram_id, command.arguments[0])
             if reminder is None:
                 return Reply(update.message.chat_id, "Reminder not found.")
@@ -422,12 +418,12 @@ class Application:
         if command.name == "me":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             return Reply(update.message.chat_id, format_profile(user))
         if command.name == "language":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if len(command.arguments) == 1:
                 try:
                     user = set_locale(
@@ -461,7 +457,7 @@ class Application:
         if command.name == "time":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if command.arguments:
                 try:
                     user = set_greeting_time(user, command.arguments[0])
@@ -482,7 +478,7 @@ class Application:
         if command.name == "days":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if command.arguments:
                 try:
                     user = set_greeting_days(user, command.arguments)
@@ -507,7 +503,7 @@ class Application:
         if command.name == "digest":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if len(command.arguments) == 1:
                 try:
                     user = set_digest_mode(user, command.arguments[0])
@@ -537,7 +533,7 @@ class Application:
         if command.name == "location":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if command.arguments == ("off",):
                 had_summary = user.weather_summary
                 self.users.save(clear_weather_location(user))
@@ -585,7 +581,7 @@ class Application:
         if command.name == "weather" and command.arguments[:1] == ("units",):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if len(command.arguments) != 2:
                 return Reply(
                     update.message.chat_id,
@@ -606,7 +602,7 @@ class Application:
         if command.name == "weather" and command.arguments == ("daily",):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if user.weather_location is None:
                 return Reply(
                     update.message.chat_id,
@@ -617,13 +613,13 @@ class Application:
         if command.name == "weather" and command.arguments == ("off",):
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             self.users.save(set_weather_summary(user, False))
             return Reply(update.message.chat_id, "Daily weather summary is off.")
         if command.name == "weather":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if command.arguments:
                 return Reply(update.message.chat_id, "Use /weather for today's forecast.")
             if user.weather_location is None:
@@ -649,7 +645,7 @@ class Application:
         if command.name == "timezone":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if command.arguments:
                 try:
                     user = set_timezone(user, command.arguments[0])
@@ -670,7 +666,7 @@ class Application:
         if command.name == "quiet":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if len(command.arguments) == 2:
                 try:
                     user = set_quiet_hours(user, *command.arguments)
@@ -698,7 +694,7 @@ class Application:
         if command.name == "name":
             user = self.users.get(update.message.sender.id)
             if user is None:
-                return registration_required(update.message.chat_id)
+                return self._registration_required(update)
             if command.arguments:
                 try:
                     user = set_first_name(user, " ".join(command.arguments))
@@ -762,6 +758,14 @@ class Application:
         if user is not None:
             return user.locale
         return normalize_locale(update.message.sender.language_code)
+
+    def _registration_required(self, update: Update) -> Reply:
+        return Reply(
+            update.message.chat_id,
+            self.messages.text(
+                "registration_required", self._message_locale(update)
+            ),
+        )
 
 
 def handle_update(

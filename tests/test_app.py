@@ -794,6 +794,14 @@ class AppTest(unittest.TestCase):
         self.assertEqual(reply.text, "You are not registered. Send /register first.")
         self.assertEqual(notes.all_for(42), [])
 
+    def test_localizes_registration_required_for_an_unregistered_sender(self):
+        reply = handle_update(text_update("/notes", "uk-UA"))
+
+        self.assertEqual(
+            reply.text,
+            "Ви не зареєстровані. Спочатку надішліть /register.",
+        )
+
     def test_lists_notes(self):
         users = InMemoryUserRepository()
         notes = InMemoryNoteRepository()
