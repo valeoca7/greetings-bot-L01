@@ -60,6 +60,22 @@ class ProfileTest(unittest.TestCase):
 
         self.assertIn("Daily weather: on", format_profile(user))
 
+    def test_formats_ukrainian_labels_and_states(self):
+        user = User(
+            telegram_id=42,
+            chat_id=42,
+            first_name="Міра",
+            locale="uk",
+            digest_mode="daily",
+        )
+
+        profile = format_profile(user)
+
+        self.assertIn("Ім'я: Міра", profile)
+        self.assertIn("Щоденний огляд: щодня", profile)
+        self.assertIn("Місце для погоди: не вказано", profile)
+        self.assertIn("Привітання: увімкнено", profile)
+
 
 if __name__ == "__main__":
     unittest.main()

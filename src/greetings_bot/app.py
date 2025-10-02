@@ -419,7 +419,7 @@ class Application:
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return self._registration_required(update)
-            return Reply(update.message.chat_id, format_profile(user))
+            return Reply(update.message.chat_id, format_profile(user, self.messages))
         if command.name == "language":
             user = self.users.get(update.message.sender.id)
             if user is None:

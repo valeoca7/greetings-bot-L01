@@ -10,6 +10,18 @@ ENGLISH_MESSAGES = {
     "language_current": "Your language is {locale}.",
     "language_changed": "Language changed to {locale}.",
     "language_usage": "Use /language en or /language uk.",
+    "state_on": "on",
+    "state_off": "off",
+    "state_daily": "daily",
+    "not_set": "not set",
+    "profile": (
+        "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
+        "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
+        "Quiet hours: {quiet_hours}\nDaily digest: {digest}\n"
+        "Weather location: {weather_location}\nWeather units: {weather_units}\n"
+        "Daily weather: {weather_summary}\nTimezone: {timezone}\n"
+        "Greetings: {greetings}"
+    ),
     "help": (
         "Available commands:\n"
         "/start - get a greeting\n"
@@ -45,6 +57,18 @@ UKRAINIAN_MESSAGES = {
     "language_current": "Ваша мова: {locale}.",
     "language_changed": "Мову змінено на {locale}.",
     "language_usage": "Використайте /language en або /language uk.",
+    "state_on": "увімкнено",
+    "state_off": "вимкнено",
+    "state_daily": "щодня",
+    "not_set": "не вказано",
+    "profile": (
+        "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
+        "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"
+        "Тихі години: {quiet_hours}\nЩоденний огляд: {digest}\n"
+        "Місце для погоди: {weather_location}\nОдиниці погоди: {weather_units}\n"
+        "Щоденна погода: {weather_summary}\nЧасовий пояс: {timezone}\n"
+        "Привітання: {greetings}"
+    ),
     "help": (
         "Доступні команди:\n"
         "/start - отримати привітання\n"
