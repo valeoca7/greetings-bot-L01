@@ -14,6 +14,14 @@ ENGLISH_MESSAGES = {
     "state_off": "off",
     "state_daily": "daily",
     "not_set": "not set",
+    "note_add_usage": "Use /note add <text>.",
+    "note_too_long": "Note text must be 500 characters or shorter.",
+    "note_saved": "Saved note {note_id}.",
+    "note_delete_usage": "Use /note delete <id>.",
+    "note_not_found": "Note not found.",
+    "note_deleted": "Note deleted.",
+    "note_usage": "Use /note add <text>, /note <id>, or /note delete <id>.",
+    "notes_empty": "You have no notes.",
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
         "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
@@ -61,6 +69,14 @@ UKRAINIAN_MESSAGES = {
     "state_off": "вимкнено",
     "state_daily": "щодня",
     "not_set": "не вказано",
+    "note_add_usage": "Використайте /note add <текст>.",
+    "note_too_long": "Нотатка має містити не більше 500 символів.",
+    "note_saved": "Нотатку {note_id} збережено.",
+    "note_delete_usage": "Використайте /note delete <id>.",
+    "note_not_found": "Нотатку не знайдено.",
+    "note_deleted": "Нотатку видалено.",
+    "note_usage": "Використайте /note add <текст>, /note <id> або /note delete <id>.",
+    "notes_empty": "У вас немає нотаток.",
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
         "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"

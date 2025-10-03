@@ -822,6 +822,18 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "You have no notes.")
 
+    def test_localizes_note_responses(self):
+        users = InMemoryUserRepository()
+        notes = InMemoryNoteRepository()
+        handle_update(text_update("/register", "uk"), users, notes)
+
+        saved = handle_update(text_update("/note add Купити чай"), users, notes)
+        empty_users_notes = InMemoryNoteRepository()
+        empty = handle_update(text_update("/notes"), users, empty_users_notes)
+
+        self.assertTrue(saved.text.startswith("Нотатку "))
+        self.assertEqual(empty.text, "У вас немає нотаток.")
+
     def test_shows_note_by_id(self):
         users = InMemoryUserRepository()
         notes = InMemoryNoteRepository()

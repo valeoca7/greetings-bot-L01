@@ -174,35 +174,50 @@ class Application:
                 if "too long" in str(error):
                     return Reply(
                         update.message.chat_id,
-                        "Note text must be 500 characters or shorter.",
+                        self.messages.text("note_too_long", user.locale),
                     )
-                return Reply(update.message.chat_id, "Use /note add <text>.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("note_add_usage", user.locale),
+                )
             self.notes.save(note)
             return Reply(
                 update.message.chat_id,
-                "Saved note {}.".format(note.id),
+                self.messages.text("note_saved", user.locale, note_id=note.id),
             )
         if command.name == "note" and command.arguments[:1] == ("delete",):
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return self._registration_required(update)
             if len(command.arguments) != 2:
-                return Reply(update.message.chat_id, "Use /note delete <id>.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("note_delete_usage", user.locale),
+                )
             if not self.notes.delete(user.telegram_id, command.arguments[1]):
-                return Reply(update.message.chat_id, "Note not found.")
-            return Reply(update.message.chat_id, "Note deleted.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("note_not_found", user.locale),
+                )
+            return Reply(
+                update.message.chat_id,
+                self.messages.text("note_deleted", user.locale),
+            )
         if command.name == "note" and len(command.arguments) == 1:
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return self._registration_required(update)
             note = self.notes.get(user.telegram_id, command.arguments[0])
             if note is None:
-                return Reply(update.message.chat_id, "Note not found.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("note_not_found", user.locale),
+                )
             return Reply(update.message.chat_id, note.text)
         if command.name == "note":
             return Reply(
                 update.message.chat_id,
-                "Use /note add <text>, /note <id>, or /note delete <id>.",
+                self.messages.text("note_usage", self._message_locale(update)),
             )
         if command.name == "notes":
             user = self.users.get(update.message.sender.id)
@@ -210,7 +225,10 @@ class Application:
                 return self._registration_required(update)
             notes = self.notes.all_for(user.telegram_id)
             if not notes:
-                return Reply(update.message.chat_id, "You have no notes.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("notes_empty", user.locale),
+                )
             return Reply(update.message.chat_id, format_note_list(notes))
         if command.name == "remind":
             user = self.users.get(update.message.sender.id)
