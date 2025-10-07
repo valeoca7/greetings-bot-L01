@@ -22,6 +22,14 @@ ENGLISH_MESSAGES = {
     "note_deleted": "Note deleted.",
     "note_usage": "Use /note add <text>, /note <id>, or /note delete <id>.",
     "notes_empty": "You have no notes.",
+    "remind_daily_usage": "Use /remind every day HH:MM <text>.",
+    "remind_daily_created": "Daily reminder {reminder_id} created.",
+    "remind_weekly_usage": "Use /remind every <weekday> HH:MM <text>.",
+    "remind_weekly_created": "Weekly reminder {reminder_id} created.",
+    "remind_usage": "Use /remind YYYY-MM-DD HH:MM <text>.",
+    "remind_future_usage": "Use a future local time: /remind YYYY-MM-DD HH:MM <text>.",
+    "remind_created": "Reminder {reminder_id} set for {date} {time}.",
+    "reminders_empty": "You have no reminders.",
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
         "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
@@ -77,6 +85,18 @@ UKRAINIAN_MESSAGES = {
     "note_deleted": "Нотатку видалено.",
     "note_usage": "Використайте /note add <текст>, /note <id> або /note delete <id>.",
     "notes_empty": "У вас немає нотаток.",
+    "remind_daily_usage": "Використайте /remind every day ГГ:ХХ <текст>.",
+    "remind_daily_created": "Щоденне нагадування {reminder_id} створено.",
+    "remind_weekly_usage": "Використайте /remind every <день> ГГ:ХХ <текст>.",
+    "remind_weekly_created": "Щотижневе нагадування {reminder_id} створено.",
+    "remind_usage": "Використайте /remind РРРР-ММ-ДД ГГ:ХХ <текст>.",
+    "remind_future_usage": (
+        "Вкажіть майбутній місцевий час: /remind РРРР-ММ-ДД ГГ:ХХ <текст>."
+    ),
+    "remind_created": (
+        "Нагадування {reminder_id} встановлено на {date} {time}."
+    ),
+    "reminders_empty": "У вас немає нагадувань.",
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
         "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"

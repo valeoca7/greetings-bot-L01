@@ -898,6 +898,27 @@ class AppTest(unittest.TestCase):
         self.assertIn("set for 2023-04-01 09:30", reply.text)
         self.assertEqual(reminders.all_for(42)[0].text, "Call home")
 
+    def test_localizes_reminder_creation_and_empty_list(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register", "uk"), users)
+
+        created = handle_update(
+            text_update("/remind 2023-04-01 09:30 Подзвонити додому"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 3, 17, 18, 0, tzinfo=timezone.utc)),
+        )
+        empty = handle_update(
+            text_update("/reminders"),
+            users,
+            reminders=InMemoryReminderRepository(),
+        )
+
+        self.assertTrue(created.text.startswith("Нагадування "))
+        self.assertIn("встановлено на 2023-04-01 09:30", created.text)
+        self.assertEqual(empty.text, "У вас немає нагадувань.")
+
     def test_schedules_one_time_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()

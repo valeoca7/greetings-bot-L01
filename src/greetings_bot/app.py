@@ -245,12 +245,16 @@ class Application:
                 except ValueError:
                     return Reply(
                         update.message.chat_id,
-                        "Use /remind every day HH:MM <text>.",
+                        self.messages.text("remind_daily_usage", user.locale),
                     )
                 self.reminders.save(reminder)
                 return Reply(
                     update.message.chat_id,
-                    "Daily reminder {} created.".format(reminder.id),
+                    self.messages.text(
+                        "remind_daily_created",
+                        user.locale,
+                        reminder_id=reminder.id,
+                    ),
                 )
             if (
                 len(command.arguments) >= 4
@@ -268,17 +272,21 @@ class Application:
                 except ValueError:
                     return Reply(
                         update.message.chat_id,
-                        "Use /remind every <weekday> HH:MM <text>.",
+                        self.messages.text("remind_weekly_usage", user.locale),
                     )
                 self.reminders.save(reminder)
                 return Reply(
                     update.message.chat_id,
-                    "Weekly reminder {} created.".format(reminder.id),
+                    self.messages.text(
+                        "remind_weekly_created",
+                        user.locale,
+                        reminder_id=reminder.id,
+                    ),
                 )
             if len(command.arguments) < 3:
                 return Reply(
                     update.message.chat_id,
-                    "Use /remind YYYY-MM-DD HH:MM <text>.",
+                    self.messages.text("remind_usage", user.locale),
                 )
             try:
                 reminder = create_reminder(
@@ -291,14 +299,18 @@ class Application:
             except ValueError:
                 return Reply(
                     update.message.chat_id,
-                    "Use a future local time: /remind YYYY-MM-DD HH:MM <text>.",
+                    self.messages.text("remind_future_usage", user.locale),
                 )
             self.reminders.save(reminder)
             self.reminder_scheduler.create(reminder)
             return Reply(
                 update.message.chat_id,
-                "Reminder {} set for {} {}.".format(
-                    reminder.id, command.arguments[0], command.arguments[1]
+                self.messages.text(
+                    "remind_created",
+                    user.locale,
+                    reminder_id=reminder.id,
+                    date=command.arguments[0],
+                    time=command.arguments[1],
                 ),
             )
         if command.name == "reminders":
@@ -307,7 +319,10 @@ class Application:
                 return self._registration_required(update)
             reminders = self.reminders.all_for(user.telegram_id)
             if not reminders:
-                return Reply(update.message.chat_id, "You have no reminders.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("reminders_empty", user.locale),
+                )
             return Reply(
                 update.message.chat_id,
                 format_reminder_list(reminders, user.timezone),
