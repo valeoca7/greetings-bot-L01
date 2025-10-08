@@ -30,6 +30,26 @@ ENGLISH_MESSAGES = {
     "remind_future_usage": "Use a future local time: /remind YYYY-MM-DD HH:MM <text>.",
     "remind_created": "Reminder {reminder_id} set for {date} {time}.",
     "reminders_empty": "You have no reminders.",
+    "reminder_not_found": "Reminder not found.",
+    "reminder_status_pending": "pending",
+    "reminder_status_paused": "paused",
+    "reminder_status_sent": "sent",
+    "reminder_status_cancelled": "cancelled",
+    "reminder_already": "Reminder is already {status}.",
+    "reminder_paused": "Reminder paused.",
+    "reminder_resumed": "Reminder resumed.",
+    "reminder_complete": "Reminder is already complete.",
+    "reminder_cancelled": "Reminder cancelled.",
+    "reminder_snooze_usage": (
+        "Use /reminder snooze <id> <minutes|hours|days>, for example 30m."
+    ),
+    "reminder_snoozed": "Reminder snoozed until {due_time} local time.",
+    "reminder_edit_usage": "Use /reminder edit <id> <text>.",
+    "reminder_edit_denied": "Reminder cannot be edited.",
+    "reminder_updated": "Reminder updated.",
+    "reminder_usage": (
+        "Use /reminder <id> or /reminder <edit|pause|resume|cancel|snooze> ..."
+    ),
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
         "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
@@ -97,6 +117,29 @@ UKRAINIAN_MESSAGES = {
         "Нагадування {reminder_id} встановлено на {date} {time}."
     ),
     "reminders_empty": "У вас немає нагадувань.",
+    "reminder_not_found": "Нагадування не знайдено.",
+    "reminder_status_pending": "активне",
+    "reminder_status_paused": "призупинене",
+    "reminder_status_sent": "надіслане",
+    "reminder_status_cancelled": "скасоване",
+    "reminder_already": "Нагадування вже {status}.",
+    "reminder_paused": "Нагадування призупинено.",
+    "reminder_resumed": "Нагадування відновлено.",
+    "reminder_complete": "Нагадування вже завершено.",
+    "reminder_cancelled": "Нагадування скасовано.",
+    "reminder_snooze_usage": (
+        "Використайте /reminder snooze <id> <хвилини|години|дні>, наприклад 30m."
+    ),
+    "reminder_snoozed": (
+        "Нагадування відкладено до {due_time} за місцевим часом."
+    ),
+    "reminder_edit_usage": "Використайте /reminder edit <id> <текст>.",
+    "reminder_edit_denied": "Нагадування не можна змінити.",
+    "reminder_updated": "Нагадування оновлено.",
+    "reminder_usage": (
+        "Використайте /reminder <id> або "
+        "/reminder <edit|pause|resume|cancel|snooze> ..."
+    ),
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
         "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"

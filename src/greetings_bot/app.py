@@ -337,7 +337,10 @@ class Application:
                 return self._registration_required(update)
             reminder = self.reminders.get(user.telegram_id, command.arguments[1])
             if reminder is None:
-                return Reply(update.message.chat_id, "Reminder not found.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("reminder_not_found", user.locale),
+                )
             transition = (
                 pause_reminder
                 if command.arguments[0] == "pause"
@@ -348,7 +351,14 @@ class Application:
             except ValueError:
                 return Reply(
                     update.message.chat_id,
-                    "Reminder is already {}.".format(reminder.status),
+                    self.messages.text(
+                        "reminder_already",
+                        user.locale,
+                        status=self.messages.text(
+                            "reminder_status_{}".format(reminder.status),
+                            user.locale,
+                        ),
+                    ),
                 )
             self.reminders.save(reminder)
             if reminder.recurrence is None:
@@ -356,12 +366,14 @@ class Application:
                     self.reminder_scheduler.delete(reminder)
                 else:
                     self.reminder_scheduler.create(reminder)
-            confirmation = (
-                "paused" if command.arguments[0] == "pause" else "resumed"
-            )
             return Reply(
                 update.message.chat_id,
-                "Reminder {}.".format(confirmation),
+                self.messages.text(
+                    "reminder_paused"
+                    if command.arguments[0] == "pause"
+                    else "reminder_resumed",
+                    user.locale,
+                ),
             )
         if (
             command.name == "reminder"
@@ -373,15 +385,24 @@ class Application:
                 return self._registration_required(update)
             reminder = self.reminders.get(user.telegram_id, command.arguments[1])
             if reminder is None:
-                return Reply(update.message.chat_id, "Reminder not found.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("reminder_not_found", user.locale),
+                )
             try:
                 reminder = cancel_reminder(reminder)
             except ValueError:
-                return Reply(update.message.chat_id, "Reminder is already complete.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("reminder_complete", user.locale),
+                )
             self.reminders.save(reminder)
             if reminder.recurrence is None:
                 self.reminder_scheduler.delete(reminder)
-            return Reply(update.message.chat_id, "Reminder cancelled.")
+            return Reply(
+                update.message.chat_id,
+                self.messages.text("reminder_cancelled", user.locale),
+            )
         if (
             command.name == "reminder"
             and len(command.arguments) == 3
@@ -392,7 +413,10 @@ class Application:
                 return self._registration_required(update)
             reminder = self.reminders.get(user.telegram_id, command.arguments[1])
             if reminder is None:
-                return Reply(update.message.chat_id, "Reminder not found.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("reminder_not_found", user.locale),
+                )
             try:
                 duration = parse_snooze_duration(command.arguments[2])
                 reminder = snooze_reminder(
@@ -401,15 +425,17 @@ class Application:
             except ValueError:
                 return Reply(
                     update.message.chat_id,
-                    "Use /reminder snooze <id> <minutes|hours|days>, for example 30m.",
+                    self.messages.text("reminder_snooze_usage", user.locale),
                 )
             self.reminders.save(reminder)
             if reminder.recurrence is None:
                 self.reminder_scheduler.update(reminder)
             return Reply(
                 update.message.chat_id,
-                "Reminder snoozed until {} local time.".format(
-                    format_due_time(reminder, user.timezone)
+                self.messages.text(
+                    "reminder_snoozed",
+                    user.locale,
+                    due_time=format_due_time(reminder, user.timezone),
                 ),
             )
         if command.name == "reminder" and command.arguments[:1] == ("edit",):
@@ -419,26 +445,38 @@ class Application:
             if len(command.arguments) < 3:
                 return Reply(
                     update.message.chat_id,
-                    "Use /reminder edit <id> <text>.",
+                    self.messages.text("reminder_edit_usage", user.locale),
                 )
             reminder = self.reminders.get(user.telegram_id, command.arguments[1])
             if reminder is None:
-                return Reply(update.message.chat_id, "Reminder not found.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("reminder_not_found", user.locale),
+                )
             try:
                 reminder = edit_reminder_text(
                     reminder, " ".join(command.arguments[2:])
                 )
             except ValueError:
-                return Reply(update.message.chat_id, "Reminder cannot be edited.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("reminder_edit_denied", user.locale),
+                )
             self.reminders.save(reminder)
-            return Reply(update.message.chat_id, "Reminder updated.")
+            return Reply(
+                update.message.chat_id,
+                self.messages.text("reminder_updated", user.locale),
+            )
         if command.name == "reminder" and len(command.arguments) == 1:
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return self._registration_required(update)
             reminder = self.reminders.get(user.telegram_id, command.arguments[0])
             if reminder is None:
-                return Reply(update.message.chat_id, "Reminder not found.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("reminder_not_found", user.locale),
+                )
             return Reply(
                 update.message.chat_id,
                 format_reminder(reminder, user.timezone),
@@ -446,7 +484,9 @@ class Application:
         if command.name == "reminder":
             return Reply(
                 update.message.chat_id,
-                "Use /reminder <id> or /reminder <edit|pause|resume|cancel|snooze> ...",
+                self.messages.text(
+                    "reminder_usage", self._message_locale(update)
+                ),
             )
         if command.name == "me":
             user = self.users.get(update.message.sender.id)

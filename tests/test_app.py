@@ -1067,6 +1067,32 @@ class AppTest(unittest.TestCase):
         self.assertEqual(resumed.text, "Reminder resumed.")
         self.assertEqual(reminders.get(42, reminder_id).status, "pending")
 
+    def test_localizes_reminder_management(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        handle_update(text_update("/register", "uk"), users)
+        handle_update(
+            text_update("/remind every day 09:30 Розім'ятися"),
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2023, 6, 20, 18, 0, tzinfo=timezone.utc)),
+        )
+        reminder_id = reminders.all_for(42)[0].id
+
+        paused = handle_update(
+            text_update("/reminder pause " + reminder_id),
+            users,
+            reminders=reminders,
+        )
+        resumed = handle_update(
+            text_update("/reminder resume " + reminder_id),
+            users,
+            reminders=reminders,
+        )
+
+        self.assertEqual(paused.text, "Нагадування призупинено.")
+        self.assertEqual(resumed.text, "Нагадування відновлено.")
+
     def test_cancels_reminder(self):
         users = InMemoryUserRepository()
         reminders = InMemoryReminderRepository()
