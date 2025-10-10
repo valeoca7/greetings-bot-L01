@@ -325,7 +325,9 @@ class Application:
                 )
             return Reply(
                 update.message.chat_id,
-                format_reminder_list(reminders, user.timezone),
+                format_reminder_list(
+                    reminders, user.timezone, self.messages, user.locale
+                ),
             )
         if (
             command.name == "reminder"
@@ -479,7 +481,9 @@ class Application:
                 )
             return Reply(
                 update.message.chat_id,
-                format_reminder(reminder, user.timezone),
+                format_reminder(
+                    reminder, user.timezone, self.messages, user.locale
+                ),
             )
         if command.name == "reminder":
             return Reply(

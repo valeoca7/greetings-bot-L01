@@ -171,6 +171,25 @@ class ReminderTest(unittest.TestCase):
             "Drink water\nDue: 2023-06-14 09:00\nStatus: pending\nRepeat: daily",
         )
 
+    def test_formats_reminder_details_in_ukrainian(self):
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Випити води",
+            datetime(2023, 6, 14, 16, 0, tzinfo=timezone.utc),
+            datetime(2023, 5, 1, 18, 0, tzinfo=timezone.utc),
+            recurrence="daily",
+            timezone="America/Vancouver",
+        )
+
+        text = format_reminder(
+            reminder, "America/Vancouver", locale="uk"
+        )
+
+        self.assertEqual(
+            text,
+            "Випити води\nТермін: 2023-06-14 09:00\n"
+            "Статус: активне\nПовтор: щодня",
+        )
+
     def test_rejects_time_skipped_by_spring_clock_change(self):
         with self.assertRaisesRegex(ValueError, "does not exist"):
             local_to_utc(

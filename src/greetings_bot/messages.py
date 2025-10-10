@@ -35,6 +35,12 @@ ENGLISH_MESSAGES = {
     "reminder_status_paused": "paused",
     "reminder_status_sent": "sent",
     "reminder_status_cancelled": "cancelled",
+    "reminder_repeat_once": "once",
+    "reminder_repeat_daily": "daily",
+    "reminder_repeat_weekly": "weekly",
+    "reminder_details": (
+        "{text}\nDue: {due_time}\nStatus: {status}\nRepeat: {repeat}"
+    ),
     "reminder_already": "Reminder is already {status}.",
     "reminder_paused": "Reminder paused.",
     "reminder_resumed": "Reminder resumed.",
@@ -122,6 +128,12 @@ UKRAINIAN_MESSAGES = {
     "reminder_status_paused": "призупинене",
     "reminder_status_sent": "надіслане",
     "reminder_status_cancelled": "скасоване",
+    "reminder_repeat_once": "одноразово",
+    "reminder_repeat_daily": "щодня",
+    "reminder_repeat_weekly": "щотижня",
+    "reminder_details": (
+        "{text}\nТермін: {due_time}\nСтатус: {status}\nПовтор: {repeat}"
+    ),
     "reminder_already": "Нагадування вже {status}.",
     "reminder_paused": "Нагадування призупинено.",
     "reminder_resumed": "Нагадування відновлено.",

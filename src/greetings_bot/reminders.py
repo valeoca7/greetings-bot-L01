@@ -4,6 +4,7 @@ from typing import Iterable, Literal, Optional
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from greetings_bot.messages import MessageCatalog
 from greetings_bot.users import User
 
 
@@ -215,14 +216,23 @@ def create_weekly_reminder(
 
 
 def format_reminder_list(
-    reminders: Iterable[Reminder], timezone_name: str
+    reminders: Iterable[Reminder],
+    timezone_name: str,
+    messages: Optional[MessageCatalog] = None,
+    locale: str = "en",
 ) -> str:
+    catalog = messages if messages is not None else MessageCatalog()
     zone = ZoneInfo(timezone_name)
     lines = []
     for reminder in reminders:
-        state = reminder.status
+        state = catalog.text(
+            "reminder_status_{}".format(reminder.status), locale
+        )
         if reminder.recurrence:
-            state = "{}, {}".format(state, reminder.recurrence)
+            repeat = catalog.text(
+                "reminder_repeat_{}".format(reminder.recurrence), locale
+            )
+            state = "{}, {}".format(state, repeat)
         lines.append(
             "{}: {} {} ({})".format(
                 reminder.id,
@@ -234,17 +244,26 @@ def format_reminder_list(
     return "\n".join(lines)
 
 
-def format_reminder(reminder: Reminder, timezone_name: str) -> str:
+def format_reminder(
+    reminder: Reminder,
+    timezone_name: str,
+    messages: Optional[MessageCatalog] = None,
+    locale: str = "en",
+) -> str:
+    catalog = messages if messages is not None else MessageCatalog()
     local_due = format_due_time(reminder, timezone_name)
-    repeat = reminder.recurrence or "once"
-    return (
-        "{}\nDue: {}\nStatus: {}\nRepeat: {}"
-        .format(
-            reminder.text,
-            local_due,
-            reminder.status,
-            repeat,
-        )
+    repeat = catalog.text(
+        "reminder_repeat_{}".format(reminder.recurrence or "once"), locale
+    )
+    return catalog.text(
+        "reminder_details",
+        locale,
+        text=reminder.text,
+        due_time=local_due,
+        status=catalog.text(
+            "reminder_status_{}".format(reminder.status), locale
+        ),
+        repeat=repeat,
     )
 
 
