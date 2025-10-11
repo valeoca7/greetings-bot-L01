@@ -56,6 +56,21 @@ ENGLISH_MESSAGES = {
     "reminder_usage": (
         "Use /reminder <id> or /reminder <edit|pause|resume|cancel|snooze> ..."
     ),
+    "location_removed_with_summary": "Weather location and daily summary removed.",
+    "location_removed": "Weather location removed.",
+    "location_usage": "Use /location <latitude> <longitude> <name>.",
+    "location_changed": "Weather location set to {location}.",
+    "location_missing": "Weather location is not set.",
+    "location_current": "Weather location is {location} ({latitude:.4f}, {longitude:.4f}).",
+    "weather_units_usage": (
+        "Use /weather units metric or /weather units imperial."
+    ),
+    "weather_units_changed": "Weather units changed to {units}.",
+    "weather_location_required": "Set a weather location with /location first.",
+    "weather_daily_on": "Daily weather summary is on.",
+    "weather_daily_off": "Daily weather summary is off.",
+    "weather_usage": "Use /weather for today's forecast.",
+    "weather_unavailable": "Weather is temporarily unavailable.",
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
         "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
@@ -152,6 +167,23 @@ UKRAINIAN_MESSAGES = {
         "Використайте /reminder <id> або "
         "/reminder <edit|pause|resume|cancel|snooze> ..."
     ),
+    "location_removed_with_summary": (
+        "Місце для погоди та щоденний огляд видалено."
+    ),
+    "location_removed": "Місце для погоди видалено.",
+    "location_usage": "Використайте /location <широта> <довгота> <назва>.",
+    "location_changed": "Місце для погоди змінено на {location}.",
+    "location_missing": "Місце для погоди не вказано.",
+    "location_current": "Місце для погоди: {location} ({latitude:.4f}, {longitude:.4f}).",
+    "weather_units_usage": (
+        "Використайте /weather units metric або /weather units imperial."
+    ),
+    "weather_units_changed": "Одиниці погоди змінено на {units}.",
+    "weather_location_required": "Спочатку вкажіть місце командою /location.",
+    "weather_daily_on": "Щоденний огляд погоди увімкнено.",
+    "weather_daily_off": "Щоденний огляд погоди вимкнено.",
+    "weather_usage": "Використайте /weather для прогнозу на сьогодні.",
+    "weather_unavailable": "Погода тимчасово недоступна.",
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
         "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"

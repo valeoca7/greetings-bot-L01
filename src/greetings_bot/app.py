@@ -617,9 +617,14 @@ class Application:
                 if had_summary:
                     return Reply(
                         update.message.chat_id,
-                        "Weather location and daily summary removed.",
+                        self.messages.text(
+                            "location_removed_with_summary", user.locale
+                        ),
                     )
-                return Reply(update.message.chat_id, "Weather location removed.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("location_removed", user.locale),
+                )
             if len(command.arguments) >= 3:
                 try:
                     user = set_weather_location(
@@ -631,28 +636,35 @@ class Application:
                 except ValueError:
                     return Reply(
                         update.message.chat_id,
-                        "Use /location <latitude> <longitude> <name>.",
+                        self.messages.text("location_usage", user.locale),
                     )
                 self.users.save(user)
                 return Reply(
                     update.message.chat_id,
-                    "Weather location set to {}.".format(
-                        user.weather_location.name
+                    self.messages.text(
+                        "location_changed",
+                        user.locale,
+                        location=user.weather_location.name,
                     ),
                 )
             if command.arguments:
                 return Reply(
                     update.message.chat_id,
-                    "Use /location <latitude> <longitude> <name>.",
+                    self.messages.text("location_usage", user.locale),
                 )
             if user.weather_location is None:
-                return Reply(update.message.chat_id, "Weather location is not set.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("location_missing", user.locale),
+                )
             return Reply(
                 update.message.chat_id,
-                "Weather location is {} ({:.4f}, {:.4f}).".format(
-                    user.weather_location.name,
-                    user.weather_location.latitude,
-                    user.weather_location.longitude,
+                self.messages.text(
+                    "location_current",
+                    user.locale,
+                    location=user.weather_location.name,
+                    latitude=user.weather_location.latitude,
+                    longitude=user.weather_location.longitude,
                 ),
             )
         if command.name == "weather" and command.arguments[:1] == ("units",):
@@ -662,19 +674,23 @@ class Application:
             if len(command.arguments) != 2:
                 return Reply(
                     update.message.chat_id,
-                    "Use /weather units metric or /weather units imperial.",
+                    self.messages.text("weather_units_usage", user.locale),
                 )
             try:
                 user = set_weather_units(user, command.arguments[1])
             except ValueError:
                 return Reply(
                     update.message.chat_id,
-                    "Use /weather units metric or /weather units imperial.",
+                    self.messages.text("weather_units_usage", user.locale),
                 )
             self.users.save(user)
             return Reply(
                 update.message.chat_id,
-                "Weather units changed to {}.".format(user.weather_units),
+                self.messages.text(
+                    "weather_units_changed",
+                    user.locale,
+                    units=user.weather_units,
+                ),
             )
         if command.name == "weather" and command.arguments == ("daily",):
             user = self.users.get(update.message.sender.id)
@@ -683,36 +699,51 @@ class Application:
             if user.weather_location is None:
                 return Reply(
                     update.message.chat_id,
-                    "Set a weather location with /location first.",
+                    self.messages.text("weather_location_required", user.locale),
                 )
             self.users.save(set_weather_summary(user, True))
-            return Reply(update.message.chat_id, "Daily weather summary is on.")
+            return Reply(
+                update.message.chat_id,
+                self.messages.text("weather_daily_on", user.locale),
+            )
         if command.name == "weather" and command.arguments == ("off",):
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return self._registration_required(update)
             self.users.save(set_weather_summary(user, False))
-            return Reply(update.message.chat_id, "Daily weather summary is off.")
+            return Reply(
+                update.message.chat_id,
+                self.messages.text("weather_daily_off", user.locale),
+            )
         if command.name == "weather":
             user = self.users.get(update.message.sender.id)
             if user is None:
                 return self._registration_required(update)
             if command.arguments:
-                return Reply(update.message.chat_id, "Use /weather for today's forecast.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("weather_usage", user.locale),
+                )
             if user.weather_location is None:
                 return Reply(
                     update.message.chat_id,
-                    "Set a weather location with /location first.",
+                    self.messages.text("weather_location_required", user.locale),
                 )
             if self.weather_provider is None:
-                return Reply(update.message.chat_id, "Weather is temporarily unavailable.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("weather_unavailable", user.locale),
+                )
             forecast_date = user_local_time(user, self.clock.now()).date()
             try:
                 forecast = self.weather_provider.daily_forecast(
                     user.weather_location, forecast_date
                 )
             except WeatherProviderError:
-                return Reply(update.message.chat_id, "Weather is temporarily unavailable.")
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("weather_unavailable", user.locale),
+                )
             return Reply(
                 update.message.chat_id,
                 format_daily_forecast(
