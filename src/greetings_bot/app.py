@@ -123,20 +123,19 @@ class Application:
             if not self.information_enabled:
                 return Reply(
                     update.message.chat_id,
-                    "Information requests are not enabled.",
+                    self.messages.text("information_disabled", user.locale),
                 )
             try:
                 request = parse_information_request(command.arguments)
             except ValueError:
                 return Reply(
                     update.message.chat_id,
-                    "Use /ask joke, /ask fact, /ask person <name>, "
-                    "/ask place <name>, or /ask advice <topic>.",
+                    self.messages.text("information_usage", user.locale),
                 )
             if self.information_service is None:
                 return Reply(
                     update.message.chat_id,
-                    "Information service is temporarily unavailable.",
+                    self.messages.text("information_unavailable", user.locale),
                 )
             if self.information_quota is not None:
                 try:
@@ -148,20 +147,25 @@ class Application:
                 except InformationQuotaError:
                     return Reply(
                         update.message.chat_id,
-                        "Information service is temporarily unavailable.",
+                        self.messages.text(
+                            "information_unavailable", user.locale
+                        ),
                     )
                 if not decision.allowed:
                     return Reply(
                         update.message.chat_id,
-                        "Weekly information limit reached. It resets on "
-                        "{} UTC.".format(decision.resets_at.date().isoformat()),
+                        self.messages.text(
+                            "information_limit",
+                            user.locale,
+                            reset_date=decision.resets_at.date().isoformat(),
+                        ),
                     )
             try:
                 answer = self.information_service.answer(request)
             except (InformationProviderError, ValueError):
                 return Reply(
                     update.message.chat_id,
-                    "Information service is temporarily unavailable.",
+                    self.messages.text("information_unavailable", user.locale),
                 )
             return Reply(update.message.chat_id, answer)
         if command.name == "note" and command.arguments[:1] == ("add",):

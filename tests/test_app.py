@@ -77,6 +77,14 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Information requests are not enabled.")
 
+    def test_localizes_disabled_information_requests(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register", "uk"), users)
+
+        reply = handle_update(text_update("/ask joke"), users)
+
+        self.assertEqual(reply.text, "Інформаційні запити не увімкнено.")
+
     def test_handles_enabled_information_request(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register"), users)

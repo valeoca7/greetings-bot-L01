@@ -71,6 +71,15 @@ ENGLISH_MESSAGES = {
     "weather_daily_off": "Daily weather summary is off.",
     "weather_usage": "Use /weather for today's forecast.",
     "weather_unavailable": "Weather is temporarily unavailable.",
+    "information_disabled": "Information requests are not enabled.",
+    "information_usage": (
+        "Use /ask joke, /ask fact, /ask person <name>, /ask place <name>, "
+        "or /ask advice <topic>."
+    ),
+    "information_unavailable": "Information service is temporarily unavailable.",
+    "information_limit": (
+        "Weekly information limit reached. It resets on {reset_date} UTC."
+    ),
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
         "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
@@ -184,6 +193,15 @@ UKRAINIAN_MESSAGES = {
     "weather_daily_off": "Щоденний огляд погоди вимкнено.",
     "weather_usage": "Використайте /weather для прогнозу на сьогодні.",
     "weather_unavailable": "Погода тимчасово недоступна.",
+    "information_disabled": "Інформаційні запити не увімкнено.",
+    "information_usage": (
+        "Використайте /ask joke, /ask fact, /ask person <ім'я>, "
+        "/ask place <місце> або /ask advice <тема>."
+    ),
+    "information_unavailable": "Інформаційний сервіс тимчасово недоступний.",
+    "information_limit": (
+        "Тижневий ліміт запитів вичерпано. Він оновиться {reset_date} UTC."
+    ),
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
         "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"
