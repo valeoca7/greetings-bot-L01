@@ -21,6 +21,19 @@ class GreetingTest(unittest.TestCase):
 
         self.assertEqual("Good day, Mira!", format_scheduled_greeting(user))
 
+    def test_formats_ukrainian_greetings(self):
+        telegram_user = TelegramUser(id=42, first_name="Міра")
+        saved_user = User(
+            telegram_id=42, chat_id=42, first_name="Міра", locale="uk"
+        )
+
+        self.assertEqual(
+            format_greeting(telegram_user, locale="uk"), "Вітаю, Міра!"
+        )
+        self.assertEqual(
+            format_scheduled_greeting(saved_user), "Добрий день, Міра!"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

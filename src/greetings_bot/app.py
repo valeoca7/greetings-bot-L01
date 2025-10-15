@@ -856,7 +856,7 @@ class Application:
                 )
             return Reply(
                 update.message.chat_id,
-                format_greeting(update.message.sender),
+                format_greeting(update.message.sender, self.messages, locale),
             )
         return Reply(
             update.message.chat_id,

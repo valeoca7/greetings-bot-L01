@@ -80,6 +80,9 @@ ENGLISH_MESSAGES = {
     "information_limit": (
         "Weekly information limit reached. It resets on {reset_date} UTC."
     ),
+    "greeting": "Hello, {name}!",
+    "greeting_anonymous": "Hello!",
+    "scheduled_greeting": "Good day, {name}!",
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
         "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
@@ -202,6 +205,9 @@ UKRAINIAN_MESSAGES = {
     "information_limit": (
         "Тижневий ліміт запитів вичерпано. Він оновиться {reset_date} UTC."
     ),
+    "greeting": "Вітаю, {name}!",
+    "greeting_anonymous": "Вітаю!",
+    "scheduled_greeting": "Добрий день, {name}!",
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
         "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"
