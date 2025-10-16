@@ -27,6 +27,10 @@ class MessageCatalogTest(unittest.TestCase):
             "I don't know that command. Try /help.",
         )
         self.assertEqual(
+            catalog.resolved_locale("registration_required", "fr-CA"), "fr"
+        )
+        self.assertEqual(catalog.resolved_locale("help", "fr-CA"), "en")
+        self.assertEqual(
             locale_candidates("pt_BR"), ("pt-br", "pt", "en")
         )
 

@@ -1,11 +1,12 @@
 from dataclasses import dataclass
-from typing import Mapping
+from typing import Mapping, Tuple
 
 from greetings_bot.information_runtime import (
     DEFAULT_BEDROCK_MODEL_ID,
     information_requests_enabled,
     information_weekly_limit,
 )
+from greetings_bot.messages import MessageCatalog
 from greetings_bot.retention import retention_from_env
 
 
@@ -20,9 +21,12 @@ class DashboardConfig:
     delivery_admin_configured: bool
     delivery_history_days: int = 90
     delivery_receipt_days: int = 14
+    supported_locales: Tuple[str, ...] = ("en", "uk")
+    fallback_locale: str = "en"
 
 
 def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
+    messages = MessageCatalog()
     model = environ.get("BEDROCK_MODEL_ID", DEFAULT_BEDROCK_MODEL_ID).strip()
     if not model:
         raise ValueError("BEDROCK_MODEL_ID must not be blank")
@@ -52,4 +56,6 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         delivery_configured,
         retention.delivery_days,
         retention.receipt_days,
+        messages.supported_locales,
+        "en",
     )

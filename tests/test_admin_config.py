@@ -13,6 +13,8 @@ class AdminConfigTest(unittest.TestCase):
         self.assertEqual(config.weather_max_calls, 20)
         self.assertEqual(config.delivery_history_days, 90)
         self.assertEqual(config.delivery_receipt_days, 14)
+        self.assertEqual(config.supported_locales, ("en", "uk"))
+        self.assertEqual(config.fallback_locale, "en")
         self.assertFalse(config.delivery_admin_configured)
 
     def test_reads_selected_runtime_configuration(self):

@@ -76,6 +76,14 @@ class ProfileTest(unittest.TestCase):
         self.assertIn("Місце для погоди: не вказано", profile)
         self.assertIn("Привітання: увімкнено", profile)
 
+    def test_shows_fallback_for_a_legacy_locale(self):
+        user = User(42, 42, "Mira", locale="fr-CA")
+
+        profile = format_profile(user)
+
+        self.assertIn("Language: fr-CA", profile)
+        self.assertIn("Message fallback: en", profile)
+
 
 if __name__ == "__main__":
     unittest.main()

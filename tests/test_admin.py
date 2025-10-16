@@ -383,6 +383,9 @@ class AdminApplicationTest(unittest.TestCase):
         self.assertIsInstance(response, HtmlResponse)
         self.assertIn("model-v1", response.body)
         self.assertIn("Disabled", response.body)
+        self.assertIn("Message languages", response.body)
+        self.assertIn("en, uk", response.body)
+        self.assertIn("Message fallback", response.body)
 
     def test_renders_dashboard_delivery_operations(self):
         app = AdminApplication(

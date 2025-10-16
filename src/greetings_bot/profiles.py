@@ -27,7 +27,7 @@ def format_profile(
         if user.digest_mode == "daily"
         else catalog.text("state_off", user.locale)
     )
-    return catalog.text(
+    profile = catalog.text(
         "profile",
         user.locale,
         name=user.first_name,
@@ -43,3 +43,9 @@ def format_profile(
         timezone=user.timezone,
         greetings=status,
     )
+    resolved_locale = catalog.resolved_locale("profile", user.locale)
+    if resolved_locale != user.locale.replace("_", "-").lower():
+        profile += "\n" + catalog.text(
+            "profile_fallback", resolved_locale, locale=resolved_locale
+        )
+    return profile

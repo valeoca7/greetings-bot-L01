@@ -83,6 +83,7 @@ ENGLISH_MESSAGES = {
     "greeting": "Hello, {name}!",
     "greeting_anonymous": "Hello!",
     "scheduled_greeting": "Good day, {name}!",
+    "profile_fallback": "Message fallback: {locale}",
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
         "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
@@ -208,6 +209,7 @@ UKRAINIAN_MESSAGES = {
     "greeting": "Вітаю, {name}!",
     "greeting_anonymous": "Вітаю!",
     "scheduled_greeting": "Добрий день, {name}!",
+    "profile_fallback": "Резервна мова повідомлень: {locale}",
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
         "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"
@@ -266,16 +268,21 @@ class MessageCatalog:
     ) -> str:
         if key not in self.catalogs["en"]:
             raise KeyError("unknown message key: {}".format(key))
-        template = self.catalogs["en"][key]
-        for candidate in locale_candidates(locale_code):
-            messages = self.catalogs.get(candidate)
-            if messages is not None and key in messages:
-                template = messages[key]
-                break
+        locale = self.resolved_locale(key, locale_code)
+        template = self.catalogs[locale][key]
         try:
             return template.format(**values)
         except KeyError as error:
             raise ValueError("missing message value") from error
+
+    def resolved_locale(self, key: str, locale_code: str = "en") -> str:
+        if key not in self.catalogs["en"]:
+            raise KeyError("unknown message key: {}".format(key))
+        for candidate in locale_candidates(locale_code):
+            messages = self.catalogs.get(candidate)
+            if messages is not None and key in messages:
+                return candidate
+        return "en"
 
     def _validate_placeholders(self) -> None:
         formatter = Formatter()
