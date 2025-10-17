@@ -52,6 +52,7 @@ does not send them to Telegram.
 - `/start` registers the user and returns a greeting
 - `/register` creates a user profile
 - `/me` shows the current profile
+- `/language [en|uk]` shows or changes the message language
 - `/timezone [area/name]` shows or changes the user's timezone
 - `/days [daily|weekdays|days...]` chooses local greeting weekdays
 - `/quiet [start end]` sets local quiet hours; `/quiet off` removes them
@@ -72,6 +73,11 @@ does not send them to Telegram.
 - `/reminder pause|resume|cancel <id>` changes reminder state
 - `/reminder snooze <id> <duration>` delays it by `30m`, `2h`, or `1d`
 - `/help` lists the available actions
+
+English and Ukrainian messages are included. Telegram's language is used when a
+profile is first created, and `/language` stores later changes. Unknown or incomplete
+locales fall back to English without changing user-provided names, notes, reminder
+text, weather place names, or generated information answers.
 
 Run the tests with:
 
