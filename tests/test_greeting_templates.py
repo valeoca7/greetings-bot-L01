@@ -3,6 +3,7 @@ import unittest
 from greetings_bot.greeting_templates import (
     GreetingTemplate,
     GreetingTemplateCatalog,
+    GreetingTemplateRenderer,
 )
 
 
@@ -37,6 +38,47 @@ class GreetingTemplateTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             GreetingTemplateCatalog((template, template))
+
+
+class GreetingTemplateRendererTest(unittest.TestCase):
+    def test_renders_allowlisted_values(self):
+        template = GreetingTemplate(
+            "friendly", "en", "Good {weekday}, {name}! Today is {date}."
+        )
+
+        text = GreetingTemplateRenderer().render(
+            template,
+            {"name": "Mira", "weekday": "Monday", "date": "2025-10-20"},
+        )
+
+        self.assertEqual(text, "Good Monday, Mira! Today is 2025-10-20.")
+
+    def test_rejects_unknown_or_traversed_values(self):
+        renderer = GreetingTemplateRenderer()
+
+        with self.assertRaises(ValueError):
+            renderer.render(
+                GreetingTemplate("brief", "en", "{note}"), {"note": "private"}
+            )
+        with self.assertRaises(ValueError):
+            renderer.render(
+                GreetingTemplate("brief", "en", "{name.__class__}"),
+                {"name": "Mira"},
+            )
+
+    def test_rejects_missing_values(self):
+        template = GreetingTemplate("brief", "en", "Hello, {name}.")
+
+        with self.assertRaises(ValueError):
+            GreetingTemplateRenderer().render(template, {})
+
+    def test_bounds_the_rendered_greeting(self):
+        template = GreetingTemplate("brief", "en", "Hello, {name}.")
+
+        with self.assertRaises(ValueError):
+            GreetingTemplateRenderer(max_length=11).render(
+                template, {"name": "Mira"}
+            )
 
 
 if __name__ == "__main__":

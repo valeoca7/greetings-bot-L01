@@ -1,11 +1,14 @@
 from dataclasses import dataclass
-from typing import Iterable, Tuple
+from string import Formatter
+from typing import Iterable, Mapping, Tuple
 
 from greetings_bot.messages import locale_candidates
 
 
 TEMPLATE_CATEGORIES = ("friendly", "brief", "cheerful")
 MAX_TEMPLATE_LENGTH = 240
+MAX_RENDERED_LENGTH = 320
+ALLOWED_TEMPLATE_VARIABLES = ("name", "weekday", "date")
 
 
 @dataclass(frozen=True)
@@ -59,3 +62,38 @@ class GreetingTemplateCatalog:
             if template is not None:
                 return template
         raise KeyError("greeting template not found")
+
+
+class GreetingTemplateRenderer:
+    def __init__(self, max_length: int = MAX_RENDERED_LENGTH) -> None:
+        if max_length < 1:
+            raise ValueError("rendered greeting limit must be positive")
+        self.max_length = max_length
+
+    def variables(self, template: GreetingTemplate) -> Tuple[str, ...]:
+        fields = []
+        for _, field, format_spec, conversion in Formatter().parse(template.text):
+            if field is None:
+                continue
+            if (
+                field not in ALLOWED_TEMPLATE_VARIABLES
+                or format_spec
+                or conversion
+            ):
+                raise ValueError("unsafe greeting template variable")
+            if field not in fields:
+                fields.append(field)
+        return tuple(fields)
+
+    def render(
+        self, template: GreetingTemplate, values: Mapping[str, object]
+    ) -> str:
+        fields = self.variables(template)
+        if any(field not in values for field in fields):
+            raise ValueError("missing greeting template value")
+        rendered = template.text.format(
+            **{field: str(values[field]) for field in fields}
+        )
+        if len(rendered) > self.max_length:
+            raise ValueError("rendered greeting is too long")
+        return rendered
