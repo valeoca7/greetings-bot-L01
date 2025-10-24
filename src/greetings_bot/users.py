@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Protocol, Sequence, Tuple
 
+from greetings_bot.greeting_templates import TEMPLATE_CATEGORIES
 from greetings_bot.weather import WeatherLocation
 
 EVERY_DAY = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
@@ -22,6 +23,7 @@ class User:
     weather_location: Optional[WeatherLocation] = None
     weather_units: str = "metric"
     weather_summary: bool = False
+    greeting_template_category: str = "friendly"
 
 
 def user_to_dict(user: User) -> Dict[str, object]:
@@ -48,6 +50,7 @@ def user_to_dict(user: User) -> Dict[str, object]:
         ),
         "weather_units": user.weather_units,
         "weather_summary": user.weather_summary,
+        "greeting_template_category": user.greeting_template_category,
     }
 
 
@@ -78,6 +81,11 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
     weather_summary = data.get("weather_summary", False)
     if not isinstance(weather_summary, bool):
         weather_summary = False
+    template_category = str(
+        data.get("greeting_template_category", "friendly")
+    )
+    if template_category not in TEMPLATE_CATEGORIES:
+        template_category = "friendly"
     return User(
         telegram_id=int(data["telegram_id"]),
         chat_id=int(data["chat_id"]),
@@ -93,6 +101,7 @@ def user_from_dict(data: Mapping[str, Any]) -> User:
         weather_location=weather_location,
         weather_units=weather_units,
         weather_summary=weather_summary,
+        greeting_template_category=template_category,
     )
 
 

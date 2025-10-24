@@ -33,6 +33,7 @@ class UserTest(unittest.TestCase):
         self.assertIsNone(user.weather_location)
         self.assertEqual(user.weather_units, "metric")
         self.assertFalse(user.weather_summary)
+        self.assertEqual(user.greeting_template_category, "friendly")
 
     def test_normalizes_first_name(self):
         self.assertEqual(normalize_first_name("  Mira "), "Mira")
@@ -62,6 +63,7 @@ class UserTest(unittest.TestCase):
             ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
         )
         self.assertEqual(data["digest_mode"], "off")
+        self.assertEqual(data["greeting_template_category"], "friendly")
 
     def test_defaults_timezone_in_old_records(self):
         user = user_from_dict({"telegram_id": 1, "chat_id": 1, "first_name": "Jo"})
@@ -97,12 +99,26 @@ class UserTest(unittest.TestCase):
             first_name="Mira",
             greeting_days=("tue", "thu"),
             digest_mode="daily",
+            greeting_template_category="cheerful",
         )
 
         restored = user_from_dict(user_to_dict(user))
 
         self.assertEqual(restored.greeting_days, ("tue", "thu"))
         self.assertEqual(restored.digest_mode, "daily")
+        self.assertEqual(restored.greeting_template_category, "cheerful")
+
+    def test_repairs_an_unknown_template_category(self):
+        user = user_from_dict(
+            {
+                "telegram_id": 1,
+                "chat_id": 2,
+                "first_name": "Mira",
+                "greeting_template_category": "surprise",
+            }
+        )
+
+        self.assertEqual(user.greeting_template_category, "friendly")
 
     def test_round_trips_weather_location(self):
         user = User(
