@@ -2,6 +2,7 @@ import re
 from dataclasses import replace
 from typing import Sequence
 
+from greetings_bot.greeting_templates import TEMPLATE_CATEGORIES
 from greetings_bot.timezones import validate_timezone
 from greetings_bot.users import (
     EVERY_DAY,
@@ -56,6 +57,13 @@ def set_locale(
     if locale not in supported:
         raise ValueError("unsupported locale")
     return replace(user, locale=locale)
+
+
+def set_greeting_template_category(user: User, value: str) -> User:
+    category = value.strip().lower()
+    if category not in TEMPLATE_CATEGORIES:
+        raise ValueError("unsupported greeting template category")
+    return replace(user, greeting_template_category=category)
 
 
 def set_quiet_hours(user: User, start: str, end: str) -> User:

@@ -5,6 +5,7 @@ from greetings_bot.preferences import (
     set_first_name,
     set_digest_mode,
     set_greeting_days,
+    set_greeting_template_category,
     set_greeting_time,
     set_quiet_hours,
     set_locale,
@@ -68,6 +69,19 @@ class GreetingTimeTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             set_locale(user, "fr")
+
+    def test_updates_a_supported_greeting_template_category(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        updated = set_greeting_template_category(user, " Cheerful ")
+
+        self.assertEqual(updated.greeting_template_category, "cheerful")
+
+    def test_rejects_an_unknown_greeting_template_category(self):
+        user = User(telegram_id=1, chat_id=1, first_name="Mira")
+
+        with self.assertRaises(ValueError):
+            set_greeting_template_category(user, "surprise")
 
     def test_sets_quiet_hours(self):
         user = User(telegram_id=1, chat_id=1, first_name="Mira")
