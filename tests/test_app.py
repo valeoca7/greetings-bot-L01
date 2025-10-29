@@ -283,6 +283,7 @@ class AppTest(unittest.TestCase):
             "/register - create a profile\n"
             "/me - show your profile\n"
             "/language [en|uk] - show or change language\n"
+            "/style [friendly|brief|cheerful] - choose greeting style\n"
             "/time [HH:MM] - show or change greeting time\n"
             "/days [daily|weekdays|days...] - choose greeting days\n"
             "/digest [daily|off] - manage the daily digest\n"
@@ -410,6 +411,37 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Use /language en or /language uk.")
         self.assertEqual(users.get(42).locale, "en")
+
+    def test_shows_and_changes_greeting_style(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        current = handle_update(text_update("/style"), users)
+        changed = handle_update(text_update("/style cheerful"), users)
+
+        self.assertEqual(current.text, "Your greeting style is friendly.")
+        self.assertEqual(changed.text, "Greeting style changed to cheerful.")
+        self.assertEqual(users.get(42).greeting_template_category, "cheerful")
+
+    def test_localizes_greeting_style_feedback(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register", "uk"), users)
+
+        reply = handle_update(text_update("/style brief"), users)
+
+        self.assertEqual(reply.text, "Стиль привітання змінено на brief.")
+
+    def test_rejects_an_unknown_greeting_style(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/style loud"), users)
+
+        self.assertEqual(
+            reply.text,
+            "Use /style friendly, /style brief, or /style cheerful.",
+        )
+        self.assertEqual(users.get(42).greeting_template_category, "friendly")
 
     def test_reports_missing_profile(self):
         reply = handle_update(text_update("/me"), InMemoryUserRepository())

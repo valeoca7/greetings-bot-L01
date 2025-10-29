@@ -42,6 +42,7 @@ from greetings_bot.preferences import (
     set_digest_mode,
     set_first_name,
     set_greeting_days,
+    set_greeting_template_category,
     set_greeting_time,
     set_locale,
     set_quiet_hours,
@@ -533,6 +534,42 @@ class Application:
                 update.message.chat_id,
                 self.messages.text(
                     "language_current", user.locale, locale=user.locale
+                ),
+            )
+        if command.name == "style":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return self._registration_required(update)
+            if len(command.arguments) == 1:
+                try:
+                    user = set_greeting_template_category(
+                        user, command.arguments[0]
+                    )
+                except ValueError:
+                    return Reply(
+                        update.message.chat_id,
+                        self.messages.text("style_usage", user.locale),
+                    )
+                self.users.save(user)
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text(
+                        "style_changed",
+                        user.locale,
+                        category=user.greeting_template_category,
+                    ),
+                )
+            if command.arguments:
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("style_usage", user.locale),
+                )
+            return Reply(
+                update.message.chat_id,
+                self.messages.text(
+                    "style_current",
+                    user.locale,
+                    category=user.greeting_template_category,
                 ),
             )
         if command.name == "time":

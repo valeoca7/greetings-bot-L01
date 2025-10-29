@@ -10,6 +10,9 @@ ENGLISH_MESSAGES = {
     "language_current": "Your language is {locale}.",
     "language_changed": "Language changed to {locale}.",
     "language_usage": "Use /language en or /language uk.",
+    "style_current": "Your greeting style is {category}.",
+    "style_changed": "Greeting style changed to {category}.",
+    "style_usage": "Use /style friendly, /style brief, or /style cheerful.",
     "state_on": "on",
     "state_off": "off",
     "state_daily": "daily",
@@ -98,6 +101,7 @@ ENGLISH_MESSAGES = {
         "/register - create a profile\n"
         "/me - show your profile\n"
         "/language [en|uk] - show or change language\n"
+        "/style [friendly|brief|cheerful] - choose greeting style\n"
         "/time [HH:MM] - show or change greeting time\n"
         "/days [daily|weekdays|days...] - choose greeting days\n"
         "/digest [daily|off] - manage the daily digest\n"
@@ -127,6 +131,11 @@ UKRAINIAN_MESSAGES = {
     "language_current": "Ваша мова: {locale}.",
     "language_changed": "Мову змінено на {locale}.",
     "language_usage": "Використайте /language en або /language uk.",
+    "style_current": "Ваш стиль привітання: {category}.",
+    "style_changed": "Стиль привітання змінено на {category}.",
+    "style_usage": (
+        "Використайте /style friendly, /style brief або /style cheerful."
+    ),
     "state_on": "увімкнено",
     "state_off": "вимкнено",
     "state_daily": "щодня",
@@ -224,6 +233,7 @@ UKRAINIAN_MESSAGES = {
         "/register - створити профіль\n"
         "/me - показати профіль\n"
         "/language [en|uk] - переглянути або змінити мову\n"
+        "/style [friendly|brief|cheerful] - вибрати стиль привітання\n"
         "/time [HH:MM] - переглянути або змінити час привітання\n"
         "/days [daily|weekdays|days...] - вибрати дні привітань\n"
         "/digest [daily|off] - керувати щоденним оглядом\n"
