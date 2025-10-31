@@ -43,9 +43,14 @@ def due_users(users: Iterable[User], current_time: datetime) -> List[User]:
     ]
 
 
-def build_greeting_replies(users: Iterable[User]) -> List[Reply]:
+def build_greeting_replies(
+    users: Iterable[User], current_time: Optional[datetime] = None
+) -> List[Reply]:
     return [
-        Reply(chat_id=user.chat_id, text=format_scheduled_greeting(user))
+        Reply(
+            chat_id=user.chat_id,
+            text=format_scheduled_greeting(user, current_time),
+        )
         for user in users
     ]
 
@@ -81,7 +86,7 @@ class GreetingDispatcher:
             if not self.deliveries.contains(greeting_delivery(user, current_time))
         ][: self.max_batch]
         LOGGER.info("dispatching %d scheduled greetings", len(users))
-        replies = build_greeting_replies(users)
+        replies = build_greeting_replies(users, current_time)
         for user in users:
             self.deliveries.record(greeting_delivery(user, current_time))
         return replies

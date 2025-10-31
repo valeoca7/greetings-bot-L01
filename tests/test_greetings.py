@@ -1,5 +1,10 @@
 import unittest
+from datetime import datetime, timezone
 
+from greetings_bot.greeting_templates import (
+    GreetingTemplate,
+    GreetingTemplateCatalog,
+)
 from greetings_bot.greetings import format_greeting, format_scheduled_greeting
 from greetings_bot.telegram import TelegramUser
 from greetings_bot.users import User
@@ -33,6 +38,34 @@ class GreetingTest(unittest.TestCase):
         self.assertEqual(
             format_scheduled_greeting(saved_user), "Добрий день, Міра!"
         )
+
+    def test_uses_the_selected_scheduled_greeting_style(self):
+        user = User(
+            42, 42, "Mira", greeting_template_category="cheerful"
+        )
+
+        self.assertEqual(
+            format_scheduled_greeting(user),
+            "Hope your day starts well, Mira!",
+        )
+
+    def test_supplies_local_date_values_to_the_renderer(self):
+        user = User(42, 42, "Mira", timezone="America/Vancouver")
+        templates = GreetingTemplateCatalog(
+            (
+                GreetingTemplate(
+                    "friendly", "en", "{weekday}, {date}: hello {name}!"
+                ),
+            )
+        )
+
+        text = format_scheduled_greeting(
+            user,
+            datetime(2025, 10, 28, 2, 0, tzinfo=timezone.utc),
+            templates,
+        )
+
+        self.assertEqual(text, "Monday, 2025-10-27: hello Mira!")
 
 
 if __name__ == "__main__":
