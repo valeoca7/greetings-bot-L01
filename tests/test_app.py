@@ -284,6 +284,7 @@ class AppTest(unittest.TestCase):
             "/me - show your profile\n"
             "/language [en|uk] - show or change language\n"
             "/style [friendly|brief|cheerful] - choose greeting style\n"
+            "/preview - preview the scheduled greeting\n"
             "/time [HH:MM] - show or change greeting time\n"
             "/days [daily|weekdays|days...] - choose greeting days\n"
             "/digest [daily|off] - manage the daily digest\n"
@@ -442,6 +443,33 @@ class AppTest(unittest.TestCase):
             "Use /style friendly, /style brief, or /style cheerful.",
         )
         self.assertEqual(users.get(42).greeting_template_category, "friendly")
+
+    def test_previews_the_selected_greeting_style(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+        handle_update(text_update("/style cheerful"), users)
+
+        reply = handle_update(
+            text_update("/preview"),
+            users,
+            clock=FixedClock(datetime(2025, 11, 3, 20, 0, tzinfo=timezone.utc)),
+        )
+
+        self.assertEqual(
+            reply.text,
+            "Preview:\nHope your day starts well, Mira!",
+        )
+
+    def test_localizes_a_greeting_preview(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register", "uk"), users)
+
+        reply = handle_update(text_update("/preview"), users)
+
+        self.assertEqual(
+            reply.text,
+            "Попередній перегляд:\nДобрий день, Mira!",
+        )
 
     def test_reports_missing_profile(self):
         reply = handle_update(text_update("/me"), InMemoryUserRepository())

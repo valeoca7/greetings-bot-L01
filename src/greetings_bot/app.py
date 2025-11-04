@@ -7,7 +7,7 @@ from greetings_bot.event_scheduler import (
     ReminderSchedulePort,
 )
 from greetings_bot.commands import parse_command
-from greetings_bot.greetings import format_greeting
+from greetings_bot.greetings import format_greeting, format_scheduled_greeting
 from greetings_bot.information import (
     InformationProviderError,
     InformationService,
@@ -570,6 +570,22 @@ class Application:
                     "style_current",
                     user.locale,
                     category=user.greeting_template_category,
+                ),
+            )
+        if command.name == "preview":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return self._registration_required(update)
+            if command.arguments:
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("greeting_preview_usage", user.locale),
+                )
+            greeting = format_scheduled_greeting(user, self.clock.now())
+            return Reply(
+                update.message.chat_id,
+                self.messages.text(
+                    "greeting_preview", user.locale, greeting=greeting
                 ),
             )
         if command.name == "time":
