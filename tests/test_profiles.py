@@ -14,6 +14,7 @@ class ProfileTest(unittest.TestCase):
         self.assertEqual(
             profile,
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
+            "Greeting style: friendly\n"
             "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
             "Quiet hours: off\nDaily digest: off\nWeather location: not set\n"
             "Weather units: metric\nDaily weather: off\nTimezone: UTC\nGreetings: on",
@@ -72,6 +73,7 @@ class ProfileTest(unittest.TestCase):
         profile = format_profile(user)
 
         self.assertIn("Ім'я: Міра", profile)
+        self.assertIn("Стиль привітання: friendly", profile)
         self.assertIn("Щоденний огляд: щодня", profile)
         self.assertIn("Місце для погоди: не вказано", profile)
         self.assertIn("Привітання: увімкнено", profile)

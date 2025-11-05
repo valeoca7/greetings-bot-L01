@@ -33,6 +33,7 @@ def format_profile(
         name=user.first_name,
         telegram_id=user.telegram_id,
         locale=user.locale,
+        greeting_style=user.greeting_template_category,
         greeting_time=user.greeting_time,
         greeting_days=", ".join(user.greeting_days),
         quiet_hours=quiet_hours,

@@ -386,6 +386,7 @@ class AppTest(unittest.TestCase):
         self.assertEqual(
             reply.text,
             "Name: Mira\nTelegram ID: 42\nLanguage: en\n"
+            "Greeting style: friendly\n"
             "Greeting time: 09:00\nGreeting days: mon, tue, wed, thu, fri, sat, sun\n"
             "Quiet hours: off\nDaily digest: off\nWeather location: not set\n"
             "Weather units: metric\nDaily weather: off\nTimezone: UTC\nGreetings: on",

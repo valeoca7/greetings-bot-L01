@@ -91,6 +91,7 @@ ENGLISH_MESSAGES = {
     "profile_fallback": "Message fallback: {locale}",
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
+        "Greeting style: {greeting_style}\n"
         "Greeting time: {greeting_time}\nGreeting days: {greeting_days}\n"
         "Quiet hours: {quiet_hours}\nDaily digest: {digest}\n"
         "Weather location: {weather_location}\nWeather units: {weather_units}\n"
@@ -226,6 +227,7 @@ UKRAINIAN_MESSAGES = {
     "profile_fallback": "Резервна мова повідомлень: {locale}",
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
+        "Стиль привітання: {greeting_style}\n"
         "Час привітання: {greeting_time}\nДні привітань: {greeting_days}\n"
         "Тихі години: {quiet_hours}\nЩоденний огляд: {digest}\n"
         "Місце для погоди: {weather_location}\nОдиниці погоди: {weather_units}\n"
