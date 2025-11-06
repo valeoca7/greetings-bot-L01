@@ -97,6 +97,7 @@ def _profile(user: User) -> Dict[str, object]:
         "enabled": user.enabled,
         "timezone": user.timezone,
         "greeting_time": user.greeting_time,
+        "greeting_template_category": user.greeting_template_category,
         "greeting_days": list(user.greeting_days),
         "quiet_start": user.quiet_start,
         "quiet_end": user.quiet_end,

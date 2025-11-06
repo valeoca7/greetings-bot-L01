@@ -37,6 +37,9 @@ class UserDataExportTest(unittest.TestCase):
 
         self.assertEqual(document["schema_version"], 1)
         self.assertEqual(document["profile"]["telegram_id"], 42)
+        self.assertEqual(
+            document["profile"]["greeting_template_category"], "friendly"
+        )
         self.assertEqual(document["notes"][0]["text"], "bring an umbrella")
         self.assertEqual(document["reminders"][0]["text"], "call home")
         self.assertEqual(document["generated_at"], "2025-08-11T20:00:00Z")
