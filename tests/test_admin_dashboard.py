@@ -92,6 +92,7 @@ class AdminDashboardTest(unittest.TestCase):
                 "locale": "en",
                 "timezone": "America/Vancouver",
                 "greeting_time": "18:30",
+                "greeting_template_category": "cheerful",
                 "greeting_days": ["mon", "wed", "fri"],
                 "quiet_hours": {"start": "22:00", "end": "07:00"},
                 "digest_mode": "daily",
@@ -105,6 +106,7 @@ class AdminDashboardTest(unittest.TestCase):
 
         self.assertIn("Mira &lt;Owner&gt;", page)
         self.assertIn("America/Vancouver", page)
+        self.assertIn("Cheerful", page)
         self.assertIn("mon, wed, fri", page)
         self.assertIn("22:00–07:00", page)
         self.assertIn("Daily", page)
@@ -134,6 +136,8 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertNotIn("QUEUE_URL", page)
         self.assertIn("90 days", page)
         self.assertIn("14 days", page)
+        self.assertIn("friendly, brief, cheerful", page)
+        self.assertIn("name, weekday, date", page)
 
     def test_renders_delivery_status_and_confirmed_redrive_form(self):
         page = render_delivery(

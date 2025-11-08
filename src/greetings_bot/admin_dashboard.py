@@ -206,6 +206,7 @@ def render_user_detail(version: str, detail: Mapping[str, object]) -> str:
         <dt>Locale</dt><dd>{locale}</dd>
         <dt>Timezone</dt><dd>{timezone}</dd>
         <dt>Greeting time</dt><dd>{greeting_time}</dd>
+        <dt>Greeting style</dt><dd>{greeting_style}</dd>
         <dt>Greeting days</dt><dd>{days}</dd>
         <dt>Quiet hours</dt><dd>{quiet}</dd>
         <dt>Digest</dt><dd>{digest}</dd>
@@ -219,6 +220,9 @@ def render_user_detail(version: str, detail: Mapping[str, object]) -> str:
         locale=escape(str(preferences["locale"])),
         timezone=escape(str(preferences["timezone"])),
         greeting_time=escape(str(preferences["greeting_time"])),
+        greeting_style=escape(
+            str(preferences["greeting_template_category"]).title()
+        ),
         days=escape(days),
         quiet=escape(quiet_label),
         digest=escape(str(preferences["digest_mode"]).title()),
@@ -253,6 +257,8 @@ def render_config(version: str, config: DashboardConfig) -> str:
         <dt>Receipt retention</dt><dd>{receipt_days} days</dd>
         <dt>Message languages</dt><dd>{locales}</dd>
         <dt>Message fallback</dt><dd>{fallback_locale}</dd>
+        <dt>Greeting styles</dt><dd>{template_categories}</dd>
+        <dt>Safe template variables</dt><dd>{template_variables}</dd>
       </dl>
     </section>""".format(
         information="Enabled" if config.information_enabled else "Disabled",
@@ -266,6 +272,8 @@ def render_config(version: str, config: DashboardConfig) -> str:
         receipt_days=config.delivery_receipt_days,
         locales=escape(", ".join(config.supported_locales)),
         fallback_locale=escape(config.fallback_locale),
+        template_categories=escape(", ".join(config.template_categories)),
+        template_variables=escape(", ".join(config.template_variables)),
     )
     return _render_layout(
         "Configuration · Greetings Bot Admin",

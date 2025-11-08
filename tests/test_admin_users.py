@@ -115,6 +115,9 @@ class AdminUserDetailTest(unittest.TestCase):
         self.assertEqual(detail["id"], 42)
         self.assertEqual(detail["preferences"]["greeting_time"], "18:30")
         self.assertEqual(
+            detail["preferences"]["greeting_template_category"], "friendly"
+        )
+        self.assertEqual(
             detail["preferences"]["greeting_days"], ["mon", "wed", "fri"]
         )
         self.assertEqual(

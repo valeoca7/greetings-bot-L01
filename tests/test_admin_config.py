@@ -15,6 +15,10 @@ class AdminConfigTest(unittest.TestCase):
         self.assertEqual(config.delivery_receipt_days, 14)
         self.assertEqual(config.supported_locales, ("en", "uk"))
         self.assertEqual(config.fallback_locale, "en")
+        self.assertEqual(
+            config.template_categories, ("friendly", "brief", "cheerful")
+        )
+        self.assertEqual(config.template_variables, ("name", "weekday", "date"))
         self.assertFalse(config.delivery_admin_configured)
 
     def test_reads_selected_runtime_configuration(self):

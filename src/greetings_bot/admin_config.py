@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from typing import Mapping, Tuple
 
+from greetings_bot.greeting_templates import (
+    ALLOWED_TEMPLATE_VARIABLES,
+    TEMPLATE_CATEGORIES,
+)
 from greetings_bot.information_runtime import (
     DEFAULT_BEDROCK_MODEL_ID,
     information_requests_enabled,
@@ -23,6 +27,8 @@ class DashboardConfig:
     delivery_receipt_days: int = 14
     supported_locales: Tuple[str, ...] = ("en", "uk")
     fallback_locale: str = "en"
+    template_categories: Tuple[str, ...] = TEMPLATE_CATEGORIES
+    template_variables: Tuple[str, ...] = ALLOWED_TEMPLATE_VARIABLES
 
 
 def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
@@ -58,4 +64,6 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         retention.receipt_days,
         messages.supported_locales,
         "en",
+        TEMPLATE_CATEGORIES,
+        ALLOWED_TEMPLATE_VARIABLES,
     )

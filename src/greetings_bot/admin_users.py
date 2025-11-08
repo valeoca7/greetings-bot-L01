@@ -105,6 +105,7 @@ def user_detail(user: User) -> Dict[str, object]:
         "locale": user.locale,
         "timezone": user.timezone,
         "greeting_time": user.greeting_time,
+        "greeting_template_category": user.greeting_template_category,
         "greeting_days": list(user.greeting_days),
         "quiet_hours": quiet_hours,
         "digest_mode": user.digest_mode,
