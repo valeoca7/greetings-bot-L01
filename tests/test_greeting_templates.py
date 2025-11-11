@@ -14,6 +14,12 @@ class GreetingTemplateTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             GreetingTemplate("friendly", "en", " ")
 
+    def test_rejects_unsafe_templates_before_catalog_use(self):
+        for text in ("{note}", "{name.__class__}", "{name!r}", "{name:>20}"):
+            with self.subTest(text=text):
+                with self.assertRaises(ValueError):
+                    GreetingTemplate("friendly", "en", text)
+
     def test_lists_built_in_categories_in_display_order(self):
         catalog = GreetingTemplateCatalog()
 

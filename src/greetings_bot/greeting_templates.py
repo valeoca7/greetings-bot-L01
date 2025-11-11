@@ -11,6 +11,26 @@ MAX_RENDERED_LENGTH = 320
 ALLOWED_TEMPLATE_VARIABLES = ("name", "weekday", "date")
 
 
+def _template_variables(text: str) -> Tuple[str, ...]:
+    fields = []
+    try:
+        parts = Formatter().parse(text)
+        for _, field, format_spec, conversion in parts:
+            if field is None:
+                continue
+            if (
+                field not in ALLOWED_TEMPLATE_VARIABLES
+                or format_spec
+                or conversion
+            ):
+                raise ValueError("unsafe greeting template variable")
+            if field not in fields:
+                fields.append(field)
+    except ValueError as error:
+        raise ValueError("invalid greeting template") from error
+    return tuple(fields)
+
+
 @dataclass(frozen=True)
 class GreetingTemplate:
     category: str
@@ -24,6 +44,7 @@ class GreetingTemplate:
             raise ValueError("template locale is required")
         if not self.text.strip() or len(self.text) > MAX_TEMPLATE_LENGTH:
             raise ValueError("invalid greeting template text")
+        _template_variables(self.text)
 
 
 BUILTIN_TEMPLATES = (
@@ -71,19 +92,7 @@ class GreetingTemplateRenderer:
         self.max_length = max_length
 
     def variables(self, template: GreetingTemplate) -> Tuple[str, ...]:
-        fields = []
-        for _, field, format_spec, conversion in Formatter().parse(template.text):
-            if field is None:
-                continue
-            if (
-                field not in ALLOWED_TEMPLATE_VARIABLES
-                or format_spec
-                or conversion
-            ):
-                raise ValueError("unsafe greeting template variable")
-            if field not in fields:
-                fields.append(field)
-        return tuple(fields)
+        return _template_variables(template.text)
 
     def render(
         self, template: GreetingTemplate, values: Mapping[str, object]
