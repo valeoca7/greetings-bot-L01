@@ -42,6 +42,7 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
                 weather_location=WeatherLocation("Vancouver", 49.2, -123.1),
                 weather_summary=True,
                 digest_mode="daily",
+                greeting_template_category="cheerful",
             )
         )
         handler = ScheduledGreetingHandler(
@@ -51,7 +52,7 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         replies = handler.handle({"time": "2024-05-10T10:00:00Z"})
 
         self.assertEqual(len(replies), 1)
-        self.assertIn("Good day, Mira!", replies[0]["text"])
+        self.assertIn("Hope your day starts well, Mira!", replies[0]["text"])
         self.assertIn("Vancouver: clear, 5-12°C", replies[0]["text"])
 
     def test_enqueues_combined_weather_summary(self):
