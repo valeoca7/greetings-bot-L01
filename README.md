@@ -53,6 +53,8 @@ does not send them to Telegram.
 - `/register` creates a user profile
 - `/me` shows the current profile
 - `/language [en|uk]` shows or changes the message language
+- `/style [friendly|brief|cheerful]` shows or changes the scheduled greeting style
+- `/preview` renders the selected greeting without scheduling a delivery
 - `/timezone [area/name]` shows or changes the user's timezone
 - `/days [daily|weekdays|days...]` chooses local greeting weekdays
 - `/quiet [start end]` sets local quiet hours; `/quiet off` removes them
@@ -78,6 +80,11 @@ English and Ukrainian messages are included. Telegram's language is used when a
 profile is first created, and `/language` stores later changes. Unknown or incomplete
 locales fall back to English without changing user-provided names, notes, reminder
 text, weather place names, or generated information answers.
+
+Scheduled greetings use one of three built-in styles. Templates accept only `name`,
+`weekday`, and `date` values; attribute access, format expressions, unknown variables,
+and oversized output are rejected. Previewing uses the same renderer as delivery and
+does not write a delivery marker or call a remote provider.
 
 Run the tests with:
 
