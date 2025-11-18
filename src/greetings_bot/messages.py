@@ -87,7 +87,6 @@ ENGLISH_MESSAGES = {
     ),
     "greeting": "Hello, {name}!",
     "greeting_anonymous": "Hello!",
-    "scheduled_greeting": "Good day, {name}!",
     "profile_fallback": "Message fallback: {locale}",
     "profile": (
         "Name: {name}\nTelegram ID: {telegram_id}\nLanguage: {locale}\n"
@@ -223,7 +222,6 @@ UKRAINIAN_MESSAGES = {
     ),
     "greeting": "Вітаю, {name}!",
     "greeting_anonymous": "Вітаю!",
-    "scheduled_greeting": "Добрий день, {name}!",
     "profile_fallback": "Резервна мова повідомлень: {locale}",
     "profile": (
         "Ім'я: {name}\nTelegram ID: {telegram_id}\nМова: {locale}\n"
