@@ -8,12 +8,14 @@ from greetings_bot.admin_api import (
     HtmlResponse,
     JsonDownloadResponse,
 )
+from greetings_bot.admin_audit import audit_record_data, parse_audit_query
 from greetings_bot.admin_auth import AdminAuthorizer
 from greetings_bot.admin_config import DashboardConfig
 from greetings_bot.admin_dashboard import (
     DashboardSnapshot,
     render_dashboard,
     render_config,
+    render_audit,
     render_delivery,
     render_user_detail,
     render_user_list,
@@ -21,6 +23,7 @@ from greetings_bot.admin_dashboard import (
 from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryAdminOperations
 from greetings_bot.admin_users import parse_user_query, search_users, user_detail
 from greetings_bot.clock import Clock, SystemClock
+from greetings_bot.configuration_audit import AuditRepository
 from greetings_bot.user_data import UserDataExporter, UserDataExportError
 from greetings_bot.user_deletion_service import (
     UserDeletionError,
@@ -39,6 +42,7 @@ class AdminApplication:
         exporter: Optional[UserDataExporter] = None,
         clock: Optional[Clock] = None,
         deletion: Optional[UserDeletionService] = None,
+        audit: Optional[AuditRepository] = None,
     ) -> None:
         self.authorizer = authorizer
         self.users = users
@@ -47,6 +51,7 @@ class AdminApplication:
         self.exporter = exporter
         self.clock = clock or SystemClock()
         self.deletion = deletion
+        self.audit = audit
 
     def handle(
         self, request: AdminRequest
@@ -65,6 +70,23 @@ class AdminApplication:
             return AdminResponse(200, {"status": "ok", "version": __version__})
         if request.path == "/admin/stats":
             return AdminResponse(200, {"users": self.users.count()})
+        if request.path == "/admin/audit":
+            if self.audit is None:
+                return AdminResponse(503, {"error": "audit unavailable"})
+            try:
+                query = parse_audit_query(request.query)
+                page = self.audit.query(query)
+            except ValueError as error:
+                return AdminResponse(400, {"error": str(error)})
+            return AdminResponse(
+                200,
+                {
+                    "items": [
+                        audit_record_data(record) for record in page.records
+                    ],
+                    "next_cursor": page.next_cursor,
+                },
+            )
         if request.path == "/admin/dashboard":
             return self._dashboard()
         if request.path == "/admin/dashboard/config":
@@ -73,6 +95,15 @@ class AdminApplication:
             return HtmlResponse(
                 200, render_config(__version__, self.dashboard_config)
             )
+        if request.path == "/admin/dashboard/audit":
+            if self.audit is None:
+                return AdminResponse(503, {"error": "audit unavailable"})
+            try:
+                query = parse_audit_query(request.query)
+                page = self.audit.query(query)
+            except ValueError as error:
+                return AdminResponse(400, {"error": str(error)})
+            return HtmlResponse(200, render_audit(__version__, page, query))
         if request.path == "/admin/dashboard/delivery":
             return self._dashboard_delivery()
         if request.path == "/admin/dashboard/users":

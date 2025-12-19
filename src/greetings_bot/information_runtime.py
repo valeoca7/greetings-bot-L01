@@ -6,6 +6,7 @@ from greetings_bot.bedrock_information import (
     BedrockInformationProvider,
 )
 from greetings_bot.information import InformationService
+from greetings_bot.feature_flags import feature_flags_from_env
 
 
 DEFAULT_BEDROCK_MODEL_ID = "amazon.titan-text-lite-v1"
@@ -16,10 +17,7 @@ DEFAULT_BEDROCK_TIMEOUT_SECONDS = 8
 def information_requests_enabled(
     environ: Mapping[str, str] = os.environ,
 ) -> bool:
-    value = environ.get("INFO_REQUESTS_ENABLED", "false").lower()
-    if value not in ("true", "false"):
-        raise ValueError("INFO_REQUESTS_ENABLED must be true or false")
-    return value == "true"
+    return feature_flags_from_env(environ).enabled("information_requests")
 
 
 def information_weekly_limit(

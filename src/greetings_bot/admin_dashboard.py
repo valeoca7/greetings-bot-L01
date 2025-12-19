@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 from greetings_bot.admin_config import DashboardConfig
 from greetings_bot.admin_delivery import DeliveryQueueSummary
 from greetings_bot.admin_users import AdminUserPage, AdminUserQuery
+from greetings_bot.configuration_audit import AuditPage, AuditQuery
 
 
 @dataclass(frozen=True)
@@ -100,6 +101,7 @@ def _render_layout(
       <a href="/admin/dashboard/users">Users</a>
       <a href="/admin/dashboard/delivery">Delivery</a>
       <a href="/admin/dashboard/config">Configuration</a>
+      <a href="/admin/dashboard/audit">Audit</a>
     </nav>
   </header>
   <main>
@@ -242,6 +244,10 @@ def render_user_detail(version: str, detail: Mapping[str, object]) -> str:
 
 
 def render_config(version: str, config: DashboardConfig) -> str:
+    flags = ", ".join(
+        "{}={}".format(name, "on" if enabled else "off")
+        for name, enabled in config.feature_flags
+    )
     content = """<section class="panel">
       <p><strong>Deployment managed.</strong> Change these values through the stack
       parameters or Lambda environment, then redeploy.</p>
@@ -259,6 +265,7 @@ def render_config(version: str, config: DashboardConfig) -> str:
         <dt>Message fallback</dt><dd>{fallback_locale}</dd>
         <dt>Greeting styles</dt><dd>{template_categories}</dd>
         <dt>Safe template variables</dt><dd>{template_variables}</dd>
+        <dt>Feature flags</dt><dd>{feature_flags}</dd>
       </dl>
     </section>""".format(
         information="Enabled" if config.information_enabled else "Disabled",
@@ -274,11 +281,54 @@ def render_config(version: str, config: DashboardConfig) -> str:
         fallback_locale=escape(config.fallback_locale),
         template_categories=escape(", ".join(config.template_categories)),
         template_variables=escape(", ".join(config.template_variables)),
+        feature_flags=escape(flags),
     )
     return _render_layout(
         "Configuration · Greetings Bot Admin",
         "Configuration",
         "Safe runtime settings and operational limits.",
+        version,
+        content,
+    )
+
+
+def render_audit(version: str, page: AuditPage, query: AuditQuery) -> str:
+    rows = "".join(
+        """<tr><td>{time}</td><td>{category}</td><td>{action}</td>
+        <td>{source}</td><td>{request_id}</td><td>{keys}</td></tr>""".format(
+            time=escape(record.occurred_at.isoformat()),
+            category=escape(record.category),
+            action=escape(record.action),
+            source=escape(record.source),
+            request_id=escape(record.request_id),
+            keys=escape(", ".join(record.changed_keys) or "None"),
+        )
+        for record in page.records
+    )
+    if not rows:
+        rows = '<tr><td colspan="6">No matching audit records.</td></tr>'
+    next_link = ""
+    if page.next_cursor:
+        values = {"limit": str(query.limit), "cursor": page.next_cursor}
+        if query.category:
+            values["category"] = query.category
+        if query.since:
+            values["since"] = query.since.isoformat()
+        if query.until:
+            values["until"] = query.until.isoformat()
+        next_link = '<p><a href="?{}">Next page</a></p>'.format(
+            escape(urlencode(values))
+        )
+    content = """<section class="panel">
+      <p>Privacy-safe configuration and administration history.</p>
+      <table><thead><tr><th>Time</th><th>Category</th><th>Action</th>
+      <th>Source</th><th>Request</th><th>Changed keys</th></tr></thead>
+      <tbody>{rows}</tbody></table>{next_link}
+    </section>""".format(rows=rows, next_link=next_link)
+    return _render_layout(
+        "Audit · Greetings Bot Admin",
+        "Audit history",
+        "Bounded operational attribution without configuration values.",
         version,
         content,
     )

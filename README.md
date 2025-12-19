@@ -240,6 +240,15 @@ currently returns only the total user count and has DynamoDB scan permission, wi
 write actions. Responses disable caching and content sniffing. Handler tests use local
 repositories and synthetic API Gateway events, so they do not invoke AWS resources.
 
+`GET /admin/audit` and `/admin/dashboard/audit` provide bounded, newest-first audit
+history with category and ISO-8601 time filters. Records contain request correlation,
+source, action, and allowlisted changed-key names only. Configuration values, tokens,
+request bodies, note text, reminder text, and user identifiers are not stored.
+
+Feature flags use strict `true` or `false` environment values. The dashboard exposes
+only the registered public flag names and enabled states; unrelated environment
+variables never enter the configuration snapshot.
+
 The user list accepts a case-insensitive `q` name or exact Telegram ID, a `status` of
 `all`, `active`, or `disabled`, and a `limit` from 1 to 50. Responses are ordered by
 user ID and return an opaque `next_cursor` when another page is available. Detail

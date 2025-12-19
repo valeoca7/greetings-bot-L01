@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timezone
 
 from greetings_bot.admin_dashboard import (
     DashboardSnapshot,
@@ -6,7 +7,13 @@ from greetings_bot.admin_dashboard import (
     render_user_detail,
     render_user_list,
     render_config,
+    render_audit,
     render_delivery,
+)
+from greetings_bot.configuration_audit import (
+    AuditPage,
+    AuditQuery,
+    AuditRecord,
 )
 from greetings_bot.admin_config import DashboardConfig
 from greetings_bot.admin_delivery import DeliveryQueueSummary
@@ -138,6 +145,8 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn("14 days", page)
         self.assertIn("friendly, brief, cheerful", page)
         self.assertIn("name, weekday, date", page)
+        self.assertIn("information_requests=off", page)
+        self.assertIn("greeting_previews=on", page)
 
     def test_renders_delivery_status_and_confirmed_redrive_form(self):
         page = render_delivery(
@@ -150,6 +159,29 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('name="confirm"', page)
         self.assertIn('name="rate"', page)
         self.assertIn('max="500"', page)
+
+    def test_renders_escaped_audit_history_and_next_page(self):
+        record = AuditRecord(
+            "audit-1",
+            datetime(2025, 12, 11, 20, 0, tzinfo=timezone.utc),
+            "configuration",
+            "flags_<loaded>",
+            "deployment",
+            "request-1",
+            ("greeting_previews",),
+        )
+
+        page = render_audit(
+            "0.35.0",
+            AuditPage((record,), "next-token"),
+            AuditQuery(category="configuration", limit=10),
+        )
+
+        self.assertIn("Audit history", page)
+        self.assertIn("flags_&lt;loaded&gt;", page)
+        self.assertNotIn("flags_<loaded>", page)
+        self.assertIn("greeting_previews", page)
+        self.assertIn("cursor=next-token", page)
 
     def test_escapes_delivery_action_feedback(self):
         page = render_delivery(

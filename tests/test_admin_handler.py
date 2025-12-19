@@ -10,6 +10,7 @@ from greetings_bot.admin_handler import (
 )
 from greetings_bot.admin_delivery import SqsDeliveryAdmin
 from greetings_bot.dynamo_users import DynamoUserRepository
+from greetings_bot.configuration_audit import AuditQuery, InMemoryAuditRepository
 from greetings_bot.users import User
 
 
@@ -34,6 +35,22 @@ class AdminHandlerTest(unittest.TestCase):
 
         self.assertEqual(response["statusCode"], 200)
         self.assertEqual(json.loads(response["body"]), {"users": 1})
+
+    def test_records_a_safe_startup_configuration_snapshot(self):
+        page = self.handler.application.audit.query(
+            AuditQuery("configuration")
+        )
+
+        self.assertEqual(len(page.records), 1)
+        self.assertEqual(page.records[0].action, "configuration_loaded")
+        self.assertEqual(
+            page.records[0].changed_keys,
+            (
+                "greeting_previews",
+                "information_requests",
+                "weather_summaries",
+            ),
+        )
 
     def test_rejects_unauthorized_requests(self):
         response = self.handler.handle(
@@ -117,6 +134,17 @@ class AdminHandlerTest(unittest.TestCase):
 
         self.assertEqual(requested["statusCode"], 201)
         self.assertEqual(confirmed["statusCode"], 200)
+        actions = self.handler.application.audit.query(
+            AuditQuery("admin_action")
+        )
+        self.assertEqual(
+            {record.action for record in actions.records},
+            {
+                "user_deletion_request",
+                "user_deletion_confirm",
+                "user_deletion_execute",
+            },
+        )
         self.assertEqual(completed["statusCode"], 200)
         self.assertIsNone(self.handler.application.users.get(42))
 
@@ -175,9 +203,14 @@ class AdminHandlerTest(unittest.TestCase):
             build_default_handler({})
 
     def test_uses_the_configured_user_table(self):
+        class Table:
+            def put_item(self, **arguments):
+                self.last_put = arguments
+                return {}
+
         class Resource:
             def __init__(self):
-                self.table = object()
+                self.table = Table()
 
             def Table(self, name):
                 self.name = name
@@ -228,6 +261,9 @@ class AdminHandlerTest(unittest.TestCase):
         self.assertTrue(handler.application.dashboard_config.information_enabled)
         self.assertEqual(
             handler.application.dashboard_config.information_weekly_limit, 7
+        )
+        self.assertIsInstance(
+            handler.application.audit, InMemoryAuditRepository
         )
 
     def test_logs_status_without_exposing_the_admin_token(self):
@@ -301,6 +337,7 @@ class AdminHandlerTest(unittest.TestCase):
                 "dashboard_user_detail",
             ),
             ("/admin/dashboard/config", "GET", "dashboard_config"),
+            ("/admin/dashboard/audit", "GET", "dashboard_audit"),
             (
                 "/admin/dashboard/delivery",
                 "GET",

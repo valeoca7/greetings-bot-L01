@@ -5,6 +5,7 @@ from greetings_bot.greeting_templates import (
     ALLOWED_TEMPLATE_VARIABLES,
     TEMPLATE_CATEGORIES,
 )
+from greetings_bot.feature_flags import feature_flags_from_env
 from greetings_bot.information_runtime import (
     DEFAULT_BEDROCK_MODEL_ID,
     information_requests_enabled,
@@ -29,10 +30,16 @@ class DashboardConfig:
     fallback_locale: str = "en"
     template_categories: Tuple[str, ...] = TEMPLATE_CATEGORIES
     template_variables: Tuple[str, ...] = ALLOWED_TEMPLATE_VARIABLES
+    feature_flags: Tuple[Tuple[str, bool], ...] = (
+        ("information_requests", False),
+        ("greeting_previews", True),
+        ("weather_summaries", True),
+    )
 
 
 def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
     messages = MessageCatalog()
+    feature_flags = feature_flags_from_env(environ)
     model = environ.get("BEDROCK_MODEL_ID", DEFAULT_BEDROCK_MODEL_ID).strip()
     if not model:
         raise ValueError("BEDROCK_MODEL_ID must not be blank")
@@ -66,4 +73,5 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         "en",
         TEMPLATE_CATEGORIES,
         ALLOWED_TEMPLATE_VARIABLES,
+        feature_flags.public_snapshot(),
     )

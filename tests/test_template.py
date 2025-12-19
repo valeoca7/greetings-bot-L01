@@ -91,6 +91,8 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Path: /admin/dashboard/users", self.template)
         self.assertIn("Path: /admin/dashboard/users/{id}", self.template)
         self.assertIn("Path: /admin/dashboard/config", self.template)
+        self.assertIn("Path: /admin/dashboard/audit", self.template)
+        self.assertIn("Path: /admin/audit", self.template)
         self.assertIn("Path: /admin/dashboard/delivery", self.template)
         self.assertIn(
             "Path: /admin/dashboard/delivery/redrive", self.template

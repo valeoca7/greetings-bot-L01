@@ -12,6 +12,12 @@ from greetings_bot.admin_auth import BearerTokenAuthorizer
 from greetings_bot.admin_config import dashboard_config_from_env
 from greetings_bot.admin_delivery import SqsAdminClient, delivery_admin_from_env
 from greetings_bot.clock import SystemClock
+from greetings_bot.configuration_audit import (
+    admin_action_record,
+    configuration_snapshot_record,
+    InMemoryAuditRepository,
+)
+from greetings_bot.dynamo_configuration_audit import DynamoAuditRepository
 from greetings_bot.dynamo_notes import DynamoNoteRepository
 from greetings_bot.dynamo_reminders import DynamoReminderRepository
 from greetings_bot.dynamo_user_deletion import DynamoDeletionRequestRepository
@@ -39,12 +45,43 @@ class AdminLambdaHandler:
     def __init__(self, application: AdminApplication) -> None:
         self.application = application
 
-    def handle(self, event: Mapping[str, Any]) -> Dict[str, object]:
+    def handle(
+        self, event: Mapping[str, Any], context: object = None
+    ) -> Dict[str, object]:
         try:
             request = AdminRequest.from_event(event)
         except AdminRequestError as error:
             return AdminResponse(400, {"error": str(error)}).to_dict()
-        return self.application.handle(request).to_dict()
+        response = self.application.handle(request).to_dict()
+        action = _audit_action(event)
+        if (
+            action in AUDITED_ADMIN_ACTIONS
+            and int(response["statusCode"]) < 400
+            and self.application.audit is not None
+        ):
+            source = (
+                "dashboard"
+                if request.path.startswith("/admin/dashboard/")
+                else "runtime"
+            )
+            self.application.audit.save(
+                admin_action_record(
+                    action,
+                    source,
+                    self.application.clock.now(),
+                    correlation_id(event, context),
+                )
+            )
+        return response
+
+
+AUDITED_ADMIN_ACTIONS = {
+    "dashboard_delivery_redrive",
+    "delivery_redrive",
+    "user_deletion_request",
+    "user_deletion_confirm",
+    "user_deletion_execute",
+}
 
 
 def build_default_handler(
@@ -63,19 +100,22 @@ def build_default_handler(
         reminders = DynamoReminderRepository(users.table)
         deletion_requests = DynamoDeletionRequestRepository(users.table)
         cleaner = DynamoUserDataCleaner(users.table)
+        audit = DynamoAuditRepository(users.table)
     else:
         users = InMemoryUserRepository()
         notes = InMemoryNoteRepository()
         reminders = InMemoryReminderRepository()
         deletion_requests = InMemoryDeletionRequestRepository()
         cleaner = RepositoryUserDataCleaner(users, notes, reminders)
+        audit = InMemoryAuditRepository()
     delivery = delivery_admin_from_env(environ, sqs_client)
     dashboard_config = dashboard_config_from_env(environ)
     exporter = UserDataExporter(users, notes, reminders)
+    clock = SystemClock()
     deletion = UserDeletionService(
         users,
         deletion_requests,
-        SystemClock(),
+        clock,
         cleaner=cleaner,
         reminders=reminders,
         scheduler=scheduler_from_env(environ, scheduler_client),
@@ -87,6 +127,15 @@ def build_default_handler(
         dashboard_config,
         exporter,
         deletion=deletion,
+        audit=audit,
+        clock=clock,
+    )
+    audit.save(
+        configuration_snapshot_record(
+            clock.now(),
+            "startup",
+            tuple(name for name, _ in dashboard_config.feature_flags),
+        )
     )
     return AdminLambdaHandler(application)
 
@@ -100,7 +149,7 @@ def handle_event(
     global _handler
     if _handler is None:
         _handler = build_default_handler()
-    response = _handler.handle(event)
+    response = _handler.handle(event, context)
     status_code = int(response["statusCode"])
     log_event(
         LOGGER,
@@ -129,12 +178,16 @@ def _audit_action(event: Mapping[str, Any]) -> str:
         return "dashboard_user_detail"
     if path == "/admin/dashboard/config":
         return "dashboard_config"
+    if path == "/admin/dashboard/audit":
+        return "dashboard_audit"
     if path == "/admin/dashboard/delivery":
         return "dashboard_delivery_status"
     if path == "/admin/dashboard/delivery/redrive":
         return "dashboard_delivery_redrive"
     if path == "/admin/users":
         return "users_list"
+    if path == "/admin/audit":
+        return "audit_list"
     if isinstance(path, str) and path.endswith("/deletion"):
         return "user_deletion_request"
     if isinstance(path, str) and path.endswith("/deletion/confirm"):

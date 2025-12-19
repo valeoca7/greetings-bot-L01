@@ -211,6 +211,11 @@ Resources:
           Properties:
             Path: /admin/dashboard/config
             Method: get
+        DashboardAudit:
+          Type: Api
+          Properties:
+            Path: /admin/dashboard/audit
+            Method: get
         DashboardDelivery:
           Type: Api
           Properties:
@@ -230,6 +235,11 @@ Resources:
           Type: Api
           Properties:
             Path: /admin/stats
+            Method: get
+        Audit:
+          Type: Api
+          Properties:
+            Path: /admin/audit
             Method: get
         Users:
           Type: Api

@@ -19,6 +19,14 @@ class AdminConfigTest(unittest.TestCase):
             config.template_categories, ("friendly", "brief", "cheerful")
         )
         self.assertEqual(config.template_variables, ("name", "weekday", "date"))
+        self.assertEqual(
+            config.feature_flags,
+            (
+                ("information_requests", False),
+                ("greeting_previews", True),
+                ("weather_summaries", True),
+            ),
+        )
         self.assertFalse(config.delivery_admin_configured)
 
     def test_reads_selected_runtime_configuration(self):

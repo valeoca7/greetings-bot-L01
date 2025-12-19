@@ -10,6 +10,10 @@ from greetings_bot.admin_api import (
 from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryQueueSummary
 from greetings_bot.admin_config import DashboardConfig
 from greetings_bot.clock import FixedClock
+from greetings_bot.configuration_audit import (
+    AuditRecord,
+    InMemoryAuditRepository,
+)
 from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.user_data import UserDataExporter
@@ -500,6 +504,51 @@ class AdminApplicationTest(unittest.TestCase):
                     )
                 )
                 self.assertEqual(response.status_code, 400)
+
+    def test_lists_filtered_configuration_audit_records(self):
+        audit = InMemoryAuditRepository()
+        audit.save(
+            AuditRecord(
+                "audit-1",
+                datetime(2025, 12, 10, 20, 0, tzinfo=timezone.utc),
+                "configuration",
+                "flags_loaded",
+                "deployment",
+                "request-1",
+                ("greeting_previews",),
+            )
+        )
+        app = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository(), audit=audit
+        )
+
+        response = app.handle(
+            AdminRequest(
+                "GET",
+                "/admin/audit",
+                {},
+                {"category": "configuration", "limit": "10"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.body["items"][0]["id"], "audit-1")
+        self.assertNotIn("values", response.body["items"][0])
+
+    def test_handles_unavailable_or_invalid_audit_queries(self):
+        unavailable = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository()
+        ).handle(AdminRequest("GET", "/admin/audit", {}))
+        invalid = AdminApplication(
+            FixedAuthorizer(True),
+            InMemoryUserRepository(),
+            audit=InMemoryAuditRepository(),
+        ).handle(
+            AdminRequest("GET", "/admin/audit", {}, {"limit": "all"})
+        )
+
+        self.assertEqual(unavailable.status_code, 503)
+        self.assertEqual(invalid.status_code, 400)
 
     def test_rejects_unknown_routes_and_write_methods(self):
         app = AdminApplication(FixedAuthorizer(True), InMemoryUserRepository())
