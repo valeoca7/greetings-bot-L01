@@ -22,6 +22,20 @@ class DynamoDeliveryLedger:
         return "Item" in result
 
     def record(self, delivery: Delivery) -> None:
+        self._put(delivery)
+
+    def claim(self, delivery: Delivery) -> bool:
+        try:
+            self._put(delivery, "attribute_not_exists(pk)")
+        except Exception as error:
+            response = getattr(error, "response", {})
+            code = response.get("Error", {}).get("Code")
+            if code == "ConditionalCheckFailedException":
+                return False
+            raise
+        return True
+
+    def _put(self, delivery: Delivery, condition: str = None) -> None:
         item = delivery_key(delivery)
         item["entity"] = "delivery"
         expires = datetime.combine(
@@ -30,4 +44,7 @@ class DynamoDeliveryLedger:
             timezone.utc,
         )
         item["expires_at"] = int(expires.timestamp())
-        self.table.put_item(Item=item)
+        arguments = {"Item": item}
+        if condition is not None:
+            arguments["ConditionExpression"] = condition
+        self.table.put_item(**arguments)

@@ -21,6 +21,13 @@ class DeliveryTest(unittest.TestCase):
 
         self.assertTrue(ledger.contains(delivery))
 
+    def test_claims_a_delivery_only_once(self):
+        ledger = InMemoryDeliveryLedger()
+        delivery = Delivery(42, date(2022, 8, 29))
+
+        self.assertTrue(ledger.claim(delivery))
+        self.assertFalse(ledger.claim(delivery))
+
 
 if __name__ == "__main__":
     unittest.main()

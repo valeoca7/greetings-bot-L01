@@ -80,13 +80,12 @@ class GreetingDispatcher:
         current_time = self.clock.now()
         if available_users is None:
             available_users = self.users.all()
-        users = [
-            user
-            for user in due_users(available_users, current_time)
-            if not self.deliveries.contains(greeting_delivery(user, current_time))
-        ][: self.max_batch]
+        users = []
+        for user in due_users(available_users, current_time):
+            if len(users) >= self.max_batch:
+                break
+            if self.deliveries.claim(greeting_delivery(user, current_time)):
+                users.append(user)
         LOGGER.info("dispatching %d scheduled greetings", len(users))
         replies = build_greeting_replies(users, current_time)
-        for user in users:
-            self.deliveries.record(greeting_delivery(user, current_time))
         return replies

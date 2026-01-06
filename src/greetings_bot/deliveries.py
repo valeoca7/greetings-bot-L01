@@ -16,6 +16,9 @@ class DeliveryLedger(Protocol):
     def record(self, delivery: Delivery) -> None:
         ...
 
+    def claim(self, delivery: Delivery) -> bool:
+        ...
+
 
 class InMemoryDeliveryLedger:
     def __init__(self) -> None:
@@ -25,5 +28,10 @@ class InMemoryDeliveryLedger:
         return delivery in self._deliveries
 
     def record(self, delivery: Delivery) -> None:
-        if not self.contains(delivery):
-            self._deliveries.append(delivery)
+        self.claim(delivery)
+
+    def claim(self, delivery: Delivery) -> bool:
+        if self.contains(delivery):
+            return False
+        self._deliveries.append(delivery)
+        return True

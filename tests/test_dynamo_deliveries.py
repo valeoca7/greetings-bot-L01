@@ -13,8 +13,15 @@ class FakeTable:
         item = self.items.get((Key["pk"], Key["sk"]))
         return {} if item is None else {"Item": item}
 
-    def put_item(self, *, Item):
-        self.items[(Item["pk"], Item["sk"])] = dict(Item)
+    def put_item(self, *, Item, ConditionExpression=None):
+        key = (Item["pk"], Item["sk"])
+        if ConditionExpression and key in self.items:
+            error = RuntimeError("conditional check failed")
+            error.response = {
+                "Error": {"Code": "ConditionalCheckFailedException"}
+            }
+            raise error
+        self.items[key] = dict(Item)
         return {}
 
 
@@ -57,6 +64,13 @@ class DynamoDeliveryLedgerTest(unittest.TestCase):
             "expires_at",
             table.items[("USER#42", "DELIVERY#2023-01-16")],
         )
+
+    def test_claims_a_delivery_with_a_conditional_write(self):
+        ledger = DynamoDeliveryLedger(FakeTable())
+        delivery = Delivery(42, date(2023, 1, 16))
+
+        self.assertTrue(ledger.claim(delivery))
+        self.assertFalse(ledger.claim(delivery))
 
 
 if __name__ == "__main__":
