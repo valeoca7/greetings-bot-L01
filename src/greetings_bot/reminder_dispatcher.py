@@ -22,7 +22,13 @@ class ReminderDispatcher:
         self.max_batch = max_batch
 
     def dispatch(self) -> List[Reply]:
-        due = self.reminders.due_before(self.clock.now(), self.max_batch)
+        due = [
+            reminder
+            for reminder in self.reminders.due_before(
+                self.clock.now(), self.max_batch
+            )
+            if self.reminders.claim_due(reminder)
+        ]
         LOGGER.info("dispatching %d reminders", len(due))
         replies = [
             Reply(reminder.chat_id, "Reminder: {}".format(reminder.text))

@@ -14,8 +14,15 @@ class FakeTable:
     def __init__(self):
         self.items = {}
 
-    def put_item(self, *, Item):
-        self.items[(Item["pk"], Item["sk"])] = dict(Item)
+    def put_item(self, *, Item, ConditionExpression=None):
+        key = (Item["pk"], Item["sk"])
+        if ConditionExpression and key in self.items:
+            error = RuntimeError("conditional check failed")
+            error.response = {
+                "Error": {"Code": "ConditionalCheckFailedException"}
+            }
+            raise error
+        self.items[key] = dict(Item)
         return {}
 
     def get_item(self, *, Key):
@@ -87,6 +94,18 @@ class ReminderMappingTest(unittest.TestCase):
 
 
 class DynamoReminderRepositoryTest(unittest.TestCase):
+    def test_claims_one_reminder_occurrence_once(self):
+        table = FakeTable()
+        repository = DynamoReminderRepository(table)
+        reminder = Reminder(
+            "abcd1234", 42, 84, "Call home",
+            datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc),
+            datetime(2023, 3, 7, 18, 0, tzinfo=timezone.utc),
+        )
+
+        self.assertTrue(repository.claim_due(reminder))
+        self.assertFalse(repository.claim_due(reminder))
+
     def test_saves_and_loads_owned_reminder(self):
         reminders = DynamoReminderRepository(FakeTable())
         value = Reminder(

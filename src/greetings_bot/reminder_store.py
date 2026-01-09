@@ -17,6 +17,9 @@ class ReminderRepository(Protocol):
     def due_before(self, current_time: datetime, limit: int) -> Sequence[Reminder]:
         ...
 
+    def claim_due(self, reminder: Reminder) -> bool:
+        ...
+
     def delete_all_for(self, owner_id: int, limit: int = 100) -> int:
         ...
 
@@ -24,6 +27,7 @@ class ReminderRepository(Protocol):
 class InMemoryReminderRepository:
     def __init__(self) -> None:
         self._reminders: Dict[Tuple[int, str], Reminder] = {}
+        self._claims = set()
 
     def save(self, reminder: Reminder) -> None:
         self._reminders[(reminder.owner_id, reminder.id)] = reminder
@@ -44,6 +48,13 @@ class InMemoryReminderRepository:
             if reminder.status == "pending" and reminder.due_at <= current_time
         ]
         return sorted(due, key=lambda reminder: reminder.due_at)[:limit]
+
+    def claim_due(self, reminder: Reminder) -> bool:
+        key = (reminder.owner_id, reminder.id, reminder.due_at)
+        if key in self._claims:
+            return False
+        self._claims.add(key)
+        return True
 
     def delete_all_for(self, owner_id: int, limit: int = 100) -> int:
         if not 1 <= limit <= 100:

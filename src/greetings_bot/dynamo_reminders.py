@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Mapping, Optional, Sequence
 
 from greetings_bot.dynamo_users import DynamoTable
@@ -96,6 +96,30 @@ class DynamoReminderRepository:
             for item in result.get("Items", [])
             if isinstance(item, dict) and item.get("entity") == "reminder"
         ]
+
+    def claim_due(self, reminder: Reminder) -> bool:
+        item = {
+            "pk": "USER#{}".format(reminder.owner_id),
+            "sk": "REMINDER_CLAIM#{}#{}".format(
+                reminder.id, reminder.due_at.isoformat()
+            ),
+            "entity": "reminder_claim",
+            "expires_at": int(
+                (reminder.due_at + timedelta(days=14)).timestamp()
+            ),
+        }
+        try:
+            self.table.put_item(
+                Item=item,
+                ConditionExpression="attribute_not_exists(pk)",
+            )
+        except Exception as error:
+            response = getattr(error, "response", {})
+            code = response.get("Error", {}).get("Code")
+            if code == "ConditionalCheckFailedException":
+                return False
+            raise
+        return True
 
     def delete_all_for(self, owner_id: int, limit: int = 100) -> int:
         if not 1 <= limit <= 100:

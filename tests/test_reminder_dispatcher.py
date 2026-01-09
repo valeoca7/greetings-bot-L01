@@ -44,6 +44,21 @@ class ReminderDispatcherTest(unittest.TestCase):
 
         self.assertEqual(dispatcher.dispatch(), [])
 
+    def test_shared_dispatchers_claim_one_occurrence_once(self):
+        reminders = InMemoryReminderRepository()
+        reminders.save(
+            Reminder(
+                "abcd1234", 42, 84, "Call home",
+                datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc),
+                datetime(2023, 3, 7, 18, 0, tzinfo=timezone.utc),
+            )
+        )
+        clock = FixedClock(datetime(2023, 4, 1, 18, 0, tzinfo=timezone.utc))
+
+        due = reminders.due_before(clock.now(), 100)[0]
+        self.assertTrue(reminders.claim_due(due))
+        self.assertEqual(ReminderDispatcher(reminders, clock).dispatch(), [])
+
     def test_advances_recurring_reminder(self):
         reminders = InMemoryReminderRepository()
         reminder = Reminder(
