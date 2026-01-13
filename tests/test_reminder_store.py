@@ -66,6 +66,17 @@ class InMemoryReminderRepositoryTest(unittest.TestCase):
         self.assertEqual(reminders.delete_all_for(42), 1)
         self.assertEqual(len(reminders.all_for(7)), 1)
 
+    def test_clears_occurrence_claims_after_owner_deletion(self):
+        reminders = InMemoryReminderRepository()
+        value = reminder()
+        reminders.save(value)
+        self.assertTrue(reminders.claim_due(value))
+
+        reminders.delete_all_for(42)
+        reminders.save(value)
+
+        self.assertTrue(reminders.claim_due(value))
+
 
 if __name__ == "__main__":
     unittest.main()

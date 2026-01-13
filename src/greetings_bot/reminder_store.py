@@ -64,4 +64,8 @@ class InMemoryReminderRepository:
         )[:limit]
         for key in keys:
             del self._reminders[key]
+        if not any(key[0] == owner_id for key in self._reminders):
+            self._claims = {
+                claim for claim in self._claims if claim[0] != owner_id
+            }
         return len(keys)
