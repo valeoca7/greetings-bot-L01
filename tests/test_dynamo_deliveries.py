@@ -72,6 +72,16 @@ class DynamoDeliveryLedgerTest(unittest.TestCase):
         self.assertTrue(ledger.claim(delivery))
         self.assertFalse(ledger.claim(delivery))
 
+    def test_does_not_hide_an_unexpected_claim_failure(self):
+        class BrokenTable(FakeTable):
+            def put_item(self, **arguments):
+                raise RuntimeError("table unavailable")
+
+        with self.assertRaisesRegex(RuntimeError, "table unavailable"):
+            DynamoDeliveryLedger(BrokenTable()).claim(
+                Delivery(42, date(2023, 1, 16))
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
