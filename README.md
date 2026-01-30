@@ -127,7 +127,9 @@ sam local invoke GreetingDispatcherFunction --event events/scheduled.json
 ```
 
 The dispatcher records a delivery for each user's local date so repeated events do
-not prepare the same daily greeting again.
+not prepare the same daily greeting again. Cloud delivery records use conditional
+writes, so overlapping scheduler invocations have a single claimant for each user and
+local day.
 
 Notes are stored beside the owner's profile under `NOTE#<id>` sort keys. Lookups and
 deletes always include the Telegram user ID, and note listings query only that user
@@ -136,6 +138,10 @@ partition.
 One-time reminders use the profile timezone for command input and are stored as UTC.
 Pending records appear in the sparse `DueIndex`; once dispatched, they move to the
 `sent` state and leave that index.
+
+Reminder occurrences use short-lived conditional claim records before a reply is
+prepared. This prevents overlapping dispatcher invocations from sending the same
+one-time or recurring occurrence twice.
 
 Recurring reminders retain their local wall-clock time across timezone offset
 changes. A daily or weekly occurrence that falls inside a daylight-saving gap is
