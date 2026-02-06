@@ -15,9 +15,15 @@ class DeliveryQueue(Protocol):
     def enqueue(self, message: DeliveryMessage) -> None:
         ...
 
+    def depth(self) -> int:
+        ...
+
 
 class QueueClient(Protocol):
     def send_message(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
+    def get_queue_attributes(self, **kwargs: object) -> Mapping[str, object]:
         ...
 
 
@@ -54,6 +60,27 @@ class SqsDeliveryQueue:
         self.client.send_message(
             QueueUrl=self.queue_url,
             MessageBody=message_to_body(message),
+        )
+
+    def depth(self) -> int:
+        response = self.client.get_queue_attributes(
+            QueueUrl=self.queue_url,
+            AttributeNames=[
+                "ApproximateNumberOfMessages",
+                "ApproximateNumberOfMessagesNotVisible",
+                "ApproximateNumberOfMessagesDelayed",
+            ],
+        )
+        attributes = response.get("Attributes", {})
+        if not isinstance(attributes, Mapping):
+            raise ValueError("invalid queue attributes")
+        return sum(
+            int(attributes.get(name, "0"))
+            for name in (
+                "ApproximateNumberOfMessages",
+                "ApproximateNumberOfMessagesNotVisible",
+                "ApproximateNumberOfMessagesDelayed",
+            )
         )
 
 

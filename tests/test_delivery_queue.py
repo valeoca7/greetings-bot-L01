@@ -12,10 +12,15 @@ from greetings_bot.delivery_queue import (
 class FakeQueueClient:
     def __init__(self):
         self.request = None
+        self.attributes = {}
 
     def send_message(self, **kwargs):
         self.request = kwargs
         return {"MessageId": "1"}
+
+    def get_queue_attributes(self, **kwargs):
+        self.request = kwargs
+        return {"Attributes": self.attributes}
 
 
 class DeliveryMessageTest(unittest.TestCase):
@@ -39,6 +44,23 @@ class DeliveryMessageTest(unittest.TestCase):
 
         self.assertEqual(client.request["QueueUrl"], "queue-url")
         self.assertEqual(message_from_body(client.request["MessageBody"]), message)
+
+    def test_reports_total_approximate_depth(self):
+        client = FakeQueueClient()
+        client.attributes = {
+            "ApproximateNumberOfMessages": "12",
+            "ApproximateNumberOfMessagesNotVisible": "3",
+            "ApproximateNumberOfMessagesDelayed": "2",
+        }
+
+        depth = SqsDeliveryQueue(client, "queue-url").depth()
+
+        self.assertEqual(depth, 17)
+        self.assertEqual(client.request["QueueUrl"], "queue-url")
+        self.assertEqual(len(client.request["AttributeNames"]), 3)
+
+    def test_treats_missing_depth_attributes_as_zero(self):
+        self.assertEqual(SqsDeliveryQueue(FakeQueueClient(), "queue-url").depth(), 0)
 
     def test_builds_queue_from_environment(self):
         queue = queue_from_env(
