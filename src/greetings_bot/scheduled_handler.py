@@ -18,6 +18,7 @@ from greetings_bot.reminder_store import (
 from greetings_bot.retention import retention_from_env
 from greetings_bot.scheduler import GreetingDispatcher
 from greetings_bot.telegram import reply_batch
+from greetings_bot.throughput import throughput_from_env
 from greetings_bot.users import UserRepository
 from greetings_bot.users import InMemoryUserRepository
 from greetings_bot.weather import WeatherProvider
@@ -39,6 +40,7 @@ class ScheduledGreetingHandler:
         include_reminders: bool = True,
         queue: Optional[DeliveryQueue] = None,
         weather_provider: Optional[WeatherProvider] = None,
+        queue_high_watermark: int = 1000,
     ) -> None:
         self.users = users
         self.deliveries = deliveries
@@ -49,9 +51,12 @@ class ScheduledGreetingHandler:
         self.include_reminders = include_reminders
         self.queue = queue
         self.weather_provider = weather_provider
+        self.queue_high_watermark = queue_high_watermark
 
     def handle(self, event: Mapping[str, Any]) -> ScheduledResponse:
         clock = FixedClock(event_time(event))
+        if self.queue is not None and self.queue.depth() >= self.queue_high_watermark:
+            return []
         dispatcher = GreetingDispatcher(
             self.users,
             clock,
@@ -88,7 +93,7 @@ def build_default_handler(
     environ: Mapping[str, str] = os.environ,
     dynamodb_resource: DynamoResource = None,
 ) -> ScheduledGreetingHandler:
-    max_batch = int(environ.get("DISPATCH_BATCH_SIZE", "100"))
+    throughput = throughput_from_env(environ)
     include_reminders = environ.get("TARGETED_REMINDERS") != "true"
     queue = queue_from_env(environ)
     table_name = environ.get("USER_TABLE_NAME")
@@ -96,10 +101,11 @@ def build_default_handler(
         weather_provider = reliable_weather_provider(environ)
         return ScheduledGreetingHandler(
             InMemoryUserRepository(),
-            max_batch=max_batch,
+            max_batch=throughput.dispatch_batch_size,
             include_reminders=include_reminders,
             queue=queue,
             weather_provider=weather_provider,
+            queue_high_watermark=throughput.queue_high_watermark,
         )
     users = repository_for_table(table_name, dynamodb_resource)
     weather_provider = reliable_weather_provider(environ, users.table)
@@ -109,11 +115,12 @@ def build_default_handler(
     return ScheduledGreetingHandler(
         users,
         deliveries,
-        max_batch,
+        throughput.dispatch_batch_size,
         reminders,
         include_reminders,
         queue,
         weather_provider,
+        throughput.queue_high_watermark,
     )
 
 

@@ -11,11 +11,15 @@ from greetings_bot.weather_cache import CachingWeatherProvider
 
 
 class FakeQueue:
-    def __init__(self):
+    def __init__(self, depth=0):
         self.messages = []
+        self.current_depth = depth
 
     def enqueue(self, message):
         self.messages.append(message)
+
+    def depth(self):
+        return self.current_depth
 from greetings_bot.scheduled_handler import (
     ScheduledGreetingHandler,
     build_default_handler,
@@ -135,6 +139,11 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
 
         self.assertEqual(handler.max_batch, 25)
 
+    def test_reads_queue_high_watermark(self):
+        handler = build_default_handler({"DELIVERY_QUEUE_HIGH_WATERMARK": "250"})
+
+        self.assertEqual(handler.queue_high_watermark, 250)
+
     def test_disables_polled_reminders_for_targeted_delivery(self):
         handler = build_default_handler({"TARGETED_REMINDERS": "true"})
 
@@ -175,6 +184,19 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         self.assertEqual(len(queue.messages), 1)
         self.assertEqual(queue.messages[0].kind, "greeting")
         self.assertEqual(queue.messages[0].id, "greeting-84-202309211000")
+
+    def test_stops_before_dispatch_when_queue_is_full(self):
+        users = InMemoryUserRepository()
+        users.save(User(42, 84, "Mira", greeting_time="10:00"))
+        queue = FakeQueue(depth=20)
+        handler = ScheduledGreetingHandler(
+            users, queue=queue, queue_high_watermark=20
+        )
+
+        replies = handler.handle({"time": "2023-09-21T10:00:00Z"})
+
+        self.assertEqual(replies, [])
+        self.assertEqual(queue.messages, [])
 
 
 if __name__ == "__main__":
