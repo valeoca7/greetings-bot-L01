@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Mapping, Optional, Protocol
+from typing import Iterable, Mapping, Optional, Protocol
 
 
 @dataclass(frozen=True)
@@ -18,12 +18,18 @@ class DeliveryQueue(Protocol):
     def depth(self) -> int:
         ...
 
+    def enqueue_many(self, messages: Iterable[DeliveryMessage]) -> None:
+        ...
+
 
 class QueueClient(Protocol):
     def send_message(self, **kwargs: object) -> Mapping[str, object]:
         ...
 
     def get_queue_attributes(self, **kwargs: object) -> Mapping[str, object]:
+        ...
+
+    def send_message_batch(self, **kwargs: object) -> Mapping[str, object]:
         ...
 
 
@@ -82,6 +88,29 @@ class SqsDeliveryQueue:
                 "ApproximateNumberOfMessagesDelayed",
             )
         )
+
+    def enqueue_many(self, messages: Iterable[DeliveryMessage]) -> None:
+        batch = []
+        for message in messages:
+            batch.append(
+                {
+                    "Id": str(len(batch)),
+                    "MessageBody": message_to_body(message),
+                }
+            )
+            if len(batch) == 10:
+                self._send_batch(batch)
+                batch = []
+        if batch:
+            self._send_batch(batch)
+
+    def _send_batch(self, entries: list) -> None:
+        response = self.client.send_message_batch(
+            QueueUrl=self.queue_url,
+            Entries=entries,
+        )
+        if response.get("Failed"):
+            raise RuntimeError("delivery queue rejected a message batch")
 
 
 def queue_from_env(

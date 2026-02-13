@@ -13,6 +13,8 @@ class FakeQueueClient:
     def __init__(self):
         self.request = None
         self.attributes = {}
+        self.batch_requests = []
+        self.failed = []
 
     def send_message(self, **kwargs):
         self.request = kwargs
@@ -21,6 +23,10 @@ class FakeQueueClient:
     def get_queue_attributes(self, **kwargs):
         self.request = kwargs
         return {"Attributes": self.attributes}
+
+    def send_message_batch(self, **kwargs):
+        self.batch_requests.append(kwargs)
+        return {"Failed": self.failed}
 
 
 class DeliveryMessageTest(unittest.TestCase):
@@ -61,6 +67,33 @@ class DeliveryMessageTest(unittest.TestCase):
 
     def test_treats_missing_depth_attributes_as_zero(self):
         self.assertEqual(SqsDeliveryQueue(FakeQueueClient(), "queue-url").depth(), 0)
+
+    def test_enqueues_messages_in_sqs_sized_batches(self):
+        client = FakeQueueClient()
+        messages = [
+            DeliveryMessage("greeting-{}".format(index), index, "Hello", "greeting")
+            for index in range(23)
+        ]
+
+        SqsDeliveryQueue(client, "queue-url").enqueue_many(messages)
+
+        self.assertEqual(
+            [len(request["Entries"]) for request in client.batch_requests],
+            [10, 10, 3],
+        )
+        self.assertEqual(
+            message_from_body(client.batch_requests[2]["Entries"][2]["MessageBody"]),
+            messages[-1],
+        )
+
+    def test_raises_when_sqs_rejects_part_of_a_batch(self):
+        client = FakeQueueClient()
+        client.failed = [{"Id": "0", "Code": "InternalError"}]
+
+        with self.assertRaisesRegex(RuntimeError, "rejected"):
+            SqsDeliveryQueue(client, "queue-url").enqueue_many(
+                [DeliveryMessage("greeting-1", 1, "Hello", "greeting")]
+            )
 
     def test_builds_queue_from_environment(self):
         queue = queue_from_env(
