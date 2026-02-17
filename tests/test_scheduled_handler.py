@@ -14,12 +14,17 @@ class FakeQueue:
     def __init__(self, depth=0):
         self.messages = []
         self.current_depth = depth
+        self.batch_calls = 0
 
     def enqueue(self, message):
         self.messages.append(message)
 
     def depth(self):
         return self.current_depth
+
+    def enqueue_many(self, messages):
+        self.batch_calls += 1
+        self.messages.extend(messages)
 from greetings_bot.scheduled_handler import (
     ScheduledGreetingHandler,
     build_default_handler,
@@ -80,6 +85,7 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
         handler.handle({"time": "2024-05-31T10:00:00Z"})
 
         self.assertEqual(len(queue.messages), 1)
+        self.assertEqual(queue.batch_calls, 1)
         self.assertEqual(queue.messages[0].kind, "greeting")
         self.assertIn("Vancouver: clear", queue.messages[0].text)
 

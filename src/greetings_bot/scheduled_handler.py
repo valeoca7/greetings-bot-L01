@@ -76,9 +76,10 @@ class ScheduledGreetingHandler:
             )
         if self.queue is not None:
             event_stamp = clock.now().strftime("%Y%m%d%H%M")
+            messages = []
             for reply in replies:
                 kind = "reminder" if reply.text.startswith("Reminder:") else "greeting"
-                self.queue.enqueue(
+                messages.append(
                     DeliveryMessage(
                         "{}-{}-{}".format(kind, reply.chat_id, event_stamp),
                         reply.chat_id,
@@ -86,6 +87,7 @@ class ScheduledGreetingHandler:
                         kind,
                     )
                 )
+            self.queue.enqueue_many(messages)
         return reply_batch(replies)
 
 
