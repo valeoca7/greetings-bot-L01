@@ -199,10 +199,16 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
             users, queue=queue, queue_high_watermark=20
         )
 
-        replies = handler.handle({"time": "2023-09-21T10:00:00Z"})
+        with self.assertLogs("greetings_bot.scheduled_handler", level="INFO") as logs:
+            replies = handler.handle({"time": "2023-09-21T10:00:00Z"})
 
         self.assertEqual(replies, [])
         self.assertEqual(queue.messages, [])
+        self.assertTrue(any('"QueueDepth":20' in line for line in logs.output))
+        self.assertTrue(any('"Backpressure":1' in line for line in logs.output))
+        self.assertTrue(
+            any('"queue_high_watermark":20' in line for line in logs.output)
+        )
 
 
 if __name__ == "__main__":

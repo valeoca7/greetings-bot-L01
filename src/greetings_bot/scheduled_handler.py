@@ -55,8 +55,18 @@ class ScheduledGreetingHandler:
 
     def handle(self, event: Mapping[str, Any]) -> ScheduledResponse:
         clock = FixedClock(event_time(event))
-        if self.queue is not None and self.queue.depth() >= self.queue_high_watermark:
-            return []
+        if self.queue is not None:
+            queue_depth = self.queue.depth()
+            emit_metric(LOGGER, "dispatcher", "QueueDepth", queue_depth)
+            if queue_depth >= self.queue_high_watermark:
+                log_event(
+                    LOGGER,
+                    "scheduled_dispatch_paused",
+                    queue_depth=queue_depth,
+                    queue_high_watermark=self.queue_high_watermark,
+                )
+                emit_metric(LOGGER, "dispatcher", "Backpressure")
+                return []
         dispatcher = GreetingDispatcher(
             self.users,
             clock,
