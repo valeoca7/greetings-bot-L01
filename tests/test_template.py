@@ -149,6 +149,12 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("greetings_bot.scheduled_handler.handle_event", self.template)
         self.assertIn("Schedule: rate(1 minute)", self.template)
         self.assertIn("DISPATCH_BATCH_SIZE: '100'", self.template)
+        self.assertIn("DeliveryQueueHighWatermark:", self.template)
+        self.assertIn(
+            "DELIVERY_QUEUE_HIGH_WATERMARK: !Ref DeliveryQueueHighWatermark",
+            self.template,
+        )
+        self.assertIn("- sqs:GetQueueAttributes", self.template)
 
     def test_defines_due_reminder_index(self):
         self.assertIn("IndexName: DueIndex", self.template)
