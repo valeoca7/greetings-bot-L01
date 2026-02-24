@@ -143,6 +143,8 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertNotIn("QUEUE_URL", page)
         self.assertIn("90 days", page)
         self.assertIn("14 days", page)
+        self.assertIn("100 messages", page)
+        self.assertIn("1000 messages", page)
         self.assertIn("friendly, brief, cheerful", page)
         self.assertIn("name, weekday, date", page)
         self.assertIn("information_requests=off", page)

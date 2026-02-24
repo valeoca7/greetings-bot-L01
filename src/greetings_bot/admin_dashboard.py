@@ -259,6 +259,8 @@ def render_config(version: str, config: DashboardConfig) -> str:
         <dt>Weather cache</dt><dd>{cache_minutes} minutes</dd>
         <dt>Weather stale fallback</dt><dd>{stale_hours} hours</dd>
         <dt>Delivery administration</dt><dd>{delivery}</dd>
+        <dt>Dispatch batch limit</dt><dd>{dispatch_batch_size} messages</dd>
+        <dt>Queue high watermark</dt><dd>{queue_high_watermark} messages</dd>
         <dt>Delivery history retention</dt><dd>{history_days} days</dd>
         <dt>Receipt retention</dt><dd>{receipt_days} days</dd>
         <dt>Message languages</dt><dd>{locales}</dd>
@@ -275,6 +277,8 @@ def render_config(version: str, config: DashboardConfig) -> str:
         cache_minutes=config.weather_cache_minutes,
         stale_hours=config.weather_stale_hours,
         delivery="Available" if config.delivery_admin_configured else "Unavailable",
+        dispatch_batch_size=config.dispatch_batch_size,
+        queue_high_watermark=config.queue_high_watermark,
         history_days=config.delivery_history_days,
         receipt_days=config.delivery_receipt_days,
         locales=escape(", ".join(config.supported_locales)),
