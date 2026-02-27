@@ -131,6 +131,12 @@ not prepare the same daily greeting again. Cloud delivery records use conditiona
 writes, so overlapping scheduler invocations have a single claimant for each user and
 local day.
 
+Before claiming due work, the dispatcher reads the approximate visible, delayed, and
+in-flight queue depth. It pauses at 1,000 messages by default and emits queue depth
+and backpressure metrics. `DISPATCH_BATCH_SIZE` and
+`DELIVERY_QUEUE_HIGH_WATERMARK` set bounded runtime limits. Prepared messages are
+written to SQS in batches of at most ten.
+
 Notes are stored beside the owner's profile under `NOTE#<id>` sort keys. Lookups and
 deletes always include the Telegram user ID, and note listings query only that user
 partition.
