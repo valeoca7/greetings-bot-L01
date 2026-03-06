@@ -1,10 +1,13 @@
 import unittest
+from datetime import datetime, timezone
 
+from greetings_bot.clock import FixedClock
 from greetings_bot.information import (
     InformationRequest,
     InformationService,
     parse_information_request,
 )
+from greetings_bot.usage import UsageBudgets, UsageMeter
 
 
 class FakeProvider:
@@ -70,6 +73,19 @@ class InformationRequestTest(unittest.TestCase):
                     InformationService(FakeProvider(response)).answer(
                         InformationRequest("fact")
                     )
+
+    def test_counts_provider_attempts_without_request_content(self):
+        meter = UsageMeter(UsageBudgets(information_requests=2))
+        service = InformationService(
+            FakeProvider("A fact."),
+            usage_meter=meter,
+            clock=FixedClock(datetime(2026, 3, 5, tzinfo=timezone.utc)),
+        )
+
+        service.answer(InformationRequest("person", "Private Name"))
+
+        self.assertEqual(meter.count("information_requests"), 1)
+        self.assertNotIn("Private Name", repr(meter.__dict__))
 
 
 if __name__ == "__main__":

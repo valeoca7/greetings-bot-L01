@@ -12,6 +12,7 @@ from greetings_bot.weather_cache import (
     WeatherCache,
 )
 from greetings_bot.weather_limits import RateLimitedWeatherProvider
+from greetings_bot.usage import UsageMeter
 
 
 def reliable_weather_provider(
@@ -19,6 +20,7 @@ def reliable_weather_provider(
     table: Optional[DynamoTable] = None,
     clock: Optional[Clock] = None,
     opener: Optional[Callable] = None,
+    usage_meter: Optional[UsageMeter] = None,
 ) -> CachingWeatherProvider:
     try:
         max_calls = int(environ.get("WEATHER_MAX_CALLS", "20"))
@@ -39,4 +41,5 @@ def reliable_weather_provider(
         runtime_clock,
         timedelta(minutes=cache_minutes),
         timedelta(hours=stale_hours),
+        usage_meter,
     )

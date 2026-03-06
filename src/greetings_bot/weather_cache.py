@@ -7,6 +7,7 @@ from greetings_bot.weather import DailyForecast, WeatherLocation
 from greetings_bot.weather import WeatherProvider, WeatherProviderError
 from greetings_bot.clock import Clock
 from greetings_bot.observability import emit_metric
+from greetings_bot.usage import UsageMeter
 
 
 LOGGER = logging.getLogger(__name__)
@@ -56,6 +57,7 @@ class CachingWeatherProvider:
         clock: Clock,
         fresh_for: timedelta = timedelta(hours=1),
         stale_for: timedelta = timedelta(hours=24),
+        usage_meter: Optional[UsageMeter] = None,
     ) -> None:
         if fresh_for <= timedelta(0) or stale_for < fresh_for:
             raise ValueError("invalid weather cache windows")
@@ -64,6 +66,7 @@ class CachingWeatherProvider:
         self.clock = clock
         self.fresh_for = fresh_for
         self.stale_for = stale_for
+        self.usage_meter = usage_meter
 
     def daily_forecast(
         self, location: WeatherLocation, forecast_date: date
@@ -77,6 +80,8 @@ class CachingWeatherProvider:
         emit_metric(LOGGER, "weather", "CacheMiss")
         try:
             emit_metric(LOGGER, "weather", "ProviderCall")
+            if self.usage_meter is not None:
+                self.usage_meter.record("weather_calls", 1, now.date())
             forecast = self.upstream.daily_forecast(location, forecast_date)
         except WeatherProviderError:
             emit_metric(LOGGER, "weather", "ProviderError")

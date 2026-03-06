@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import Protocol, Sequence
+from typing import Optional, Protocol, Sequence
+
+from greetings_bot.clock import Clock, SystemClock
+from greetings_bot.usage import UsageMeter
 
 
 MAX_QUERY_LENGTH = 120
@@ -22,14 +25,24 @@ class InformationProvider(Protocol):
 
 class InformationService:
     def __init__(
-        self, provider: InformationProvider, max_answer_length: int = 600
+        self,
+        provider: InformationProvider,
+        max_answer_length: int = 600,
+        usage_meter: Optional[UsageMeter] = None,
+        clock: Optional[Clock] = None,
     ) -> None:
         if max_answer_length < 1:
             raise ValueError("answer length must be positive")
         self.provider = provider
         self.max_answer_length = max_answer_length
+        self.usage_meter = usage_meter
+        self.clock = clock or SystemClock()
 
     def answer(self, request: InformationRequest) -> str:
+        if self.usage_meter is not None:
+            self.usage_meter.record(
+                "information_requests", 1, self.clock.now().date()
+            )
         answer = self.provider.answer(request).strip()
         if not answer:
             raise ValueError("information answer is empty")

@@ -5,8 +5,10 @@ from greetings_bot.bedrock_information import (
     BedrockClient,
     BedrockInformationProvider,
 )
+from greetings_bot.clock import Clock
 from greetings_bot.information import InformationService
 from greetings_bot.feature_flags import feature_flags_from_env
+from greetings_bot.usage import UsageMeter
 
 
 DEFAULT_BEDROCK_MODEL_ID = "amazon.titan-text-lite-v1"
@@ -57,6 +59,8 @@ def information_service_from_env(
     environ: Mapping[str, str] = os.environ,
     client: Optional[BedrockClient] = None,
     client_builder: Optional[Callable[[int], BedrockClient]] = None,
+    usage_meter: Optional[UsageMeter] = None,
+    clock: Optional[Clock] = None,
 ) -> Optional[InformationService]:
     if not information_requests_enabled(environ):
         return None
@@ -66,7 +70,11 @@ def information_service_from_env(
     if client is None:
         builder = client_builder or _default_bedrock_client
         client = builder(bedrock_timeout_seconds(environ))
-    return InformationService(BedrockInformationProvider(client, model_id))
+    return InformationService(
+        BedrockInformationProvider(client, model_id),
+        usage_meter=usage_meter,
+        clock=clock,
+    )
 
 
 def _default_bedrock_client(timeout: int) -> BedrockClient:

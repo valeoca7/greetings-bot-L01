@@ -12,6 +12,7 @@ from greetings_bot.weather_cache import (
     CachingWeatherProvider,
     InMemoryWeatherCache,
 )
+from greetings_bot.usage import UsageMeter
 
 
 class FakeProvider:
@@ -158,6 +159,20 @@ class WeatherCacheTest(unittest.TestCase):
 
         self.assertTrue(any('"ProviderError":1' in line for line in logs.output))
         self.assertTrue(any('"StaleFallback":1' in line for line in logs.output))
+
+    def test_counts_uncached_provider_attempts_only(self):
+        meter = UsageMeter()
+        provider = CachingWeatherProvider(
+            FakeProvider(self.forecast),
+            InMemoryWeatherCache(),
+            FixedClock(self.now),
+            usage_meter=meter,
+        )
+
+        provider.daily_forecast(self.location, self.forecast.date)
+        provider.daily_forecast(self.location, self.forecast.date)
+
+        self.assertEqual(meter.count("weather_calls"), 1)
 
 
 if __name__ == "__main__":
