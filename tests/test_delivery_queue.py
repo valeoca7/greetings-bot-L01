@@ -1,5 +1,7 @@
 import unittest
+from datetime import datetime, timezone
 
+from greetings_bot.clock import FixedClock
 from greetings_bot.delivery_queue import (
     DeliveryMessage,
     SqsDeliveryQueue,
@@ -7,6 +9,7 @@ from greetings_bot.delivery_queue import (
     message_to_body,
     queue_from_env,
 )
+from greetings_bot.usage import UsageMeter
 
 
 class FakeQueueClient:
@@ -94,6 +97,26 @@ class DeliveryMessageTest(unittest.TestCase):
             SqsDeliveryQueue(client, "queue-url").enqueue_many(
                 [DeliveryMessage("greeting-1", 1, "Hello", "greeting")]
             )
+
+    def test_counts_only_messages_accepted_by_sqs(self):
+        client = FakeQueueClient()
+        meter = UsageMeter()
+        queue = SqsDeliveryQueue(
+            client,
+            "queue-url",
+            meter,
+            FixedClock(datetime(2026, 3, 8, tzinfo=timezone.utc)),
+        )
+
+        queue.enqueue(DeliveryMessage("one", 1, "Hello", "greeting"))
+        queue.enqueue_many(
+            [
+                DeliveryMessage("two", 2, "Hello", "greeting"),
+                DeliveryMessage("three", 3, "Hello", "greeting"),
+            ]
+        )
+
+        self.assertEqual(meter.count("queued_messages"), 3)
 
     def test_builds_queue_from_environment(self):
         queue = queue_from_env(

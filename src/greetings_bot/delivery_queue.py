@@ -2,6 +2,9 @@ import json
 from dataclasses import dataclass
 from typing import Iterable, Mapping, Optional, Protocol
 
+from greetings_bot.clock import Clock, SystemClock
+from greetings_bot.usage import UsageMeter
+
 
 @dataclass(frozen=True)
 class DeliveryMessage:
@@ -58,15 +61,24 @@ def message_from_body(body: str) -> DeliveryMessage:
 
 
 class SqsDeliveryQueue:
-    def __init__(self, client: QueueClient, queue_url: str) -> None:
+    def __init__(
+        self,
+        client: QueueClient,
+        queue_url: str,
+        usage_meter: Optional[UsageMeter] = None,
+        clock: Optional[Clock] = None,
+    ) -> None:
         self.client = client
         self.queue_url = queue_url
+        self.usage_meter = usage_meter
+        self.clock = clock or SystemClock()
 
     def enqueue(self, message: DeliveryMessage) -> None:
         self.client.send_message(
             QueueUrl=self.queue_url,
             MessageBody=message_to_body(message),
         )
+        self._record_usage(1)
 
     def depth(self) -> int:
         response = self.client.get_queue_attributes(
@@ -109,12 +121,23 @@ class SqsDeliveryQueue:
             QueueUrl=self.queue_url,
             Entries=entries,
         )
-        if response.get("Failed"):
+        failed = response.get("Failed", [])
+        self._record_usage(len(entries) - len(failed))
+        if failed:
             raise RuntimeError("delivery queue rejected a message batch")
+
+    def _record_usage(self, amount: int) -> None:
+        if self.usage_meter is not None and amount:
+            self.usage_meter.record(
+                "queued_messages", amount, self.clock.now().date()
+            )
 
 
 def queue_from_env(
-    environ: Mapping[str, str], client: Optional[QueueClient] = None
+    environ: Mapping[str, str],
+    client: Optional[QueueClient] = None,
+    usage_meter: Optional[UsageMeter] = None,
+    clock: Optional[Clock] = None,
 ) -> Optional[DeliveryQueue]:
     queue_url = environ.get("DELIVERY_QUEUE_URL")
     if not queue_url:
@@ -123,4 +146,4 @@ def queue_from_env(
         import boto3
 
         client = boto3.client("sqs")
-    return SqsDeliveryQueue(client, queue_url)
+    return SqsDeliveryQueue(client, queue_url, usage_meter, clock)
