@@ -21,6 +21,7 @@ from greetings_bot.telegram import reply_batch
 from greetings_bot.throughput import throughput_from_env
 from greetings_bot.users import UserRepository
 from greetings_bot.users import InMemoryUserRepository
+from greetings_bot.usage import usage_meter_from_env
 from greetings_bot.weather import WeatherProvider
 from greetings_bot.weather_summary import add_weather_summaries
 from greetings_bot.weather_runtime import reliable_weather_provider
@@ -107,10 +108,13 @@ def build_default_handler(
 ) -> ScheduledGreetingHandler:
     throughput = throughput_from_env(environ)
     include_reminders = environ.get("TARGETED_REMINDERS") != "true"
-    queue = queue_from_env(environ)
+    usage_meter = usage_meter_from_env(environ)
+    queue = queue_from_env(environ, usage_meter=usage_meter)
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:
-        weather_provider = reliable_weather_provider(environ)
+        weather_provider = reliable_weather_provider(
+            environ, usage_meter=usage_meter
+        )
         return ScheduledGreetingHandler(
             InMemoryUserRepository(),
             max_batch=throughput.dispatch_batch_size,
@@ -120,7 +124,9 @@ def build_default_handler(
             queue_high_watermark=throughput.queue_high_watermark,
         )
     users = repository_for_table(table_name, dynamodb_resource)
-    weather_provider = reliable_weather_provider(environ, users.table)
+    weather_provider = reliable_weather_provider(
+        environ, users.table, usage_meter=usage_meter
+    )
     retention = retention_from_env(environ)
     deliveries = DynamoDeliveryLedger(users.table, retention.delivery_days)
     reminders = DynamoReminderRepository(users.table)

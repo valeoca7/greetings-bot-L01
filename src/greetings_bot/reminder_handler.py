@@ -14,6 +14,7 @@ from greetings_bot.reminder_store import ReminderRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import complete_reminder
 from greetings_bot.telegram import Reply, reply_payload
+from greetings_bot.usage import usage_meter_from_env
 
 LOGGER = logging.getLogger(__name__)
 
@@ -58,14 +59,16 @@ def build_default_handler(
     environ: Mapping[str, str] = os.environ,
     dynamodb_resource: DynamoResource = None,
 ) -> ScheduledReminderHandler:
+    usage_meter = usage_meter_from_env(environ)
+    queue = queue_from_env(environ, usage_meter=usage_meter)
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:
         return ScheduledReminderHandler(
-            InMemoryReminderRepository(), queue_from_env(environ)
+            InMemoryReminderRepository(), queue
         )
     users = repository_for_table(table_name, dynamodb_resource)
     return ScheduledReminderHandler(
-        DynamoReminderRepository(users.table), queue_from_env(environ)
+        DynamoReminderRepository(users.table), queue
     )
 
 

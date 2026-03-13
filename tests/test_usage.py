@@ -1,7 +1,12 @@
 import unittest
 from datetime import date
 
-from greetings_bot.usage import UsageBudgets, UsageMeter, usage_budgets_from_env
+from greetings_bot.usage import (
+    UsageBudgets,
+    UsageMeter,
+    usage_budgets_from_env,
+    usage_meter_from_env,
+)
 
 
 class UsageBudgetsTest(unittest.TestCase):
@@ -35,6 +40,11 @@ class UsageBudgetsTest(unittest.TestCase):
             with self.subTest(environ=environ):
                 with self.assertRaisesRegex(ValueError, "usage budget"):
                     usage_budgets_from_env(environ)
+
+    def test_builds_a_meter_with_configured_budgets(self):
+        meter = usage_meter_from_env({"QUEUE_DAILY_BUDGET": "700"})
+
+        self.assertEqual(meter.budgets.queued_messages, 700)
 
 
 class UsageMeterTest(unittest.TestCase):

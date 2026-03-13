@@ -39,6 +39,7 @@ from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
 from greetings_bot.weather import WeatherProvider
 from greetings_bot.weather_runtime import reliable_weather_provider
+from greetings_bot.usage import usage_meter_from_env
 
 
 LambdaResponse = Dict[str, object]
@@ -119,9 +120,14 @@ def build_default_handler(
         reminders = InMemoryReminderRepository()
     reminder_scheduler = scheduler_from_env(environ)
     table = users.table if table_name else None
-    weather_provider = reliable_weather_provider(environ, table)
+    usage_meter = usage_meter_from_env(environ)
+    weather_provider = reliable_weather_provider(
+        environ, table, usage_meter=usage_meter
+    )
     information_enabled = information_requests_enabled(environ)
-    information_service = information_service_from_env(environ, bedrock_client)
+    information_service = information_service_from_env(
+        environ, bedrock_client, usage_meter=usage_meter
+    )
     weekly_limit = information_weekly_limit(environ)
     information_quota = None
     if information_enabled:

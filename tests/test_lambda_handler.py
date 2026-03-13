@@ -114,6 +114,10 @@ class LambdaHandlerTest(unittest.TestCase):
         self.assertIs(handler.information_service.provider.client, client)
         self.assertIsInstance(handler.information_quota, InMemoryInformationQuota)
         self.assertEqual(handler.information_weekly_limit, 9)
+        self.assertIs(
+            handler.information_service.usage_meter,
+            handler.weather_provider.usage_meter,
+        )
 
     def test_uses_the_shared_table_for_information_quota(self):
         class Resource:

@@ -50,6 +50,10 @@ def usage_budgets_from_env(environ: Mapping[str, str]) -> UsageBudgets:
         raise ValueError("invalid usage budget configuration") from error
 
 
+def usage_meter_from_env(environ: Mapping[str, str]) -> "UsageMeter":
+    return UsageMeter(usage_budgets_from_env(environ))
+
+
 class UsageMeter:
     def __init__(self, budgets: UsageBudgets = UsageBudgets()) -> None:
         self.budgets = budgets
