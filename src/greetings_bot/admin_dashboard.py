@@ -248,6 +248,9 @@ def render_config(version: str, config: DashboardConfig) -> str:
         "{}={}".format(name, "on" if enabled else "off")
         for name, enabled in config.feature_flags
     )
+    usage_budgets = ", ".join(
+        "{}={}".format(name, value) for name, value in config.usage_budgets
+    )
     content = """<section class="panel">
       <p><strong>Deployment managed.</strong> Change these values through the stack
       parameters or Lambda environment, then redeploy.</p>
@@ -261,6 +264,7 @@ def render_config(version: str, config: DashboardConfig) -> str:
         <dt>Delivery administration</dt><dd>{delivery}</dd>
         <dt>Dispatch batch limit</dt><dd>{dispatch_batch_size} messages</dd>
         <dt>Queue high watermark</dt><dd>{queue_high_watermark} messages</dd>
+        <dt>Daily usage warnings</dt><dd>{usage_budgets}</dd>
         <dt>Delivery history retention</dt><dd>{history_days} days</dd>
         <dt>Receipt retention</dt><dd>{receipt_days} days</dd>
         <dt>Message languages</dt><dd>{locales}</dd>
@@ -279,6 +283,7 @@ def render_config(version: str, config: DashboardConfig) -> str:
         delivery="Available" if config.delivery_admin_configured else "Unavailable",
         dispatch_batch_size=config.dispatch_batch_size,
         queue_high_watermark=config.queue_high_watermark,
+        usage_budgets=escape(usage_budgets),
         history_days=config.delivery_history_days,
         receipt_days=config.delivery_receipt_days,
         locales=escape(", ".join(config.supported_locales)),

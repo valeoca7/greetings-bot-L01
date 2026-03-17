@@ -15,6 +15,7 @@ class AdminConfigTest(unittest.TestCase):
         self.assertEqual(config.delivery_receipt_days, 14)
         self.assertEqual(config.dispatch_batch_size, 100)
         self.assertEqual(config.queue_high_watermark, 1000)
+        self.assertEqual(config.usage_budgets[0], ("weather_calls", 500))
         self.assertEqual(config.supported_locales, ("en", "uk"))
         self.assertEqual(config.fallback_locale, "en")
         self.assertEqual(
@@ -49,6 +50,9 @@ class AdminConfigTest(unittest.TestCase):
                 "DELIVERY_RECEIPT_DAYS": "7",
                 "DISPATCH_BATCH_SIZE": "40",
                 "DELIVERY_QUEUE_HIGH_WATERMARK": "600",
+                "WEATHER_DAILY_BUDGET": "80",
+                "INFORMATION_DAILY_BUDGET": "20",
+                "QUEUE_DAILY_BUDGET": "900",
             }
         )
 
@@ -61,6 +65,14 @@ class AdminConfigTest(unittest.TestCase):
         self.assertEqual(config.delivery_receipt_days, 7)
         self.assertEqual(config.dispatch_batch_size, 40)
         self.assertEqual(config.queue_high_watermark, 600)
+        self.assertEqual(
+            config.usage_budgets,
+            (
+                ("weather_calls", 80),
+                ("information_requests", 20),
+                ("queued_messages", 900),
+            ),
+        )
         self.assertNotIn("secret", repr(config))
 
     def test_rejects_invalid_numeric_configuration(self):

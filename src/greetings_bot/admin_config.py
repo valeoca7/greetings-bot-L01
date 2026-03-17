@@ -14,6 +14,7 @@ from greetings_bot.information_runtime import (
 from greetings_bot.messages import MessageCatalog
 from greetings_bot.retention import retention_from_env
 from greetings_bot.throughput import throughput_from_env
+from greetings_bot.usage import usage_budgets_from_env
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,11 @@ class DashboardConfig:
     )
     dispatch_batch_size: int = 100
     queue_high_watermark: int = 1000
+    usage_budgets: Tuple[Tuple[str, int], ...] = (
+        ("weather_calls", 500),
+        ("information_requests", 100),
+        ("queued_messages", 5000),
+    )
 
 
 def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
@@ -63,6 +69,7 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
     delivery_configured = all(environ.get(name, "").strip() for name in queue_names)
     retention = retention_from_env(environ)
     throughput = throughput_from_env(environ)
+    usage_budgets = usage_budgets_from_env(environ)
     return DashboardConfig(
         information_requests_enabled(environ),
         information_weekly_limit(environ),
@@ -80,4 +87,5 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         feature_flags.public_snapshot(),
         throughput.dispatch_batch_size,
         throughput.queue_high_watermark,
+        usage_budgets.public_snapshot(),
     )
