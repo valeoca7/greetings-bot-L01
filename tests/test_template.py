@@ -156,6 +156,17 @@ class SamTemplateTest(unittest.TestCase):
         )
         self.assertIn("- sqs:GetQueueAttributes", self.template)
 
+    def test_bounds_daily_usage_warning_levels(self):
+        for parameter, variable in (
+            ("WeatherDailyBudget:", "WEATHER_DAILY_BUDGET"),
+            ("InformationDailyBudget:", "INFORMATION_DAILY_BUDGET"),
+            ("QueueDailyBudget:", "QUEUE_DAILY_BUDGET"),
+        ):
+            with self.subTest(parameter=parameter):
+                self.assertIn(parameter, self.template)
+                self.assertIn(variable + ": !Ref", self.template)
+        self.assertGreaterEqual(self.template.count("MaxValue: 1000000"), 3)
+
     def test_defines_due_reminder_index(self):
         self.assertIn("IndexName: DueIndex", self.template)
         self.assertIn("AttributeName: gsi1pk", self.template)

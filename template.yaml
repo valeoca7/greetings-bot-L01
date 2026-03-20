@@ -44,6 +44,21 @@ Parameters:
     Default: 1000
     MinValue: 10
     MaxValue: 10000
+  WeatherDailyBudget:
+    Type: Number
+    Default: 500
+    MinValue: 1
+    MaxValue: 1000000
+  InformationDailyBudget:
+    Type: Number
+    Default: 100
+    MinValue: 1
+    MaxValue: 1000000
+  QueueDailyBudget:
+    Type: Number
+    Default: 5000
+    MinValue: 1
+    MaxValue: 1000000
 
 Resources:
   DataTable:
@@ -117,6 +132,8 @@ Resources:
           INFO_WEEKLY_LIMIT: !Ref InformationWeeklyLimit
           BEDROCK_MODEL_ID: !Ref BedrockModelId
           BEDROCK_TIMEOUT_SECONDS: !Ref BedrockTimeoutSeconds
+          WEATHER_DAILY_BUDGET: !Ref WeatherDailyBudget
+          INFORMATION_DAILY_BUDGET: !Ref InformationDailyBudget
       Policies:
         - Statement:
             - Effect: Allow
@@ -167,6 +184,9 @@ Resources:
           DELIVERY_DLQ_ARN: !GetAtt DeliveryDeadLetterQueue.Arn
           DISPATCH_BATCH_SIZE: '100'
           DELIVERY_QUEUE_HIGH_WATERMARK: !Ref DeliveryQueueHighWatermark
+          WEATHER_DAILY_BUDGET: !Ref WeatherDailyBudget
+          INFORMATION_DAILY_BUDGET: !Ref InformationDailyBudget
+          QUEUE_DAILY_BUDGET: !Ref QueueDailyBudget
           SCHEDULER_TARGET_ARN: !GetAtt ReminderDeliveryFunction.Arn
           SCHEDULER_ROLE_ARN: !GetAtt SchedulerInvokeRole.Arn
           SCHEDULER_GROUP: !Ref ReminderScheduleGroup
@@ -302,6 +322,8 @@ Resources:
           USER_TABLE_NAME: !Ref DataTable
           DISPATCH_BATCH_SIZE: '100'
           DELIVERY_QUEUE_HIGH_WATERMARK: !Ref DeliveryQueueHighWatermark
+          WEATHER_DAILY_BUDGET: !Ref WeatherDailyBudget
+          QUEUE_DAILY_BUDGET: !Ref QueueDailyBudget
           TARGETED_REMINDERS: 'true'
           DELIVERY_QUEUE_URL: !Ref DeliveryQueue
           DELIVERY_HISTORY_DAYS: !Ref DeliveryHistoryDays
@@ -341,6 +363,7 @@ Resources:
         Variables:
           USER_TABLE_NAME: !Ref DataTable
           DELIVERY_QUEUE_URL: !Ref DeliveryQueue
+          QUEUE_DAILY_BUDGET: !Ref QueueDailyBudget
       Policies:
         - Statement:
             - Effect: Allow
