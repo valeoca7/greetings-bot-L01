@@ -191,6 +191,12 @@ The SAM template defines alarms for failed delivery attempts and visible message
 the dead-letter queue. Alarm notification actions are intentionally left for the
 deploying environment to configure.
 
+Provider calls, accepted model requests, and accepted queue messages emit separate
+service-unit metrics. Daily soft budgets emit one warning per warm runtime when
+crossed; they do not block work or claim to represent a currency charge. Configure
+them with `WEATHER_DAILY_BUDGET`, `INFORMATION_DAILY_BUDGET`, and
+`QUEUE_DAILY_BUDGET`.
+
 ## Weather provider
 
 Weather locations store a display name and validated latitude/longitude pair on the
