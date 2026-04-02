@@ -9,9 +9,12 @@ from greetings_bot.api_gateway import (
 
 class ApiGatewayRequestTest(unittest.TestCase):
     def test_reads_text_body(self):
-        request = ApiGatewayRequest.from_event({"body": "hello"})
+        request = ApiGatewayRequest.from_event(
+            {"body": "hello", "headers": {"X-Test": "value"}}
+        )
 
         self.assertEqual(request.body, "hello")
+        self.assertEqual(request.headers["x-test"], "value")
 
     def test_missing_body_is_none(self):
         request = ApiGatewayRequest.from_event({})
@@ -35,6 +38,10 @@ class ApiGatewayRequestTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ApiGatewayRequestError, "must be JSON"):
             request.json_body()
+
+    def test_rejects_non_object_headers(self):
+        with self.assertRaisesRegex(ApiGatewayRequestError, "headers"):
+            ApiGatewayRequest.from_event({"headers": ["bad"]})
 
 
 class ApiGatewayResponseTest(unittest.TestCase):
