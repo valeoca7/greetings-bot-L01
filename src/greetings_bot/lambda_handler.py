@@ -40,6 +40,7 @@ from greetings_bot.users import InMemoryUserRepository, UserRepository
 from greetings_bot.weather import WeatherProvider
 from greetings_bot.weather_runtime import reliable_weather_provider
 from greetings_bot.usage import usage_meter_from_env
+from greetings_bot.webhook_auth import TelegramWebhookAuthorizer
 
 
 LambdaResponse = Dict[str, object]
@@ -58,6 +59,7 @@ class WebhookHandler:
         information_enabled: bool = False,
         information_quota: InformationQuota = None,
         information_weekly_limit: int = 5,
+        webhook_authorizer: TelegramWebhookAuthorizer = None,
     ) -> None:
         self.users = users
         self.notes = notes if notes is not None else InMemoryNoteRepository()
@@ -74,10 +76,19 @@ class WebhookHandler:
         self.information_enabled = information_enabled
         self.information_quota = information_quota
         self.information_weekly_limit = information_weekly_limit
+        self.webhook_authorizer = webhook_authorizer
 
     def handle(self, event: Mapping[str, Any]) -> LambdaResponse:
         try:
             request = ApiGatewayRequest.from_event(event)
+        except ApiGatewayRequestError as error:
+            return self._error_response(str(error))
+        if (
+            self.webhook_authorizer is not None
+            and not self.webhook_authorizer.authorize(request.headers)
+        ):
+            return self._error_response("forbidden", 403)
+        try:
             payload = request.json_body()
         except ApiGatewayRequestError as error:
             return self._error_response(str(error))
@@ -100,8 +111,10 @@ class WebhookHandler:
         return ApiGatewayResponse(200, body).to_dict()
 
     @staticmethod
-    def _error_response(message: str) -> LambdaResponse:
-        return ApiGatewayResponse(400, json.dumps({"error": message})).to_dict()
+    def _error_response(message: str, status_code: int = 400) -> LambdaResponse:
+        return ApiGatewayResponse(
+            status_code, json.dumps({"error": message})
+        ).to_dict()
 
 
 def build_default_handler(
@@ -136,6 +149,8 @@ def build_default_handler(
             if table is not None
             else InMemoryInformationQuota()
         )
+    secret = environ.get("TELEGRAM_WEBHOOK_SECRET", "")
+    webhook_authorizer = TelegramWebhookAuthorizer(secret) if secret else None
     return WebhookHandler(
         users,
         notes,
@@ -146,6 +161,7 @@ def build_default_handler(
         information_enabled=information_enabled,
         information_quota=information_quota,
         information_weekly_limit=weekly_limit,
+        webhook_authorizer=webhook_authorizer,
     )
 
 

@@ -70,6 +70,25 @@ class LambdaHandlerTest(unittest.TestCase):
             json.loads(response["body"]), {"error": "invalid update payload"}
         )
 
+    def test_checks_the_webhook_secret_before_parsing_the_body(self):
+        handler = build_default_handler(
+            {"TELEGRAM_WEBHOOK_SECRET": "local-secret_123"}
+        )
+
+        rejected = handler.handle({"body": "private invalid body"})
+        accepted = handler.handle(
+            {
+                "headers": {
+                    "X-Telegram-Bot-Api-Secret-Token": "local-secret_123"
+                },
+                "body": '{"update_id":1}',
+            }
+        )
+
+        self.assertEqual(rejected["statusCode"], 403)
+        self.assertEqual(json.loads(rejected["body"]), {"error": "forbidden"})
+        self.assertEqual(accepted["statusCode"], 200)
+
     def test_handles_sample_gateway_event(self):
         event = json.loads(Path("events/webhook.json").read_text())
 
