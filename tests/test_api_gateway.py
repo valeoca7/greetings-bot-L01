@@ -52,7 +52,11 @@ class ApiGatewayResponseTest(unittest.TestCase):
             response.to_dict(),
             {
                 "statusCode": 200,
-                "headers": {"content-type": "application/json"},
+                "headers": {
+                    "content-type": "application/json",
+                    "cache-control": "no-store",
+                    "x-content-type-options": "nosniff",
+                },
                 "body": "ok",
             },
         )

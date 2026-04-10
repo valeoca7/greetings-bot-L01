@@ -74,6 +74,7 @@ class AdminResponse:
             "headers": {
                 "content-type": "application/json",
                 "cache-control": "no-store",
+                "referrer-policy": "no-referrer",
                 "x-content-type-options": "nosniff",
             },
             "body": json.dumps(self.body, separators=(",", ":")),
@@ -97,6 +98,7 @@ class HtmlResponse:
                     "form-action 'self'"
                 ),
                 "referrer-policy": "no-referrer",
+                "permissions-policy": "camera=(), geolocation=(), microphone=()",
                 "x-content-type-options": "nosniff",
                 "x-frame-options": "DENY",
             },
@@ -118,6 +120,7 @@ class JsonDownloadResponse:
                     'attachment; filename="greetings-bot-user-data.json"'
                 ),
                 "cache-control": "no-store",
+                "referrer-policy": "no-referrer",
                 "x-content-type-options": "nosniff",
             },
             "body": self.body,

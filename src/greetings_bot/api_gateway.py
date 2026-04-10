@@ -17,7 +17,11 @@ class ApiGatewayResponse:
     def to_dict(self) -> Dict[str, object]:
         return {
             "statusCode": self.status_code,
-            "headers": {"content-type": "application/json"},
+            "headers": {
+                "content-type": "application/json",
+                "cache-control": "no-store",
+                "x-content-type-options": "nosniff",
+            },
             "body": self.body,
         }
 

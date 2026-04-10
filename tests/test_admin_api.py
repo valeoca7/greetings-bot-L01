@@ -104,6 +104,7 @@ class AdminResponseTest(unittest.TestCase):
         self.assertEqual(json.loads(response["body"]), {"status": "ok"})
         self.assertEqual(response["headers"]["content-type"], "application/json")
         self.assertEqual(response["headers"]["cache-control"], "no-store")
+        self.assertEqual(response["headers"]["referrer-policy"], "no-referrer")
         self.assertEqual(
             response["headers"]["x-content-type-options"], "nosniff"
         )
@@ -115,6 +116,7 @@ class AdminResponseTest(unittest.TestCase):
         self.assertEqual(response["headers"]["content-type"], "text/html; charset=utf-8")
         self.assertEqual(response["headers"]["cache-control"], "no-store")
         self.assertEqual(response["headers"]["x-frame-options"], "DENY")
+        self.assertIn("geolocation=()", response["headers"]["permissions-policy"])
         self.assertIn("default-src 'none'", response["headers"]["content-security-policy"])
         self.assertIn("form-action 'self'", response["headers"]["content-security-policy"])
         self.assertIn("<title>Status</title>", response["body"])
@@ -130,6 +132,7 @@ class AdminResponseTest(unittest.TestCase):
             "application/json; charset=utf-8",
         )
         self.assertEqual(response["headers"]["cache-control"], "no-store")
+        self.assertEqual(response["headers"]["referrer-policy"], "no-referrer")
         self.assertEqual(
             response["headers"]["content-disposition"],
             'attachment; filename="greetings-bot-user-data.json"',
