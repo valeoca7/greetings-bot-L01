@@ -3,7 +3,8 @@
   "path": "/telegram/webhook",
   "httpMethod": "POST",
   "headers": {
-    "content-type": "application/json"
+    "content-type": "application/json",
+    "x-telegram-bot-api-secret-token": "local-webhook-secret"
   },
   "body": "{\"update_id\":1001,\"message\":{\"message_id\":7,\"from\":{\"id\":42,\"first_name\":\"Mira\"},\"chat\":{\"id\":42},\"text\":\"/start\"}}",
   "isBase64Encoded": false

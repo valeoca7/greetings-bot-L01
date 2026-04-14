@@ -6,6 +6,12 @@ Parameters:
   TelegramBotToken:
     Type: String
     NoEcho: true
+  TelegramWebhookSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 16
+    MaxLength: 256
+    AllowedPattern: '[A-Za-z0-9_-]+'
   AdminApiToken:
     Type: String
     NoEcho: true
@@ -120,6 +126,7 @@ Resources:
       Environment:
         Variables:
           TELEGRAM_BOT_TOKEN: !Ref TelegramBotToken
+          TELEGRAM_WEBHOOK_SECRET: !Ref TelegramWebhookSecret
           USER_TABLE_NAME: !Ref DataTable
           SCHEDULER_TARGET_ARN: !GetAtt ReminderDeliveryFunction.Arn
           SCHEDULER_ROLE_ARN: !GetAtt SchedulerInvokeRole.Arn
@@ -140,7 +147,6 @@ Resources:
               Action:
                 - dynamodb:GetItem
                 - dynamodb:PutItem
-                - dynamodb:Scan
                 - dynamodb:Query
                 - dynamodb:DeleteItem
                 - dynamodb:UpdateItem

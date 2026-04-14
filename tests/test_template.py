@@ -16,6 +16,11 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Path: /telegram/webhook", self.template)
         self.assertIn("Method: post", self.template)
 
+    def test_configures_a_hidden_webhook_secret(self):
+        self.assertIn("TelegramWebhookSecret:", self.template)
+        self.assertIn("TELEGRAM_WEBHOOK_SECRET: !Ref TelegramWebhookSecret", self.template)
+        self.assertIn("AllowedPattern: '[A-Za-z0-9_-]+'", self.template)
+
     def test_bounds_webhook_weather_requests(self):
         self.assertEqual(self.template.count("WEATHER_TIMEOUT_SECONDS: '5'"), 2)
         self.assertEqual(self.template.count("WEATHER_MAX_CALLS: '20'"), 2)
@@ -143,6 +148,10 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("dynamodb:Query", self.template)
         self.assertIn("dynamodb:DeleteItem", self.template)
         self.assertNotIn("dynamodb:*", self.template)
+        webhook = self.template.split("WebhookFunction:", 1)[1].split(
+            "AdminFunction:", 1
+        )[0]
+        self.assertNotIn("dynamodb:Scan", webhook)
 
     def test_defines_minute_dispatcher(self):
         self.assertIn("GreetingDispatcherFunction:", self.template)
