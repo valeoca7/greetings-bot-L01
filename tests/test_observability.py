@@ -54,6 +54,25 @@ class ObservabilityTest(unittest.TestCase):
         self.assertEqual(metric["Namespace"], "GreetingsBot")
         self.assertEqual(metric["Dimensions"], [["Service"]])
 
+    def test_redacts_sensitive_fields_at_the_logging_boundary(self):
+        logger = logging.getLogger("tests.observability.redaction")
+
+        with self.assertLogs(logger, level="INFO") as logs:
+            log_event(
+                logger,
+                "request_failed",
+                request_id="safe-1",
+                body="private message",
+                headers={"authorization": "Bearer private-token"},
+                provider={"answer": "private answer", "status": 500},
+            )
+
+        output = logs.output[0]
+        self.assertIn('"request_id":"safe-1"', output)
+        self.assertIn('"status":500', output)
+        self.assertGreaterEqual(output.count("[redacted]"), 3)
+        self.assertNotIn("private", output)
+
 
 if __name__ == "__main__":
     unittest.main()

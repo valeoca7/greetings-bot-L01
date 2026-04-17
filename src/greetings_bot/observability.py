@@ -4,6 +4,17 @@ import time
 from typing import Any, Mapping
 
 
+SENSITIVE_FIELD_PARTS = (
+    "authorization",
+    "token",
+    "secret",
+    "body",
+    "text",
+    "query",
+    "answer",
+)
+
+
 def log_event(
     logger: logging.Logger,
     event: str,
@@ -11,8 +22,27 @@ def log_event(
     **fields: Any,
 ) -> None:
     payload = {"event": event}
-    payload.update(fields)
+    payload.update(_redact_mapping(fields))
     logger.log(level, json.dumps(payload, separators=(",", ":"), sort_keys=True))
+
+
+def _redact_mapping(value: Mapping[str, Any]) -> Mapping[str, Any]:
+    return {
+        str(key): (
+            "[redacted]"
+            if any(part in str(key).lower() for part in SENSITIVE_FIELD_PARTS)
+            else _redact_value(item)
+        )
+        for key, item in value.items()
+    }
+
+
+def _redact_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return _redact_mapping(value)
+    if isinstance(value, (list, tuple)):
+        return [_redact_value(item) for item in value]
+    return value
 
 
 def correlation_id(event: Mapping[str, Any], context: object = None) -> str:
