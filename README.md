@@ -114,6 +114,11 @@ sam local invoke WebhookFunction --event events/webhook.json
 The template and handler can be tested offline. Nothing in this repository creates
 AWS resources or registers the webhook with Telegram.
 
+Deployed webhooks require a 16-256 character `TelegramWebhookSecret` stack
+parameter. Requests must carry the same value in Telegram's
+`X-Telegram-Bot-Api-Secret-Token` header; comparison happens before payload parsing.
+The secret is never included in structured logs.
+
 The Lambda configuration points `USER_TABLE_NAME` at an encrypted, on-demand DynamoDB
 table. User profiles use `USER#<telegram-id>` as the partition key and `PROFILE` as
 the sort key. The function role is limited to the read, write, and scan operations
@@ -186,6 +191,10 @@ Lambda entry points write single-line JSON events with request IDs. Delivery ret
 events also include the SQS record and delivery IDs, but never the greeting or note
 text. Dispatch and delivery counts use CloudWatch embedded metric format under the
 `GreetingsBot` namespace.
+
+Structured logging also redacts nested authorization, token, secret, body, text,
+query, and answer fields. Webhook and admin responses disable caching and MIME
+sniffing; dashboard pages additionally deny framing and unnecessary browser features.
 
 The SAM template defines alarms for failed delivery attempts and visible messages in
 the dead-letter queue. Alarm notification actions are intentionally left for the
