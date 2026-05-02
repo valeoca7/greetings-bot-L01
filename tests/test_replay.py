@@ -1,9 +1,11 @@
 import json
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 from greetings_bot.delivery_queue import DeliveryMessage, message_to_body
-from greetings_bot.replay import plan_replay
+from greetings_bot.replay import main, plan_replay, replay_summary
 
 
 class ReplayPlanTest(unittest.TestCase):
@@ -36,6 +38,26 @@ class ReplayPlanTest(unittest.TestCase):
             with self.subTest(event=event):
                 with self.assertRaises(ValueError):
                     plan_replay(event, limit)
+
+    def test_reports_only_safe_replay_totals(self):
+        event = json.loads(Path("events/delivery_batch.json").read_text())
+
+        summary = replay_summary(plan_replay(event))
+
+        self.assertEqual(
+            summary,
+            {"accepted": 1, "rejected": 0, "duplicates": 0, "kinds": {"greeting": 1}},
+        )
+        self.assertNotIn("Good evening", repr(summary))
+
+    def test_prints_a_local_replay_summary(self):
+        output = StringIO()
+
+        with redirect_stdout(output):
+            status = main(["events/delivery_batch.json"])
+
+        self.assertEqual(status, 0)
+        self.assertEqual(json.loads(output.getvalue())["accepted"], 1)
 
 
 if __name__ == "__main__":
