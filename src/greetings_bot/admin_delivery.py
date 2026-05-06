@@ -24,11 +24,43 @@ class DeliveryQueueSummary:
         }
 
 
+@dataclass(frozen=True)
+class RedriveTaskStatus:
+    status: str
+    moved: int
+    remaining: int
+
+    def __post_init__(self) -> None:
+        if self.status not in (
+            "RUNNING",
+            "COMPLETED",
+            "CANCELLING",
+            "CANCELLED",
+            "FAILED",
+        ):
+            raise ValueError("unknown redrive status")
+        if min(self.moved, self.remaining) < 0:
+            raise ValueError("redrive counts must not be negative")
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "status": self.status.lower(),
+            "moved": self.moved,
+            "remaining": self.remaining,
+        }
+
+
 class DeliveryAdminOperations(Protocol):
     def summary(self) -> DeliveryQueueSummary:
         ...
 
     def start_redrive(self, max_rate: int) -> str:
+        ...
+
+    def latest_redrive(self) -> Optional[RedriveTaskStatus]:
+        ...
+
+    def cancel_redrive(self, task_handle: str) -> None:
         ...
 
 
@@ -37,6 +69,12 @@ class SqsAdminClient(Protocol):
         ...
 
     def start_message_move_task(self, **request) -> Mapping[str, object]:
+        ...
+
+    def list_message_move_tasks(self, **request) -> Mapping[str, object]:
+        ...
+
+    def cancel_message_move_task(self, **request) -> Mapping[str, object]:
         ...
 
 
@@ -91,6 +129,32 @@ class SqsDeliveryAdmin:
             return task_handle
         except Exception as error:
             raise DeliveryAdminError("delivery redrive unavailable") from error
+
+    def latest_redrive(self) -> Optional[RedriveTaskStatus]:
+        try:
+            response = self.client.list_message_move_tasks(
+                SourceArn=self.dead_letter_arn,
+                MaxResults=1,
+            )
+            results = response.get("Results", [])
+            if not results:
+                return None
+            result = results[0]
+            return RedriveTaskStatus(
+                str(result["Status"]),
+                int(result.get("ApproximateNumberOfMessagesMoved", 0)),
+                int(result.get("ApproximateNumberOfMessagesToMove", 0)),
+            )
+        except Exception as error:
+            raise DeliveryAdminError("delivery redrive status unavailable") from error
+
+    def cancel_redrive(self, task_handle: str) -> None:
+        if not task_handle or len(task_handle) > 1024:
+            raise ValueError("invalid redrive task handle")
+        try:
+            self.client.cancel_message_move_task(TaskHandle=task_handle)
+        except Exception as error:
+            raise DeliveryAdminError("delivery redrive cancellation unavailable") from error
 
 
 def delivery_admin_from_env(

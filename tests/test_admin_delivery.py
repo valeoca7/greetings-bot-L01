@@ -3,6 +3,7 @@ import unittest
 from greetings_bot.admin_delivery import (
     DeliveryAdminError,
     DeliveryQueueSummary,
+    RedriveTaskStatus,
     SqsDeliveryAdmin,
     delivery_admin_from_env,
 )
@@ -26,6 +27,22 @@ class FakeSqsClient:
     def start_message_move_task(self, **request):
         self.move_request = request
         return {"TaskHandle": "move-task-123"}
+
+    def list_message_move_tasks(self, **request):
+        self.list_request = request
+        return {
+            "Results": [
+                {
+                    "Status": "RUNNING",
+                    "ApproximateNumberOfMessagesMoved": 7,
+                    "ApproximateNumberOfMessagesToMove": 4,
+                }
+            ]
+        }
+
+    def cancel_message_move_task(self, **request):
+        self.cancel_request = request
+        return {}
 
 
 class DeliveryQueueSummaryTest(unittest.TestCase):
@@ -93,6 +110,38 @@ class SqsDeliveryAdminTest(unittest.TestCase):
             with self.subTest(rate=rate):
                 with self.assertRaises(ValueError):
                     operations.start_redrive(rate)
+
+    def test_reads_latest_redrive_progress_without_its_handle(self):
+        client = FakeSqsClient()
+        operations = SqsDeliveryAdmin(
+            client, "queue-url", "dlq-url", "queue-arn", "dlq-arn"
+        )
+
+        status = operations.latest_redrive()
+
+        self.assertEqual(status, RedriveTaskStatus("RUNNING", 7, 4))
+        self.assertEqual(
+            status.to_dict(), {"status": "running", "moved": 7, "remaining": 4}
+        )
+        self.assertEqual(client.list_request, {"SourceArn": "dlq-arn", "MaxResults": 1})
+
+    def test_cancels_one_named_redrive_task(self):
+        client = FakeSqsClient()
+        operations = SqsDeliveryAdmin(
+            client, "queue-url", "dlq-url", "queue-arn", "dlq-arn"
+        )
+
+        operations.cancel_redrive("move-task-123")
+
+        self.assertEqual(client.cancel_request, {"TaskHandle": "move-task-123"})
+
+    def test_rejects_an_empty_cancel_handle(self):
+        operations = SqsDeliveryAdmin(
+            FakeSqsClient(), "queue-url", "dlq-url", "queue-arn", "dlq-arn"
+        )
+
+        with self.assertRaises(ValueError):
+            operations.cancel_redrive("")
 
     def test_normalizes_sqs_failures(self):
         class OfflineClient(FakeSqsClient):
