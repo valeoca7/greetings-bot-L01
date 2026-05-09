@@ -240,6 +240,32 @@ class AdminApplication:
         return JsonDownloadResponse(200, body)
 
     def _redrive(self, request: AdminRequest) -> AdminResponse:
+        if request.method == "GET":
+            if self.delivery is None:
+                return AdminResponse(503, {"error": "delivery admin unavailable"})
+            try:
+                status = self.delivery.latest_redrive()
+            except DeliveryAdminError:
+                return AdminResponse(503, {"error": "delivery admin unavailable"})
+            return AdminResponse(
+                200, {"task": None if status is None else status.to_dict()}
+            )
+        if request.method == "DELETE":
+            if self.delivery is None:
+                return AdminResponse(503, {"error": "delivery admin unavailable"})
+            try:
+                body = request.json_body()
+                task = body.get("task")
+                if body.get("confirm") != "cancel_delivery_redrive":
+                    raise ValueError("redrive cancellation confirmation is required")
+                if not isinstance(task, str):
+                    raise ValueError("redrive task handle is required")
+                self.delivery.cancel_redrive(task)
+            except DeliveryAdminError:
+                return AdminResponse(503, {"error": "delivery admin unavailable"})
+            except (AdminRequestError, ValueError) as error:
+                return AdminResponse(400, {"error": str(error)})
+            return AdminResponse(202, {"status": "cancelling"})
         if request.method != "POST":
             return AdminResponse(405, {"error": "method not allowed"})
         if self.delivery is None:

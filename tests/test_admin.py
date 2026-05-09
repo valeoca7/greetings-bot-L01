@@ -7,7 +7,11 @@ from greetings_bot.admin_api import (
     HtmlResponse,
     JsonDownloadResponse,
 )
-from greetings_bot.admin_delivery import DeliveryAdminError, DeliveryQueueSummary
+from greetings_bot.admin_delivery import (
+    DeliveryAdminError,
+    DeliveryQueueSummary,
+    RedriveTaskStatus,
+)
 from greetings_bot.admin_config import DashboardConfig
 from greetings_bot.clock import FixedClock
 from greetings_bot.configuration_audit import (
@@ -36,6 +40,12 @@ class FakeDeliveryOperations:
     def start_redrive(self, max_rate):
         self.max_rate = max_rate
         return "task-123"
+
+    def latest_redrive(self):
+        return RedriveTaskStatus("RUNNING", 7, 4)
+
+    def cancel_redrive(self, task_handle):
+        self.cancelled_task = task_handle
 
 
 class FakeDeletionService:
@@ -504,6 +514,39 @@ class AdminApplicationTest(unittest.TestCase):
                     )
                 )
                 self.assertEqual(response.status_code, 400)
+
+    def test_reports_safe_redrive_progress(self):
+        app = AdminApplication(
+            FixedAuthorizer(True),
+            InMemoryUserRepository(),
+            FakeDeliveryOperations(),
+        )
+
+        response = app.handle(AdminRequest("GET", "/admin/delivery/redrive", {}))
+
+        self.assertEqual(
+            response.body,
+            {"task": {"status": "running", "moved": 7, "remaining": 4}},
+        )
+
+    def test_cancels_an_explicitly_confirmed_redrive(self):
+        operations = FakeDeliveryOperations()
+        app = AdminApplication(
+            FixedAuthorizer(True), InMemoryUserRepository(), operations
+        )
+
+        response = app.handle(
+            AdminRequest(
+                "DELETE",
+                "/admin/delivery/redrive",
+                {},
+                body='{"confirm":"cancel_delivery_redrive","task":"task-123"}',
+            )
+        )
+
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(response.body, {"status": "cancelling"})
+        self.assertEqual(operations.cancelled_task, "task-123")
 
     def test_lists_filtered_configuration_audit_records(self):
         audit = InMemoryAuditRepository()

@@ -78,6 +78,7 @@ class AdminLambdaHandler:
 AUDITED_ADMIN_ACTIONS = {
     "dashboard_delivery_redrive",
     "delivery_redrive",
+    "delivery_redrive_cancel",
     "user_deletion_request",
     "user_deletion_confirm",
     "user_deletion_execute",
@@ -205,5 +206,10 @@ def _audit_action(event: Mapping[str, Any]) -> str:
     if path == "/admin/delivery":
         return "delivery_status"
     if path == "/admin/delivery/redrive":
+        method = str(event.get("httpMethod", "")).upper()
+        if method == "GET":
+            return "delivery_redrive_status"
+        if method == "DELETE":
+            return "delivery_redrive_cancel"
         return "delivery_redrive"
     return "unknown"
