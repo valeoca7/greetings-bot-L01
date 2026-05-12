@@ -217,6 +217,8 @@ Resources:
             - Effect: Allow
               Action:
                 - sqs:StartMessageMoveTask
+                - sqs:ListMessageMoveTasks
+                - sqs:CancelMessageMoveTask
                 - sqs:ReceiveMessage
                 - sqs:DeleteMessage
               Resource: !GetAtt DeliveryDeadLetterQueue.Arn
@@ -314,6 +316,16 @@ Resources:
           Properties:
             Path: /admin/delivery/redrive
             Method: post
+        DeliveryRedriveStatus:
+          Type: Api
+          Properties:
+            Path: /admin/delivery/redrive
+            Method: get
+        DeliveryRedriveCancel:
+          Type: Api
+          Properties:
+            Path: /admin/delivery/redrive
+            Method: delete
 
   GreetingDispatcherFunction:
     Type: AWS::Serverless::Function
