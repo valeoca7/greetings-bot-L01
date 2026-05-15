@@ -132,6 +132,12 @@ class SamTemplateTest(unittest.TestCase):
         self.assertIn("Type: AWS::DynamoDB::Table", self.template)
         self.assertIn("BillingMode: PAY_PER_REQUEST", self.template)
         self.assertIn("SSEEnabled: true", self.template)
+        self.assertIn("PointInTimeRecoveryEnabled: true", self.template)
+        table = self.template.split("DataTable:", 1)[1].split(
+            "DeliveryDeadLetterQueue:", 1
+        )[0]
+        self.assertIn("DeletionPolicy: Retain", table)
+        self.assertIn("UpdateReplacePolicy: Retain", table)
         self.assertIn("USER_TABLE_NAME: !Ref DataTable", self.template)
 
     def test_expires_weather_cache_records(self):
