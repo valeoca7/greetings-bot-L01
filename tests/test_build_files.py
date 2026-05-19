@@ -15,6 +15,10 @@ class BuildFilesTest(unittest.TestCase):
         self.assertIn("greetings-bot-src.tar.gz", self.makefile)
         self.assertIn("git archive", self.makefile)
 
+    def test_makefile_can_inspect_a_saved_replay(self):
+        self.assertIn("replay-plan:", self.makefile)
+        self.assertIn("greetings_bot.replay $(EVENT)", self.makefile)
+
     def test_pipeline_runs_the_local_workflow(self):
         self.assertIn("sh 'make check'", self.jenkinsfile)
         self.assertIn("sh 'make package'", self.jenkinsfile)
