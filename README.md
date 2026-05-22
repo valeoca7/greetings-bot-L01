@@ -256,7 +256,7 @@ professional help. Content-filtered or malformed model results are not returned.
 
 ## Admin API
 
-The SAM template includes a separate read-only admin Lambda with `GET /admin/health`,
+The SAM template includes a separate protected admin Lambda with `GET /admin/health`,
 `GET /admin/stats`, `GET /admin/users`, and `GET /admin/users/{id}`. All routes
 require an `Authorization: Bearer <token>` header.
 `AdminApiToken` is a hidden deployment parameter with a 24-character minimum; the
@@ -288,6 +288,16 @@ JSON body contains `{"confirm":"redrive_failed_deliveries","rate":25}`. The rate
 be 1 through 500 messages per second. Redrive returns `202` with the SQS task handle;
 it does not wait for completion. Queue errors return `503`, and action bodies are not
 written to audit logs. Tests use a fake SQS client and never move real messages.
+
+`GET /admin/delivery/redrive` reports the latest task's safe progress counts without
+its handle. `DELETE /admin/delivery/redrive` requires the handle plus
+`{"confirm":"cancel_delivery_redrive"}`. A saved SQS batch can be validated before
+recovery with `make replay-plan EVENT=path`; the output contains totals and delivery
+kinds, not message text or chat identifiers.
+
+The DynamoDB definition enables point-in-time recovery and retains the table during
+stack deletion or replacement. These are declarative safeguards only; this project
+does not run restores or create backup resources during local work.
 
 `GET /admin/dashboard` renders a responsive, server-side overview using the same
 bearer authorization. It shows package health, active and disabled user counts, and
