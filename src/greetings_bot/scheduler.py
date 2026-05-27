@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from typing import Iterable, List, Optional
+from typing import Iterable, Iterator, List, Optional
 
 from greetings_bot.greetings import format_scheduled_greeting
 from greetings_bot.clock import Clock
@@ -33,14 +33,33 @@ def is_quiet_time(user: User, current_time: datetime) -> bool:
 
 
 def due_users(users: Iterable[User], current_time: datetime) -> List[User]:
-    return [
-        user
-        for user in users
-        if user.enabled
-        and is_delivery_day(user, current_time)
-        and is_greeting_due(user, current_time)
-        and not is_quiet_time(user, current_time)
-    ]
+    return list(iter_due_users(users, current_time))
+
+
+def iter_due_users(
+    users: Iterable[User], current_time: datetime
+) -> Iterator[User]:
+    for user in users:
+        if not user.enabled:
+            continue
+        local_time = user_local_time(user, current_time)
+        local_minute = local_time.strftime("%H:%M")
+        local_day = local_time.strftime("%a").lower()
+        quiet = False
+        if user.quiet_start is not None and user.quiet_end is not None:
+            if user.quiet_start < user.quiet_end:
+                quiet = user.quiet_start <= local_minute < user.quiet_end
+            else:
+                quiet = (
+                    local_minute >= user.quiet_start
+                    or local_minute < user.quiet_end
+                )
+        if (
+            local_day in user.greeting_days
+            and user.greeting_time == local_minute
+            and not quiet
+        ):
+            yield user
 
 
 def build_greeting_replies(
@@ -73,6 +92,7 @@ class GreetingDispatcher:
         self.clock = clock
         self.deliveries = deliveries or InMemoryDeliveryLedger()
         self.max_batch = max_batch
+        self.dispatched_users: List[User] = []
 
     def dispatch(
         self, available_users: Optional[Iterable[User]] = None
@@ -81,11 +101,15 @@ class GreetingDispatcher:
         if available_users is None:
             available_users = self.users.all()
         users = []
-        for user in due_users(available_users, current_time):
-            if len(users) >= self.max_batch:
+        candidates = iter(iter_due_users(available_users, current_time))
+        while len(users) < self.max_batch:
+            try:
+                user = next(candidates)
+            except StopIteration:
                 break
             if self.deliveries.claim(greeting_delivery(user, current_time)):
                 users.append(user)
+        self.dispatched_users = users
         LOGGER.info("dispatching %d scheduled greetings", len(users))
         replies = build_greeting_replies(users, current_time)
         return replies

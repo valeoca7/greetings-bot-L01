@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from datetime import date, datetime, timezone
 
 from greetings_bot.clock import FixedClock
@@ -8,6 +9,7 @@ from greetings_bot.scheduler import (
     build_greeting_replies,
     due_users,
     greeting_delivery,
+    iter_due_users,
     is_greeting_due,
     is_quiet_time,
     is_delivery_day,
@@ -56,6 +58,18 @@ class GreetingScheduleTest(unittest.TestCase):
         late = User(telegram_id=2, chat_id=2, first_name="Sam", greeting_time="18:30")
 
         self.assertEqual([late], due_users([early, late], datetime(2022, 8, 3, 18, 30)))
+
+    def test_converts_each_profile_timezone_once_during_selection(self):
+        users = [User(index, index, "User", greeting_time="08:00") for index in range(4)]
+
+        with patch(
+            "greetings_bot.scheduler.user_local_time",
+            side_effect=lambda user, current: current,
+        ) as local_time:
+            selected = list(iter_due_users(users, datetime(2026, 5, 25, 8, 0)))
+
+        self.assertEqual(len(selected), 4)
+        self.assertEqual(local_time.call_count, 4)
 
     def test_matches_each_users_local_time(self):
         west = User(8, 8, "West", greeting_time="09:00", timezone="America/Vancouver")
@@ -172,6 +186,26 @@ class GreetingScheduleTest(unittest.TestCase):
         )
 
         self.assertEqual(len(dispatcher.dispatch()), 1)
+
+    def test_stops_reading_a_lazy_source_at_the_batch_limit(self):
+        visited = []
+
+        def profiles():
+            for index in range(1000):
+                visited.append(index)
+                yield User(index + 1, index + 1, "User", greeting_time="08:00")
+
+        dispatcher = GreetingDispatcher(
+            InMemoryUserRepository(),
+            FixedClock(datetime(2026, 5, 25, 8, 0)),
+            max_batch=5,
+        )
+
+        replies = dispatcher.dispatch(profiles())
+
+        self.assertEqual(len(replies), 5)
+        self.assertEqual(visited, [0, 1, 2, 3, 4])
+        self.assertEqual(len(dispatcher.dispatched_users), 5)
 
     def test_rejects_empty_batch_limit(self):
         with self.assertRaisesRegex(ValueError, "max_batch"):
