@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Optional, Sequence
+from typing import Dict, Iterable, Optional, Sequence
 
 from greetings_bot.users import User, user_from_dict, user_to_dict
 
@@ -52,3 +52,9 @@ class FileUserRepository:
 
     def all(self) -> Sequence[User]:
         return [self._users[user_id] for user_id in sorted(self._users)]
+
+    def iter_all(self, page_size: int = 100) -> Iterable[User]:
+        if page_size < 1:
+            raise ValueError("page size must be positive")
+        for user_id in sorted(self._users):
+            yield self._users[user_id]

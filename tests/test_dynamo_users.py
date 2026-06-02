@@ -14,6 +14,7 @@ class FakeTable:
     def __init__(self):
         self.items = {}
         self.pages = None
+        self.scan_requests = []
 
     def put_item(self, *, Item):
         self.items[(Item["pk"], Item["sk"])] = dict(Item)
@@ -24,6 +25,7 @@ class FakeTable:
         return {} if item is None else {"Item": item}
 
     def scan(self, **kwargs):
+        self.scan_requests.append(kwargs)
         if self.pages is not None:
             page = 0 if "ExclusiveStartKey" not in kwargs else 1
             result = {"Items": self.pages[page]}
@@ -125,6 +127,24 @@ class DynamoUserRepositoryTest(unittest.TestCase):
         users = DynamoUserRepository(table).all()
 
         self.assertEqual([user.telegram_id for user in users], [7, 42])
+
+    def test_iterates_bounded_scan_pages_lazily(self):
+        table = FakeTable()
+        table.pages = [
+            [user_item(User(1, 1, "One"))],
+            [user_item(User(2, 2, "Two"))],
+        ]
+        users = DynamoUserRepository(table).iter_all(page_size=25)
+
+        first = next(iter(users))
+
+        self.assertEqual(first.telegram_id, 1)
+        self.assertEqual(len(table.scan_requests), 1)
+        self.assertEqual(table.scan_requests[0]["Limit"], 25)
+
+    def test_rejects_an_unbounded_scan_page(self):
+        with self.assertRaises(ValueError):
+            list(DynamoUserRepository(FakeTable()).iter_all(page_size=501))
 
     def test_deletes_a_user_profile(self):
         users = DynamoUserRepository(FakeTable())

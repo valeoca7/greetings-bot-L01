@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Optional, Protocol, Sequence, Tuple
+from typing import Any, Dict, Iterable, Mapping, Optional, Protocol, Sequence, Tuple
 
 from greetings_bot.greeting_templates import TEMPLATE_CATEGORIES
 from greetings_bot.weather import WeatherLocation
@@ -128,6 +128,9 @@ class UserRepository(Protocol):
     def all(self) -> Sequence[User]:
         ...
 
+    def iter_all(self, page_size: int = 100) -> Iterable[User]:
+        ...
+
     def delete(self, telegram_id: int) -> bool:
         ...
 
@@ -147,6 +150,12 @@ class InMemoryUserRepository:
 
     def all(self) -> Sequence[User]:
         return [self._users[user_id] for user_id in sorted(self._users)]
+
+    def iter_all(self, page_size: int = 100) -> Iterable[User]:
+        if page_size < 1:
+            raise ValueError("page size must be positive")
+        for user_id in sorted(self._users):
+            yield self._users[user_id]
 
     def delete(self, telegram_id: int) -> bool:
         return self._users.pop(telegram_id, None) is not None

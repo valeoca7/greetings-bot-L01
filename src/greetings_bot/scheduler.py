@@ -99,7 +99,7 @@ class GreetingDispatcher:
     ) -> List[Reply]:
         current_time = self.clock.now()
         if available_users is None:
-            available_users = self.users.all()
+            available_users = self.users.iter_all()
         users = []
         candidates = iter(iter_due_users(available_users, current_time))
         while len(users) < self.max_batch:

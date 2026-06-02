@@ -1,4 +1,4 @@
-from typing import Dict, Mapping, Optional, Protocol, Sequence
+from typing import Dict, Iterable, Mapping, Optional, Protocol, Sequence
 
 from greetings_bot.users import User, user_from_dict, user_to_dict
 
@@ -61,21 +61,26 @@ class DynamoUserRepository:
         return user_from_item(item)
 
     def all(self) -> Sequence[User]:
-        items = []
+        return sorted(self.iter_all(), key=lambda user: user.telegram_id)
+
+    def iter_all(self, page_size: int = 100) -> Iterable[User]:
+        if not 1 <= page_size <= 500:
+            raise ValueError("page size must be between 1 and 500")
         scan_args = {}
         while True:
+            scan_args["Limit"] = page_size
             result = self.table.scan(**scan_args)
-            items.extend(result.get("Items", []))
+            users = [
+                user_from_item(item)
+                for item in result.get("Items", [])
+                if isinstance(item, dict) and item.get("entity") == "user"
+            ]
+            for user in sorted(users, key=lambda value: value.telegram_id):
+                yield user
             last_key = result.get("LastEvaluatedKey")
             if not isinstance(last_key, dict):
                 break
             scan_args["ExclusiveStartKey"] = last_key
-        users = [
-            user_from_item(item)
-            for item in items
-            if isinstance(item, dict) and item.get("entity") == "user"
-        ]
-        return sorted(users, key=lambda user: user.telegram_id)
 
     def count(self) -> int:
         return len(self.all())

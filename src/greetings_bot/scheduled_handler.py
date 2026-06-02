@@ -74,10 +74,13 @@ class ScheduledGreetingHandler:
             self.deliveries,
             self.max_batch,
         )
-        users = self.users.all()
+        users = self.users.iter_all()
         replies = dispatcher.dispatch(users)
         replies = add_weather_summaries(
-            replies, users, clock.now(), self.weather_provider
+            replies,
+            dispatcher.dispatched_users,
+            clock.now(),
+            self.weather_provider,
         )
         if self.include_reminders:
             replies.extend(
