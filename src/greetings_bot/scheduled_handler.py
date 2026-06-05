@@ -42,6 +42,7 @@ class ScheduledGreetingHandler:
         queue: Optional[DeliveryQueue] = None,
         weather_provider: Optional[WeatherProvider] = None,
         queue_high_watermark: int = 1000,
+        profile_page_size: int = 100,
     ) -> None:
         self.users = users
         self.deliveries = deliveries
@@ -53,6 +54,7 @@ class ScheduledGreetingHandler:
         self.queue = queue
         self.weather_provider = weather_provider
         self.queue_high_watermark = queue_high_watermark
+        self.profile_page_size = profile_page_size
 
     def handle(self, event: Mapping[str, Any]) -> ScheduledResponse:
         clock = FixedClock(event_time(event))
@@ -74,7 +76,7 @@ class ScheduledGreetingHandler:
             self.deliveries,
             self.max_batch,
         )
-        users = self.users.iter_all()
+        users = self.users.iter_all(self.profile_page_size)
         replies = dispatcher.dispatch(users)
         replies = add_weather_summaries(
             replies,
@@ -125,6 +127,7 @@ def build_default_handler(
             queue=queue,
             weather_provider=weather_provider,
             queue_high_watermark=throughput.queue_high_watermark,
+            profile_page_size=throughput.profile_page_size,
         )
     users = repository_for_table(table_name, dynamodb_resource)
     weather_provider = reliable_weather_provider(
@@ -142,6 +145,7 @@ def build_default_handler(
         queue,
         weather_provider,
         throughput.queue_high_watermark,
+        throughput.profile_page_size,
     )
 
 

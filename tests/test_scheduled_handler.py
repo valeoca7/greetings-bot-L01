@@ -150,6 +150,11 @@ class ScheduledGreetingHandlerTest(unittest.TestCase):
 
         self.assertEqual(handler.queue_high_watermark, 250)
 
+    def test_reads_profile_scan_page_size(self):
+        handler = build_default_handler({"PROFILE_SCAN_PAGE_SIZE": "75"})
+
+        self.assertEqual(handler.profile_page_size, 75)
+
     def test_disables_polled_reminders_for_targeted_delivery(self):
         handler = build_default_handler({"TARGETED_REMINDERS": "true"})
 
