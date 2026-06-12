@@ -83,6 +83,7 @@ class ScheduledGreetingHandler:
             dispatcher.dispatched_users,
             clock.now(),
             self.weather_provider,
+            dispatcher.local_times,
         )
         if self.include_reminders:
             replies.extend(

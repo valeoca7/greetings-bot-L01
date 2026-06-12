@@ -103,6 +103,30 @@ class WeatherSummaryTest(unittest.TestCase):
         self.assertEqual(replies, [Reply(84, "Good day, Mira!")])
         self.assertEqual(provider.calls, [])
 
+    def test_accepts_a_request_local_time_from_dispatch(self):
+        location = WeatherLocation("Tokyo", 35.7, 139.7)
+        user = User(
+            42,
+            84,
+            "Mira",
+            timezone="Asia/Tokyo",
+            weather_location=location,
+            weather_summary=True,
+            digest_mode="daily",
+        )
+        provider = FakeProvider()
+        selected_local_time = datetime(2024, 5, 9, 3, 0, tzinfo=timezone.utc)
+
+        add_weather_summaries(
+            [Reply(84, "Hello")],
+            [user],
+            datetime(2024, 5, 8, 18, 0, tzinfo=timezone.utc),
+            provider,
+            {42: selected_local_time},
+        )
+
+        self.assertEqual(provider.calls[0][1], date(2024, 5, 9))
+
 
 if __name__ == "__main__":
     unittest.main()

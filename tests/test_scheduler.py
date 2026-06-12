@@ -207,6 +207,32 @@ class GreetingScheduleTest(unittest.TestCase):
         self.assertEqual(visited, [0, 1, 2, 3, 4])
         self.assertEqual(len(dispatcher.dispatched_users), 5)
 
+    def test_reuses_selected_local_time_for_claim_and_rendering(self):
+        users = InMemoryUserRepository()
+        users.save(
+            User(
+                42,
+                84,
+                "Mira",
+                greeting_time="11:00",
+                timezone="America/Toronto",
+            )
+        )
+        dispatcher = GreetingDispatcher(
+            users,
+            FixedClock(datetime(2026, 6, 11, 15, 0, tzinfo=timezone.utc)),
+        )
+
+        with patch("greetings_bot.scheduler.user_local_time") as local_time:
+            local_time.return_value = datetime(
+                2026, 6, 11, 11, 0, tzinfo=timezone.utc
+            )
+            replies = dispatcher.dispatch()
+
+        self.assertEqual(len(replies), 1)
+        self.assertEqual(local_time.call_count, 1)
+        self.assertEqual(dispatcher.local_times[42].hour, 11)
+
     def test_rejects_empty_batch_limit(self):
         with self.assertRaisesRegex(ValueError, "max_batch"):
             GreetingDispatcher(

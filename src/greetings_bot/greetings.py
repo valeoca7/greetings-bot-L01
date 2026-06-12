@@ -28,12 +28,14 @@ def format_scheduled_greeting(
     current_time: Optional[datetime] = None,
     templates: Optional[GreetingTemplateCatalog] = None,
     renderer: Optional[GreetingTemplateRenderer] = None,
+    local_time: Optional[datetime] = None,
 ) -> str:
     catalog = templates if templates is not None else GreetingTemplateCatalog()
     template = catalog.get(user.greeting_template_category, user.locale)
     values = {"name": user.first_name}
-    if current_time is not None:
+    if local_time is None and current_time is not None:
         local_time = user_local_time(user, current_time)
+    if local_time is not None:
         values.update(
             weekday=local_time.strftime("%A"),
             date=local_time.date().isoformat(),

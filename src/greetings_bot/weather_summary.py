@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from greetings_bot.telegram import Reply
 from greetings_bot.observability import log_event
@@ -17,6 +17,7 @@ def add_weather_summaries(
     users: Iterable[User],
     current_time: datetime,
     provider: Optional[WeatherProvider],
+    local_times: Optional[Dict[int, datetime]] = None,
 ) -> List[Reply]:
     replies = list(replies)
     if provider is None:
@@ -33,7 +34,10 @@ def add_weather_summaries(
         ):
             result.append(reply)
             continue
-        forecast_date = user_local_time(user, current_time).date()
+        local_time = (local_times or {}).get(user.telegram_id)
+        if local_time is None:
+            local_time = user_local_time(user, current_time)
+        forecast_date = local_time.date()
         try:
             forecast = provider.daily_forecast(
                 user.weather_location, forecast_date

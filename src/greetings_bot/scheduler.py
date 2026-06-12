@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from typing import Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, Iterator, List, Optional
 
 from greetings_bot.greetings import format_scheduled_greeting
 from greetings_bot.clock import Clock
@@ -37,12 +37,16 @@ def due_users(users: Iterable[User], current_time: datetime) -> List[User]:
 
 
 def iter_due_users(
-    users: Iterable[User], current_time: datetime
+    users: Iterable[User],
+    current_time: datetime,
+    local_times: Optional[Dict[int, datetime]] = None,
 ) -> Iterator[User]:
     for user in users:
         if not user.enabled:
             continue
         local_time = user_local_time(user, current_time)
+        if local_times is not None:
+            local_times[user.telegram_id] = local_time
         local_minute = local_time.strftime("%H:%M")
         local_day = local_time.strftime("%a").lower()
         quiet = False
@@ -63,19 +67,30 @@ def iter_due_users(
 
 
 def build_greeting_replies(
-    users: Iterable[User], current_time: Optional[datetime] = None
+    users: Iterable[User],
+    current_time: Optional[datetime] = None,
+    local_times: Optional[Dict[int, datetime]] = None,
 ) -> List[Reply]:
     return [
         Reply(
             chat_id=user.chat_id,
-            text=format_scheduled_greeting(user, current_time),
+            text=format_scheduled_greeting(
+                user,
+                current_time,
+                local_time=(local_times or {}).get(user.telegram_id),
+            ),
         )
         for user in users
     ]
 
 
-def greeting_delivery(user: User, current_time: datetime) -> Delivery:
-    return Delivery(user.telegram_id, user_local_time(user, current_time).date())
+def greeting_delivery(
+    user: User,
+    current_time: datetime,
+    local_time: Optional[datetime] = None,
+) -> Delivery:
+    value = local_time or user_local_time(user, current_time)
+    return Delivery(user.telegram_id, value.date())
 
 
 class GreetingDispatcher:
@@ -93,6 +108,7 @@ class GreetingDispatcher:
         self.deliveries = deliveries or InMemoryDeliveryLedger()
         self.max_batch = max_batch
         self.dispatched_users: List[User] = []
+        self.local_times: Dict[int, datetime] = {}
 
     def dispatch(
         self, available_users: Optional[Iterable[User]] = None
@@ -101,15 +117,24 @@ class GreetingDispatcher:
         if available_users is None:
             available_users = self.users.iter_all()
         users = []
-        candidates = iter(iter_due_users(available_users, current_time))
+        self.local_times = {}
+        candidates = iter(
+            iter_due_users(available_users, current_time, self.local_times)
+        )
         while len(users) < self.max_batch:
             try:
                 user = next(candidates)
             except StopIteration:
                 break
-            if self.deliveries.claim(greeting_delivery(user, current_time)):
+            if self.deliveries.claim(
+                greeting_delivery(
+                    user,
+                    current_time,
+                    self.local_times.get(user.telegram_id),
+                )
+            ):
                 users.append(user)
         self.dispatched_users = users
         LOGGER.info("dispatching %d scheduled greetings", len(users))
-        replies = build_greeting_replies(users, current_time)
+        replies = build_greeting_replies(users, current_time, self.local_times)
         return replies
