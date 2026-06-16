@@ -146,6 +146,22 @@ class DynamoUserRepositoryTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             list(DynamoUserRepository(FakeTable()).iter_all(page_size=501))
 
+    def test_emits_page_and_item_counts_without_profile_values(self):
+        table = FakeTable()
+        table.items[("USER#42", "PROFILE")] = user_item(
+            User(42, 84, "Private Name")
+        )
+
+        with self.assertLogs("greetings_bot.dynamo_users", level="INFO") as logs:
+            users = list(DynamoUserRepository(table).iter_all())
+
+        self.assertEqual(len(users), 1)
+        output = " ".join(logs.output)
+        self.assertIn('"ScanPages":1', output)
+        self.assertIn('"ItemsRead":1', output)
+        self.assertIn('"ProfilesLoaded":1', output)
+        self.assertNotIn("Private Name", output)
+
     def test_deletes_a_user_profile(self):
         users = DynamoUserRepository(FakeTable())
         users.save(User(42, 84, "Mira"))

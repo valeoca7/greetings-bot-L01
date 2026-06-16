@@ -1,6 +1,11 @@
+import logging
 from typing import Dict, Iterable, Mapping, Optional, Protocol, Sequence
 
+from greetings_bot.observability import emit_metric
 from greetings_bot.users import User, user_from_dict, user_to_dict
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class DynamoTable(Protocol):
@@ -70,11 +75,19 @@ class DynamoUserRepository:
         while True:
             scan_args["Limit"] = page_size
             result = self.table.scan(**scan_args)
+            raw_items = result.get("Items", [])
             users = [
                 user_from_item(item)
-                for item in result.get("Items", [])
+                for item in raw_items
                 if isinstance(item, dict) and item.get("entity") == "user"
             ]
+            emit_metric(LOGGER, "profile_repository", "ScanPages")
+            emit_metric(
+                LOGGER, "profile_repository", "ItemsRead", len(raw_items)
+            )
+            emit_metric(
+                LOGGER, "profile_repository", "ProfilesLoaded", len(users)
+            )
             for user in sorted(users, key=lambda value: value.telegram_id):
                 yield user
             last_key = result.get("LastEvaluatedKey")
