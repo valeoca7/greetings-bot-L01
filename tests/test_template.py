@@ -174,6 +174,8 @@ class SamTemplateTest(unittest.TestCase):
             self.template,
         )
         self.assertIn("- sqs:GetQueueAttributes", self.template)
+        self.assertIn("ProfileScanPageSize:", self.template)
+        self.assertIn("PROFILE_SCAN_PAGE_SIZE: !Ref ProfileScanPageSize", self.template)
 
     def test_bounds_daily_usage_warning_levels(self):
         for parameter, variable in (

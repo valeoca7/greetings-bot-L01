@@ -264,6 +264,7 @@ def render_config(version: str, config: DashboardConfig) -> str:
         <dt>Delivery administration</dt><dd>{delivery}</dd>
         <dt>Dispatch batch limit</dt><dd>{dispatch_batch_size} messages</dd>
         <dt>Queue high watermark</dt><dd>{queue_high_watermark} messages</dd>
+        <dt>Profile scan page</dt><dd>{profile_page_size} items</dd>
         <dt>Daily usage warnings</dt><dd>{usage_budgets}</dd>
         <dt>Delivery history retention</dt><dd>{history_days} days</dd>
         <dt>Receipt retention</dt><dd>{receipt_days} days</dd>
@@ -283,6 +284,7 @@ def render_config(version: str, config: DashboardConfig) -> str:
         delivery="Available" if config.delivery_admin_configured else "Unavailable",
         dispatch_batch_size=config.dispatch_batch_size,
         queue_high_watermark=config.queue_high_watermark,
+        profile_page_size=config.profile_page_size,
         usage_budgets=escape(usage_budgets),
         history_days=config.delivery_history_days,
         receipt_days=config.delivery_receipt_days,

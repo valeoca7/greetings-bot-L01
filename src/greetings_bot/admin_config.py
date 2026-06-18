@@ -39,6 +39,7 @@ class DashboardConfig:
     )
     dispatch_batch_size: int = 100
     queue_high_watermark: int = 1000
+    profile_page_size: int = 100
     usage_budgets: Tuple[Tuple[str, int], ...] = (
         ("weather_calls", 500),
         ("information_requests", 100),
@@ -87,5 +88,6 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         feature_flags.public_snapshot(),
         throughput.dispatch_batch_size,
         throughput.queue_high_watermark,
+        throughput.profile_page_size,
         usage_budgets.public_snapshot(),
     )

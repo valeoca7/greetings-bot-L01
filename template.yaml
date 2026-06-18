@@ -50,6 +50,11 @@ Parameters:
     Default: 1000
     MinValue: 10
     MaxValue: 10000
+  ProfileScanPageSize:
+    Type: Number
+    Default: 100
+    MinValue: 10
+    MaxValue: 500
   WeatherDailyBudget:
     Type: Number
     Default: 500
@@ -194,6 +199,7 @@ Resources:
           DELIVERY_DLQ_ARN: !GetAtt DeliveryDeadLetterQueue.Arn
           DISPATCH_BATCH_SIZE: '100'
           DELIVERY_QUEUE_HIGH_WATERMARK: !Ref DeliveryQueueHighWatermark
+          PROFILE_SCAN_PAGE_SIZE: !Ref ProfileScanPageSize
           WEATHER_DAILY_BUDGET: !Ref WeatherDailyBudget
           INFORMATION_DAILY_BUDGET: !Ref InformationDailyBudget
           QUEUE_DAILY_BUDGET: !Ref QueueDailyBudget
@@ -344,6 +350,7 @@ Resources:
           USER_TABLE_NAME: !Ref DataTable
           DISPATCH_BATCH_SIZE: '100'
           DELIVERY_QUEUE_HIGH_WATERMARK: !Ref DeliveryQueueHighWatermark
+          PROFILE_SCAN_PAGE_SIZE: !Ref ProfileScanPageSize
           WEATHER_DAILY_BUDGET: !Ref WeatherDailyBudget
           QUEUE_DAILY_BUDGET: !Ref QueueDailyBudget
           TARGETED_REMINDERS: 'true'

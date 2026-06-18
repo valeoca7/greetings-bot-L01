@@ -145,6 +145,7 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn("14 days", page)
         self.assertIn("100 messages", page)
         self.assertIn("1000 messages", page)
+        self.assertIn("100 items", page)
         self.assertIn("weather_calls=500", page)
         self.assertIn("queued_messages=5000", page)
         self.assertIn("friendly, brief, cheerful", page)
