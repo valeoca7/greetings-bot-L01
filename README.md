@@ -142,6 +142,12 @@ and backpressure metrics. `DISPATCH_BATCH_SIZE` and
 `DELIVERY_QUEUE_HIGH_WATERMARK` set bounded runtime limits. Prepared messages are
 written to SQS in batches of at most ten.
 
+Cloud profile scans are consumed lazily in bounded pages and stop when the dispatch
+batch has enough successful claims. `PROFILE_SCAN_PAGE_SIZE` defaults to 100 and is
+bounded from 10 to 500. Page, item-read, and loaded-profile metrics contain counts
+only. Each profile's local timestamp is reused during one dispatch, while rendered
+message text is never cached.
+
 Notes are stored beside the owner's profile under `NOTE#<id>` sort keys. Lookups and
 deletes always include the Telegram user ID, and note listings query only that user
 partition.
