@@ -29,6 +29,9 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('<meta name="viewport"', page)
         self.assertIn("<nav", page)
         self.assertIn("<main", page)
+        self.assertIn('href="#main-content"', page)
+        self.assertIn('id="main-content"', page)
+        self.assertIn(":focus-visible", page)
         self.assertIn("Version 0.30.0", page)
         self.assertNotIn("<script", page)
 

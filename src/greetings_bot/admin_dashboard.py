@@ -59,7 +59,7 @@ def _render_layout(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{escape(title)}</title>
   <style>
-    :root {{ color-scheme: light; --ink: #17202a; --muted: #607080;
+    :root {{ color-scheme: light; --ink: #17202a; --muted: #52616b;
       --panel: #ffffff; --line: #dce3e8; --accent: #176b61; }}
     * {{ box-sizing: border-box; }}
     body {{ margin: 0; color: var(--ink); background: #f3f6f7;
@@ -68,6 +68,12 @@ def _render_layout(
     header strong {{ font-size: 1.15rem; }}
     nav {{ display: flex; gap: 1rem; margin-top: .65rem; flex-wrap: wrap; }}
     nav a {{ color: #d7f5ef; text-underline-offset: .2rem; }}
+    a:focus-visible, input:focus-visible, select:focus-visible,
+    button:focus-visible {{ outline: 3px solid #f5b700; outline-offset: 3px; }}
+    .skip-link {{ position: absolute; top: .5rem; left: .5rem; z-index: 2;
+      padding: .65rem .8rem; color: var(--ink); background: white;
+      transform: translateY(-160%); }}
+    .skip-link:focus {{ transform: translateY(0); }}
     main {{ width: min(72rem, 100%); margin: 0 auto; padding: 2rem 1.5rem; }}
     .intro {{ display: flex; justify-content: space-between; gap: 1rem;
       align-items: end; border-bottom: 1px solid var(--line); }}
@@ -90,10 +96,16 @@ def _render_layout(
     button {{ color: white; background: var(--accent); cursor: pointer; }}
     footer {{ width: min(72rem, 100%); margin: 0 auto; padding: 0 1.5rem 2rem;
       color: var(--muted); font-size: .9rem; }}
-    @media (max-width: 38rem) {{ .intro {{ display: block; }} }}
+    @media (max-width: 38rem) {{
+      main {{ padding: 1.25rem .8rem; }}
+      .intro {{ display: block; }}
+      .details {{ grid-template-columns: 1fr; gap: .15rem; }}
+      .details dd {{ margin-bottom: .75rem; }}
+    }}
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header>
     <strong>Greetings Bot</strong>
     <nav aria-label="Admin navigation">
@@ -104,7 +116,7 @@ def _render_layout(
       <a href="/admin/dashboard/audit">Audit</a>
     </nav>
   </header>
-  <main>
+  <main id="main-content" tabindex="-1">
     <section class="intro">
       <div><h1>{escape(heading)}</h1><p class="muted">{escape(subtitle)}</p></div>
       <p class="muted">Version {escape(version)}</p>
