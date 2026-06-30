@@ -91,6 +91,11 @@ def _render_layout(
     .details dd {{ margin: 0; }}
     table {{ width: 100%; border-collapse: collapse; }}
     th, td {{ padding: .7rem; text-align: left; border-bottom: 1px solid var(--line); }}
+    .table-region {{ overflow-x: auto; }}
+    .table-region:focus-visible {{ outline: 3px solid #f5b700; outline-offset: 3px; }}
+    .visually-hidden {{ position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0);
+      white-space: nowrap; border: 0; }}
     input, select, button {{ min-height: 2.6rem; padding: .45rem .6rem;
       font: inherit; border: 1px solid #9aa9b2; border-radius: .35rem; }}
     button {{ color: white; background: var(--accent); cursor: pointer; }}
@@ -171,9 +176,12 @@ def render_user_list(
       </form>
     </section>
     <section class="panel">
-      <div role="region" aria-label="User results" tabindex="0">
+      <div class="table-region" role="region" aria-label="User results" tabindex="0">
         <table>
-          <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Timezone</th><th>Greeting</th></tr></thead>
+          <caption class="visually-hidden">Matching users</caption>
+          <thead><tr><th scope="col">ID</th><th scope="col">Name</th>
+          <th scope="col">Status</th><th scope="col">Timezone</th>
+          <th scope="col">Greeting</th></tr></thead>
           <tbody>{rows}</tbody>
         </table>
       </div>
@@ -344,9 +352,12 @@ def render_audit(version: str, page: AuditPage, query: AuditQuery) -> str:
         )
     content = """<section class="panel">
       <p>Privacy-safe configuration and administration history.</p>
-      <table><thead><tr><th>Time</th><th>Category</th><th>Action</th>
-      <th>Source</th><th>Request</th><th>Changed keys</th></tr></thead>
-      <tbody>{rows}</tbody></table>{next_link}
+      <div class="table-region" role="region" aria-label="Audit results" tabindex="0">
+      <table><caption class="visually-hidden">Audit results</caption>
+      <thead><tr><th scope="col">Time</th><th scope="col">Category</th>
+      <th scope="col">Action</th><th scope="col">Source</th>
+      <th scope="col">Request</th><th scope="col">Changed keys</th></tr></thead>
+      <tbody>{rows}</tbody></table></div>{next_link}
     </section>""".format(rows=rows, next_link=next_link)
     return _render_layout(
         "Audit · Greetings Bot Admin",

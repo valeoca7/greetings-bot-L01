@@ -91,6 +91,9 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('<option value="active" selected>', page)
         self.assertIn("cursor=next-page-token", page)
         self.assertIn('/admin/dashboard/users/42', page)
+        self.assertIn('<caption class="visually-hidden">Matching users</caption>', page)
+        self.assertIn('<th scope="col">ID</th>', page)
+        self.assertIn('class="table-region"', page)
         self.assertNotIn("chat_id", page)
 
     def test_renders_escaped_user_preference_details(self):
@@ -190,6 +193,8 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertNotIn("flags_<loaded>", page)
         self.assertIn("greeting_previews", page)
         self.assertIn("cursor=next-token", page)
+        self.assertIn('aria-label="Audit results"', page)
+        self.assertIn('<th scope="col">Time</th>', page)
 
     def test_escapes_delivery_action_feedback(self):
         page = render_delivery(
