@@ -99,6 +99,9 @@ def _render_layout(
     input, select, button {{ min-height: 2.6rem; padding: .45rem .6rem;
       font: inherit; border: 1px solid #9aa9b2; border-radius: .35rem; }}
     button {{ color: white; background: var(--accent); cursor: pointer; }}
+    .filters {{ display: flex; flex-wrap: wrap; gap: .8rem; align-items: end; }}
+    .filters label {{ display: grid; gap: .25rem; }}
+    fieldset {{ min-width: 0; margin: .8rem 0; padding: 0; border: 0; }}
     footer {{ width: min(72rem, 100%); margin: 0 auto; padding: 0 1.5rem 2rem;
       color: var(--muted); font-size: .9rem; }}
     @media (max-width: 38rem) {{
@@ -106,6 +109,8 @@ def _render_layout(
       .intro {{ display: block; }}
       .details {{ grid-template-columns: 1fr; gap: .15rem; }}
       .details dd {{ margin-bottom: .75rem; }}
+      .filters, .filters label, .filters input, .filters select,
+      .filters button {{ width: 100%; }}
     }}
   </style>
 </head>
@@ -168,10 +173,14 @@ def render_user_list(
         for status in ("all", "active", "disabled")
     )
     content = f"""<section class="panel">
-      <form method="get" action="/admin/dashboard/users">
-        <label>Search <input name="q" value="{escape(query.term)}" maxlength="50"></label>
-        <label>Status <select name="status">{options}</select></label>
-        <label>Rows <input name="limit" type="number" min="1" max="50" value="{query.limit}"></label>
+      <form class="filters" method="get" action="/admin/dashboard/users"
+        aria-label="Filter users">
+        <label for="user-search">Search</label>
+        <input id="user-search" name="q" value="{escape(query.term)}" maxlength="50">
+        <label for="user-status">Status</label>
+        <select id="user-status" name="status">{options}</select>
+        <label for="user-limit">Rows</label>
+        <input id="user-limit" name="limit" type="number" min="1" max="50" value="{query.limit}">
         <button type="submit">Apply</button>
       </form>
     </section>
@@ -374,7 +383,7 @@ def render_delivery(
     feedback: Optional[str] = None,
 ) -> str:
     notice = (
-        '<p role="status">{}</p>'.format(escape(feedback))
+        '<p role="status" aria-live="polite">{}</p>'.format(escape(feedback))
         if feedback
         else ""
     )
@@ -389,10 +398,15 @@ def render_delivery(
     <section class="panel" aria-labelledby="redrive-heading">
       <h2 id="redrive-heading">Redrive failed deliveries</h2>
       {notice}
-      <form method="post" action="/admin/dashboard/delivery/redrive">
-        <label>Rate <input name="rate" type="number" min="1" max="500" value="25" required></label>
+      <p id="redrive-help">Moves failed messages back to the delivery queue at a bounded rate.</p>
+      <form method="post" action="/admin/dashboard/delivery/redrive"
+        aria-describedby="redrive-help">
+        <label for="redrive-rate">Messages per second</label>
+        <input id="redrive-rate" name="rate" type="number" min="1" max="500"
+          value="25" required>
+        <fieldset><legend class="visually-hidden">Redrive confirmation</legend>
         <label><input name="confirm" type="checkbox"
-          value="redrive_failed_deliveries" required> Confirm redrive</label>
+          value="redrive_failed_deliveries" required> Confirm redrive</label></fieldset>
         <button type="submit">Start redrive</button>
       </form>
     </section>"""

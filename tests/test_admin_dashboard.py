@@ -88,6 +88,8 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn("Mira &lt;Admin&gt;", page)
         self.assertNotIn("Mira <Admin>", page)
         self.assertIn('value="Mira"', page)
+        self.assertIn('for="user-search"', page)
+        self.assertIn('aria-label="Filter users"', page)
         self.assertIn('<option value="active" selected>', page)
         self.assertIn("cursor=next-page-token", page)
         self.assertIn('/admin/dashboard/users/42', page)
@@ -170,6 +172,8 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('name="confirm"', page)
         self.assertIn('name="rate"', page)
         self.assertIn('max="500"', page)
+        self.assertIn('for="redrive-rate"', page)
+        self.assertIn('aria-describedby="redrive-help"', page)
 
     def test_renders_escaped_audit_history_and_next_page(self):
         record = AuditRecord(
@@ -204,6 +208,7 @@ class AdminDashboardTest(unittest.TestCase):
         )
 
         self.assertIn("Task &lt;started&gt;", page)
+        self.assertIn('role="status" aria-live="polite"', page)
         self.assertNotIn("Task <started>", page)
 
 
