@@ -52,6 +52,26 @@ def render_dashboard(
 def _render_layout(
     title: str, heading: str, subtitle: str, version: str, content: str
 ) -> str:
+    if title.startswith(("Users", "User")):
+        current_path = "/admin/dashboard/users"
+    elif title.startswith("Delivery"):
+        current_path = "/admin/dashboard/delivery"
+    elif title.startswith("Configuration"):
+        current_path = "/admin/dashboard/config"
+    elif title.startswith("Audit"):
+        current_path = "/admin/dashboard/audit"
+    else:
+        current_path = "/admin/dashboard"
+    navigation = "\n      ".join(
+        _navigation_link(label, path, current_path)
+        for label, path in (
+            ("Overview", "/admin/dashboard"),
+            ("Users", "/admin/dashboard/users"),
+            ("Delivery", "/admin/dashboard/delivery"),
+            ("Configuration", "/admin/dashboard/config"),
+            ("Audit", "/admin/dashboard/audit"),
+        )
+    )
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -119,11 +139,7 @@ def _render_layout(
   <header>
     <strong>Greetings Bot</strong>
     <nav aria-label="Admin navigation">
-      <a href="/admin/dashboard">Overview</a>
-      <a href="/admin/dashboard/users">Users</a>
-      <a href="/admin/dashboard/delivery">Delivery</a>
-      <a href="/admin/dashboard/config">Configuration</a>
-      <a href="/admin/dashboard/audit">Audit</a>
+      {navigation}
     </nav>
   </header>
   <main id="main-content" tabindex="-1">
@@ -136,6 +152,11 @@ def _render_layout(
   <footer>Protected administration surface</footer>
 </body>
 </html>"""
+
+
+def _navigation_link(label: str, path: str, current_path: str) -> str:
+    current = ' aria-current="page"' if path == current_path else ""
+    return '<a href="{}"{}>{}</a>'.format(path, current, label)
 
 
 def _delivery_cards(snapshot: DashboardSnapshot) -> str:

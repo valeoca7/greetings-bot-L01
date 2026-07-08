@@ -32,6 +32,9 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('href="#main-content"', page)
         self.assertIn('id="main-content"', page)
         self.assertIn(":focus-visible", page)
+        self.assertIn(
+            '<a href="/admin/dashboard" aria-current="page">Overview</a>', page
+        )
         self.assertIn("Version 0.30.0", page)
         self.assertNotIn("<script", page)
 
@@ -96,6 +99,9 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('<caption class="visually-hidden">Matching users</caption>', page)
         self.assertIn('<th scope="col">ID</th>', page)
         self.assertIn('class="table-region"', page)
+        self.assertIn(
+            '<a href="/admin/dashboard/users" aria-current="page">Users</a>', page
+        )
         self.assertNotIn("chat_id", page)
 
     def test_renders_escaped_user_preference_details(self):
@@ -174,6 +180,10 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('max="500"', page)
         self.assertIn('for="redrive-rate"', page)
         self.assertIn('aria-describedby="redrive-help"', page)
+        self.assertIn(
+            '<a href="/admin/dashboard/delivery" aria-current="page">Delivery</a>',
+            page,
+        )
 
     def test_renders_escaped_audit_history_and_next_page(self):
         record = AuditRecord(
