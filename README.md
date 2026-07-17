@@ -311,6 +311,11 @@ delivery queue counts when SQS is available. The page uses no JavaScript or exte
 frontend assets. Responses disable caching, framing, referrers, and content sniffing,
 and apply a restrictive content security policy.
 
+Every dashboard page provides a keyboard skip link, visible focus, a single main
+landmark, and current-page navigation. Forms use associated labels and recovery
+feedback is announced as status text. Wide user and audit tables remain keyboard
+focusable and horizontally scrollable on small screens with scoped column headers.
+
 The dashboard links to searchable user and preference pages, a safe configuration
 snapshot, and delivery operations. Configuration output is limited to feature states,
 model names, and numeric limits; tokens, queue URLs, ARNs, and weather coordinates are
