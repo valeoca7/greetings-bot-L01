@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Mapping
 
+from greetings_bot.config_values import integer_value
+
 
 @dataclass(frozen=True)
 class ThroughputPolicy:
@@ -18,11 +20,10 @@ class ThroughputPolicy:
 
 
 def throughput_from_env(environ: Mapping[str, str]) -> ThroughputPolicy:
-    try:
-        return ThroughputPolicy(
-            int(environ.get("DISPATCH_BATCH_SIZE", "100")),
-            int(environ.get("DELIVERY_QUEUE_HIGH_WATERMARK", "1000")),
-            int(environ.get("PROFILE_SCAN_PAGE_SIZE", "100")),
-        )
-    except ValueError as error:
-        raise ValueError("invalid throughput configuration") from error
+    return ThroughputPolicy(
+        integer_value(environ, "DISPATCH_BATCH_SIZE", 100, 1, 500),
+        integer_value(
+            environ, "DELIVERY_QUEUE_HIGH_WATERMARK", 1000, 10, 10000
+        ),
+        integer_value(environ, "PROFILE_SCAN_PAGE_SIZE", 100, 10, 500),
+    )

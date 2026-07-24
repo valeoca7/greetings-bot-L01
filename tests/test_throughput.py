@@ -19,15 +19,21 @@ class ThroughputPolicyTest(unittest.TestCase):
         self.assertEqual(policy, ThroughputPolicy(40, 600, 75))
 
     def test_rejects_invalid_limits(self):
-        for environ in (
-            {"DISPATCH_BATCH_SIZE": "0"},
-            {"DISPATCH_BATCH_SIZE": "501"},
-            {"DELIVERY_QUEUE_HIGH_WATERMARK": "9"},
-            {"DELIVERY_QUEUE_HIGH_WATERMARK": "many"},
-            {"PROFILE_SCAN_PAGE_SIZE": "9"},
+        for environ, setting in (
+            ({"DISPATCH_BATCH_SIZE": "0"}, "DISPATCH_BATCH_SIZE"),
+            ({"DISPATCH_BATCH_SIZE": "501"}, "DISPATCH_BATCH_SIZE"),
+            (
+                {"DELIVERY_QUEUE_HIGH_WATERMARK": "9"},
+                "DELIVERY_QUEUE_HIGH_WATERMARK",
+            ),
+            (
+                {"DELIVERY_QUEUE_HIGH_WATERMARK": "many"},
+                "DELIVERY_QUEUE_HIGH_WATERMARK",
+            ),
+            ({"PROFILE_SCAN_PAGE_SIZE": "9"}, "PROFILE_SCAN_PAGE_SIZE"),
         ):
             with self.subTest(environ=environ):
-                with self.assertRaisesRegex(ValueError, "throughput"):
+                with self.assertRaisesRegex(ValueError, setting):
                     throughput_from_env(environ)
 
 
