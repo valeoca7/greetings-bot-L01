@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Dict, Mapping, Tuple
 
+from greetings_bot.config_values import integer_value
 from greetings_bot.observability import emit_metric
 
 
@@ -40,14 +41,11 @@ class UsageBudgets:
 
 
 def usage_budgets_from_env(environ: Mapping[str, str]) -> UsageBudgets:
-    try:
-        return UsageBudgets(
-            int(environ.get("WEATHER_DAILY_BUDGET", "500")),
-            int(environ.get("INFORMATION_DAILY_BUDGET", "100")),
-            int(environ.get("QUEUE_DAILY_BUDGET", "5000")),
-        )
-    except ValueError as error:
-        raise ValueError("invalid usage budget configuration") from error
+    return UsageBudgets(
+        integer_value(environ, "WEATHER_DAILY_BUDGET", 500, 1, 1000000),
+        integer_value(environ, "INFORMATION_DAILY_BUDGET", 100, 1, 1000000),
+        integer_value(environ, "QUEUE_DAILY_BUDGET", 5000, 1, 1000000),
+    )
 
 
 def usage_meter_from_env(environ: Mapping[str, str]) -> "UsageMeter":

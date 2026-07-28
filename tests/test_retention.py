@@ -18,13 +18,13 @@ class RetentionPolicyTest(unittest.TestCase):
         self.assertEqual(policy, RetentionPolicy(120, 7))
 
     def test_rejects_unbounded_retention(self):
-        for environ in (
-            {"DELIVERY_HISTORY_DAYS": "1000"},
-            {"DELIVERY_RECEIPT_DAYS": "0"},
-            {"DELIVERY_HISTORY_DAYS": "forever"},
+        for environ, setting in (
+            ({"DELIVERY_HISTORY_DAYS": "1000"}, "DELIVERY_HISTORY_DAYS"),
+            ({"DELIVERY_RECEIPT_DAYS": "0"}, "DELIVERY_RECEIPT_DAYS"),
+            ({"DELIVERY_HISTORY_DAYS": "forever"}, "DELIVERY_HISTORY_DAYS"),
         ):
             with self.subTest(environ=environ):
-                with self.assertRaises(ValueError):
+                with self.assertRaisesRegex(ValueError, setting):
                     retention_from_env(environ)
 
 

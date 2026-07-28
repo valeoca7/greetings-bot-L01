@@ -32,13 +32,13 @@ class UsageBudgetsTest(unittest.TestCase):
         self.assertEqual(budgets, UsageBudgets(25, 12, 300))
 
     def test_rejects_invalid_budgets(self):
-        for environ in (
-            {"WEATHER_DAILY_BUDGET": "0"},
-            {"INFORMATION_DAILY_BUDGET": "many"},
-            {"QUEUE_DAILY_BUDGET": "1000001"},
+        for environ, setting in (
+            ({"WEATHER_DAILY_BUDGET": "0"}, "WEATHER_DAILY_BUDGET"),
+            ({"INFORMATION_DAILY_BUDGET": "many"}, "INFORMATION_DAILY_BUDGET"),
+            ({"QUEUE_DAILY_BUDGET": "1000001"}, "QUEUE_DAILY_BUDGET"),
         ):
             with self.subTest(environ=environ):
-                with self.assertRaisesRegex(ValueError, "usage budget"):
+                with self.assertRaisesRegex(ValueError, setting):
                     usage_budgets_from_env(environ)
 
     def test_builds_a_meter_with_configured_budgets(self):

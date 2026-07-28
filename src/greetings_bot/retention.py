@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Mapping
 
+from greetings_bot.config_values import integer_value
+
 
 @dataclass(frozen=True)
 class RetentionPolicy:
@@ -15,10 +17,7 @@ class RetentionPolicy:
 
 
 def retention_from_env(environ: Mapping[str, str]) -> RetentionPolicy:
-    try:
-        return RetentionPolicy(
-            int(environ.get("DELIVERY_HISTORY_DAYS", "90")),
-            int(environ.get("DELIVERY_RECEIPT_DAYS", "14")),
-        )
-    except ValueError as error:
-        raise ValueError("invalid data retention configuration") from error
+    return RetentionPolicy(
+        integer_value(environ, "DELIVERY_HISTORY_DAYS", 90, 7, 365),
+        integer_value(environ, "DELIVERY_RECEIPT_DAYS", 14, 1, 30),
+    )
