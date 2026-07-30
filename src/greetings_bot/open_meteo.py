@@ -8,6 +8,7 @@ from greetings_bot.weather import (
     WeatherProviderError,
 )
 from greetings_bot.weather_client import JsonHttpClient
+from greetings_bot.weather_config import weather_timeout_from_env
 
 
 FORECAST_ENDPOINT = "https://api.open-meteo.com/v1/forecast"
@@ -93,10 +94,7 @@ def weather_provider_from_env(
     environ: Mapping[str, str] = os.environ,
     opener: Optional[Callable] = None,
 ) -> OpenMeteoWeatherProvider:
-    try:
-        timeout = int(environ.get("WEATHER_TIMEOUT_SECONDS", "5"))
-    except ValueError:
-        raise ValueError("weather timeout must be an integer")
+    timeout = weather_timeout_from_env(environ)
     client = JsonHttpClient(timeout=timeout)
     if opener is not None:
         client = JsonHttpClient(opener, timeout)

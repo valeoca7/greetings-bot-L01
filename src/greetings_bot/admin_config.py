@@ -15,6 +15,7 @@ from greetings_bot.messages import MessageCatalog
 from greetings_bot.retention import retention_from_env
 from greetings_bot.throughput import throughput_from_env
 from greetings_bot.usage import usage_budgets_from_env
+from greetings_bot.weather_config import weather_settings_from_env
 
 
 @dataclass(frozen=True)
@@ -53,14 +54,7 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
     model = environ.get("BEDROCK_MODEL_ID", DEFAULT_BEDROCK_MODEL_ID).strip()
     if not model:
         raise ValueError("BEDROCK_MODEL_ID must not be blank")
-    try:
-        weather_max_calls = int(environ.get("WEATHER_MAX_CALLS", "20"))
-        weather_cache_minutes = int(environ.get("WEATHER_CACHE_MINUTES", "60"))
-        weather_stale_hours = int(environ.get("WEATHER_STALE_HOURS", "24"))
-    except ValueError as error:
-        raise ValueError("weather settings must be integers") from error
-    if min(weather_max_calls, weather_cache_minutes, weather_stale_hours) < 1:
-        raise ValueError("weather settings must be positive")
+    weather = weather_settings_from_env(environ)
     queue_names = (
         "DELIVERY_QUEUE_URL",
         "DELIVERY_DLQ_URL",
@@ -75,9 +69,9 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         information_requests_enabled(environ),
         information_weekly_limit(environ),
         model,
-        weather_max_calls,
-        weather_cache_minutes,
-        weather_stale_hours,
+        weather.max_calls,
+        weather.cache_minutes,
+        weather.stale_hours,
         delivery_configured,
         retention.delivery_days,
         retention.receipt_days,

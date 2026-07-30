@@ -13,6 +13,7 @@ from greetings_bot.weather_cache import (
 )
 from greetings_bot.weather_limits import RateLimitedWeatherProvider
 from greetings_bot.usage import UsageMeter
+from greetings_bot.weather_config import weather_settings_from_env
 
 
 def reliable_weather_provider(
@@ -22,15 +23,10 @@ def reliable_weather_provider(
     opener: Optional[Callable] = None,
     usage_meter: Optional[UsageMeter] = None,
 ) -> CachingWeatherProvider:
-    try:
-        max_calls = int(environ.get("WEATHER_MAX_CALLS", "20"))
-        cache_minutes = int(environ.get("WEATHER_CACHE_MINUTES", "60"))
-        stale_hours = int(environ.get("WEATHER_STALE_HOURS", "24"))
-    except ValueError as error:
-        raise ValueError("weather reliability settings must be integers") from error
+    settings = weather_settings_from_env(environ)
     runtime_clock = clock or SystemClock()
     upstream = RateLimitedWeatherProvider(
-        weather_provider_from_env(environ, opener), max_calls, runtime_clock
+        weather_provider_from_env(environ, opener), settings.max_calls, runtime_clock
     )
     cache: WeatherCache = (
         DynamoWeatherCache(table) if table is not None else InMemoryWeatherCache()
@@ -39,7 +35,7 @@ def reliable_weather_provider(
         upstream,
         cache,
         runtime_clock,
-        timedelta(minutes=cache_minutes),
-        timedelta(hours=stale_hours),
+        timedelta(minutes=settings.cache_minutes),
+        timedelta(hours=settings.stale_hours),
         usage_meter,
     )
