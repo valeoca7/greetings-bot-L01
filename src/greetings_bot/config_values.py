@@ -5,6 +5,15 @@ class ConfigurationError(ValueError):
     pass
 
 
+def nonblank_value(
+    environ: Mapping[str, str], name: str, default: Optional[str] = None
+) -> str:
+    raw = environ.get(name, default)
+    if raw is None or not raw.strip():
+        raise ConfigurationError("{} must not be blank".format(name))
+    return raw.strip()
+
+
 def integer_value(
     environ: Mapping[str, str],
     name: str,

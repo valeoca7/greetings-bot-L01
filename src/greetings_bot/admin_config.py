@@ -7,7 +7,7 @@ from greetings_bot.greeting_templates import (
 )
 from greetings_bot.feature_flags import feature_flags_from_env
 from greetings_bot.information_runtime import (
-    DEFAULT_BEDROCK_MODEL_ID,
+    bedrock_model_id,
     information_requests_enabled,
     information_weekly_limit,
 )
@@ -51,9 +51,7 @@ class DashboardConfig:
 def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
     messages = MessageCatalog()
     feature_flags = feature_flags_from_env(environ)
-    model = environ.get("BEDROCK_MODEL_ID", DEFAULT_BEDROCK_MODEL_ID).strip()
-    if not model:
-        raise ValueError("BEDROCK_MODEL_ID must not be blank")
+    model = bedrock_model_id(environ)
     weather = weather_settings_from_env(environ)
     queue_names = (
         "DELIVERY_QUEUE_URL",

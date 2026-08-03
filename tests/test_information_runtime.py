@@ -3,6 +3,7 @@ import unittest
 from greetings_bot.bedrock_information import BedrockInformationProvider
 from greetings_bot.information_runtime import (
     DEFAULT_BEDROCK_MODEL_ID,
+    bedrock_model_id,
     bedrock_timeout_seconds,
     information_requests_enabled,
     information_service_from_env,
@@ -47,6 +48,12 @@ class InformationRuntimeTest(unittest.TestCase):
         )
 
         self.assertEqual(service.provider.model_id, "amazon.example-v1")
+
+    def test_reads_the_model_without_building_a_client(self):
+        self.assertEqual(bedrock_model_id({}), DEFAULT_BEDROCK_MODEL_ID)
+        self.assertEqual(
+            bedrock_model_id({"BEDROCK_MODEL_ID": " example-v1 "}), "example-v1"
+        )
 
     def test_rejects_a_blank_model(self):
         with self.assertRaises(ValueError):

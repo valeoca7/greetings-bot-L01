@@ -6,6 +6,7 @@ from greetings_bot.bedrock_information import (
     BedrockInformationProvider,
 )
 from greetings_bot.clock import Clock
+from greetings_bot.config_values import integer_value, nonblank_value
 from greetings_bot.information import InformationService
 from greetings_bot.feature_flags import feature_flags_from_env
 from greetings_bot.usage import UsageMeter
@@ -25,34 +26,25 @@ def information_requests_enabled(
 def information_weekly_limit(
     environ: Mapping[str, str] = os.environ,
 ) -> int:
-    try:
-        limit = int(
-            environ.get(
-                "INFO_WEEKLY_LIMIT", str(DEFAULT_INFORMATION_WEEKLY_LIMIT)
-            )
-        )
-    except ValueError as error:
-        raise ValueError("INFO_WEEKLY_LIMIT must be a positive integer") from error
-    if limit < 1:
-        raise ValueError("INFO_WEEKLY_LIMIT must be a positive integer")
-    return limit
+    return integer_value(
+        environ, "INFO_WEEKLY_LIMIT", DEFAULT_INFORMATION_WEEKLY_LIMIT, 1
+    )
 
 
 def bedrock_timeout_seconds(
     environ: Mapping[str, str] = os.environ,
 ) -> int:
-    try:
-        timeout = int(
-            environ.get(
-                "BEDROCK_TIMEOUT_SECONDS",
-                str(DEFAULT_BEDROCK_TIMEOUT_SECONDS),
-            )
-        )
-    except ValueError as error:
-        raise ValueError("Bedrock timeout must be an integer") from error
-    if not 1 <= timeout <= 30:
-        raise ValueError("Bedrock timeout must be between 1 and 30 seconds")
-    return timeout
+    return integer_value(
+        environ,
+        "BEDROCK_TIMEOUT_SECONDS",
+        DEFAULT_BEDROCK_TIMEOUT_SECONDS,
+        1,
+        30,
+    )
+
+
+def bedrock_model_id(environ: Mapping[str, str] = os.environ) -> str:
+    return nonblank_value(environ, "BEDROCK_MODEL_ID", DEFAULT_BEDROCK_MODEL_ID)
 
 
 def information_service_from_env(
@@ -64,9 +56,7 @@ def information_service_from_env(
 ) -> Optional[InformationService]:
     if not information_requests_enabled(environ):
         return None
-    model_id = environ.get("BEDROCK_MODEL_ID", DEFAULT_BEDROCK_MODEL_ID).strip()
-    if not model_id:
-        raise ValueError("BEDROCK_MODEL_ID must not be blank")
+    model_id = bedrock_model_id(environ)
     if client is None:
         builder = client_builder or _default_bedrock_client
         client = builder(bedrock_timeout_seconds(environ))
