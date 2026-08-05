@@ -17,6 +17,7 @@ from greetings_bot.reminder_store import (
 )
 from greetings_bot.retention import retention_from_env
 from greetings_bot.scheduler import GreetingDispatcher
+from greetings_bot.startup_diagnostics import log_startup_diagnostics
 from greetings_bot.telegram import reply_batch
 from greetings_bot.throughput import throughput_from_env
 from greetings_bot.users import UserRepository
@@ -112,6 +113,7 @@ def build_default_handler(
     environ: Mapping[str, str] = os.environ,
     dynamodb_resource: DynamoResource = None,
 ) -> ScheduledGreetingHandler:
+    log_startup_diagnostics(LOGGER, environ)
     throughput = throughput_from_env(environ)
     include_reminders = environ.get("TARGETED_REMINDERS") != "true"
     usage_meter = usage_meter_from_env(environ)

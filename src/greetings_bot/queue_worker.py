@@ -7,6 +7,7 @@ from greetings_bot.dynamo_receipts import DynamoDeliveryReceiptLedger
 from greetings_bot.dynamo_users import DynamoResource, repository_for_table
 from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.retention import retention_from_env
+from greetings_bot.startup_diagnostics import log_startup_diagnostics
 from greetings_bot.telegram_client import TelegramBotClient
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,7 @@ def build_default_worker(
     dynamodb_resource: DynamoResource = None,
     sender: MessageSender = None,
 ) -> DeliveryQueueWorker:
+    log_startup_diagnostics(logger, environ)
     table_name = environ.get("USER_TABLE_NAME")
     token = environ.get("TELEGRAM_BOT_TOKEN")
     if not table_name or (not token and sender is None):

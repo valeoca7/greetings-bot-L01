@@ -35,6 +35,7 @@ from greetings_bot.reminder_store import (
     ReminderRepository,
 )
 from greetings_bot.runtime import process_payload
+from greetings_bot.startup_diagnostics import log_startup_diagnostics
 from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
 from greetings_bot.weather import WeatherProvider
@@ -122,6 +123,7 @@ def build_default_handler(
     dynamodb_resource: DynamoResource = None,
     bedrock_client: BedrockClient = None,
 ) -> WebhookHandler:
+    log_startup_diagnostics(LOGGER, environ)
     table_name = environ.get("USER_TABLE_NAME")
     if table_name:
         users = repository_for_table(table_name, dynamodb_resource)
