@@ -13,9 +13,12 @@ from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.reminder_store import ReminderRepository
 from greetings_bot.reminder_store import InMemoryReminderRepository
 from greetings_bot.reminders import complete_reminder
-from greetings_bot.startup_diagnostics import log_startup_diagnostics
+from greetings_bot.startup_diagnostics import (
+    log_startup_diagnostics,
+    runtime_configuration_from_env,
+)
 from greetings_bot.telegram import Reply, reply_payload
-from greetings_bot.usage import usage_meter_from_env
+from greetings_bot.usage import UsageMeter
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,8 +63,9 @@ def build_default_handler(
     environ: Mapping[str, str] = os.environ,
     dynamodb_resource: DynamoResource = None,
 ) -> ScheduledReminderHandler:
-    log_startup_diagnostics(LOGGER, environ)
-    usage_meter = usage_meter_from_env(environ)
+    configuration = runtime_configuration_from_env(environ)
+    log_startup_diagnostics(LOGGER, configuration)
+    usage_meter = UsageMeter(configuration.usage_budgets)
     queue = queue_from_env(environ, usage_meter=usage_meter)
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:

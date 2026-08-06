@@ -23,11 +23,7 @@ from greetings_bot.information_quota import (
     InMemoryInformationQuota,
 )
 from greetings_bot.bedrock_information import BedrockClient
-from greetings_bot.information_runtime import (
-    information_requests_enabled,
-    information_service_from_env,
-    information_weekly_limit,
-)
+from greetings_bot.information_runtime import information_service_from_env
 from greetings_bot.note_store import InMemoryNoteRepository, NoteRepository
 from greetings_bot.observability import correlation_id, emit_metric, log_event
 from greetings_bot.reminder_store import (
@@ -35,12 +31,15 @@ from greetings_bot.reminder_store import (
     ReminderRepository,
 )
 from greetings_bot.runtime import process_payload
-from greetings_bot.startup_diagnostics import log_startup_diagnostics
+from greetings_bot.startup_diagnostics import (
+    log_startup_diagnostics,
+    runtime_configuration_from_env,
+)
 from greetings_bot.update_parser import UpdateParseError
 from greetings_bot.users import InMemoryUserRepository, UserRepository
 from greetings_bot.weather import WeatherProvider
 from greetings_bot.weather_runtime import reliable_weather_provider
-from greetings_bot.usage import usage_meter_from_env
+from greetings_bot.usage import UsageMeter
 from greetings_bot.webhook_auth import TelegramWebhookAuthorizer
 
 
@@ -123,7 +122,8 @@ def build_default_handler(
     dynamodb_resource: DynamoResource = None,
     bedrock_client: BedrockClient = None,
 ) -> WebhookHandler:
-    log_startup_diagnostics(LOGGER, environ)
+    configuration = runtime_configuration_from_env(environ)
+    log_startup_diagnostics(LOGGER, configuration)
     table_name = environ.get("USER_TABLE_NAME")
     if table_name:
         users = repository_for_table(table_name, dynamodb_resource)
@@ -135,15 +135,20 @@ def build_default_handler(
         reminders = InMemoryReminderRepository()
     reminder_scheduler = scheduler_from_env(environ)
     table = users.table if table_name else None
-    usage_meter = usage_meter_from_env(environ)
+    usage_meter = UsageMeter(configuration.usage_budgets)
     weather_provider = reliable_weather_provider(
-        environ, table, usage_meter=usage_meter
+        environ,
+        table,
+        usage_meter=usage_meter,
+        settings=configuration.weather,
     )
-    information_enabled = information_requests_enabled(environ)
+    information_enabled = configuration.feature_flags.enabled(
+        "information_requests"
+    )
     information_service = information_service_from_env(
         environ, bedrock_client, usage_meter=usage_meter
     )
-    weekly_limit = information_weekly_limit(environ)
+    weekly_limit = configuration.information_weekly_limit
     information_quota = None
     if information_enabled:
         information_quota = (

@@ -1,21 +1,18 @@
 from dataclasses import dataclass
-from typing import Mapping, Tuple
+from typing import Mapping, Optional, Tuple
 
 from greetings_bot.greeting_templates import (
     ALLOWED_TEMPLATE_VARIABLES,
     TEMPLATE_CATEGORIES,
 )
-from greetings_bot.feature_flags import feature_flags_from_env
 from greetings_bot.information_runtime import (
     bedrock_model_id,
-    information_requests_enabled,
-    information_weekly_limit,
 )
 from greetings_bot.messages import MessageCatalog
-from greetings_bot.retention import retention_from_env
-from greetings_bot.throughput import throughput_from_env
-from greetings_bot.usage import usage_budgets_from_env
-from greetings_bot.weather_config import weather_settings_from_env
+from greetings_bot.startup_diagnostics import (
+    RuntimeConfiguration,
+    runtime_configuration_from_env,
+)
 
 
 @dataclass(frozen=True)
@@ -48,11 +45,15 @@ class DashboardConfig:
     )
 
 
-def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
+def dashboard_config_from_env(
+    environ: Mapping[str, str],
+    runtime: Optional[RuntimeConfiguration] = None,
+) -> DashboardConfig:
     messages = MessageCatalog()
-    feature_flags = feature_flags_from_env(environ)
+    runtime = runtime or runtime_configuration_from_env(environ)
+    feature_flags = runtime.feature_flags
     model = bedrock_model_id(environ)
-    weather = weather_settings_from_env(environ)
+    weather = runtime.weather
     queue_names = (
         "DELIVERY_QUEUE_URL",
         "DELIVERY_DLQ_URL",
@@ -60,12 +61,12 @@ def dashboard_config_from_env(environ: Mapping[str, str]) -> DashboardConfig:
         "DELIVERY_DLQ_ARN",
     )
     delivery_configured = all(environ.get(name, "").strip() for name in queue_names)
-    retention = retention_from_env(environ)
-    throughput = throughput_from_env(environ)
-    usage_budgets = usage_budgets_from_env(environ)
+    retention = runtime.retention
+    throughput = runtime.throughput
+    usage_budgets = runtime.usage_budgets
     return DashboardConfig(
-        information_requests_enabled(environ),
-        information_weekly_limit(environ),
+        feature_flags.enabled("information_requests"),
+        runtime.information_weekly_limit,
         model,
         weather.max_calls,
         weather.cache_minutes,

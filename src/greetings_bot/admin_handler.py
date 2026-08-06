@@ -26,7 +26,10 @@ from greetings_bot.event_scheduler import SchedulerClient, scheduler_from_env
 from greetings_bot.note_store import InMemoryNoteRepository
 from greetings_bot.observability import correlation_id, log_event
 from greetings_bot.reminder_store import InMemoryReminderRepository
-from greetings_bot.startup_diagnostics import log_startup_diagnostics
+from greetings_bot.startup_diagnostics import (
+    log_startup_diagnostics,
+    runtime_configuration_from_env,
+)
 from greetings_bot.user_data import UserDataExporter
 from greetings_bot.user_data_cleanup import (
     DynamoUserDataCleaner,
@@ -92,7 +95,8 @@ def build_default_handler(
     sqs_client: SqsAdminClient = None,
     scheduler_client: SchedulerClient = None,
 ) -> AdminLambdaHandler:
-    log_startup_diagnostics(LOGGER, environ)
+    configuration = runtime_configuration_from_env(environ)
+    log_startup_diagnostics(LOGGER, configuration)
     token = environ.get("ADMIN_API_TOKEN", "")
     if not token.strip():
         raise ValueError("ADMIN_API_TOKEN is required")
@@ -112,7 +116,7 @@ def build_default_handler(
         cleaner = RepositoryUserDataCleaner(users, notes, reminders)
         audit = InMemoryAuditRepository()
     delivery = delivery_admin_from_env(environ, sqs_client)
-    dashboard_config = dashboard_config_from_env(environ)
+    dashboard_config = dashboard_config_from_env(environ, configuration)
     exporter = UserDataExporter(users, notes, reminders)
     clock = SystemClock()
     deletion = UserDeletionService(

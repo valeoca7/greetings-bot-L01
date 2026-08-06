@@ -13,7 +13,7 @@ from greetings_bot.weather_cache import (
 )
 from greetings_bot.weather_limits import RateLimitedWeatherProvider
 from greetings_bot.usage import UsageMeter
-from greetings_bot.weather_config import weather_settings_from_env
+from greetings_bot.weather_config import WeatherSettings, weather_settings_from_env
 
 
 def reliable_weather_provider(
@@ -22,8 +22,9 @@ def reliable_weather_provider(
     clock: Optional[Clock] = None,
     opener: Optional[Callable] = None,
     usage_meter: Optional[UsageMeter] = None,
+    settings: Optional[WeatherSettings] = None,
 ) -> CachingWeatherProvider:
-    settings = weather_settings_from_env(environ)
+    settings = settings or weather_settings_from_env(environ)
     runtime_clock = clock or SystemClock()
     upstream = RateLimitedWeatherProvider(
         weather_provider_from_env(environ, opener), settings.max_calls, runtime_clock

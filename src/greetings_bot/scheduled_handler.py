@@ -15,14 +15,15 @@ from greetings_bot.reminder_store import (
     InMemoryReminderRepository,
     ReminderRepository,
 )
-from greetings_bot.retention import retention_from_env
 from greetings_bot.scheduler import GreetingDispatcher
-from greetings_bot.startup_diagnostics import log_startup_diagnostics
+from greetings_bot.startup_diagnostics import (
+    log_startup_diagnostics,
+    runtime_configuration_from_env,
+)
 from greetings_bot.telegram import reply_batch
-from greetings_bot.throughput import throughput_from_env
 from greetings_bot.users import UserRepository
 from greetings_bot.users import InMemoryUserRepository
-from greetings_bot.usage import usage_meter_from_env
+from greetings_bot.usage import UsageMeter
 from greetings_bot.weather import WeatherProvider
 from greetings_bot.weather_summary import add_weather_summaries
 from greetings_bot.weather_runtime import reliable_weather_provider
@@ -113,15 +114,16 @@ def build_default_handler(
     environ: Mapping[str, str] = os.environ,
     dynamodb_resource: DynamoResource = None,
 ) -> ScheduledGreetingHandler:
-    log_startup_diagnostics(LOGGER, environ)
-    throughput = throughput_from_env(environ)
+    configuration = runtime_configuration_from_env(environ)
+    log_startup_diagnostics(LOGGER, configuration)
+    throughput = configuration.throughput
     include_reminders = environ.get("TARGETED_REMINDERS") != "true"
-    usage_meter = usage_meter_from_env(environ)
+    usage_meter = UsageMeter(configuration.usage_budgets)
     queue = queue_from_env(environ, usage_meter=usage_meter)
     table_name = environ.get("USER_TABLE_NAME")
     if not table_name:
         weather_provider = reliable_weather_provider(
-            environ, usage_meter=usage_meter
+            environ, usage_meter=usage_meter, settings=configuration.weather
         )
         return ScheduledGreetingHandler(
             InMemoryUserRepository(),
@@ -134,9 +136,12 @@ def build_default_handler(
         )
     users = repository_for_table(table_name, dynamodb_resource)
     weather_provider = reliable_weather_provider(
-        environ, users.table, usage_meter=usage_meter
+        environ,
+        users.table,
+        usage_meter=usage_meter,
+        settings=configuration.weather,
     )
-    retention = retention_from_env(environ)
+    retention = configuration.retention
     deliveries = DynamoDeliveryLedger(users.table, retention.delivery_days)
     reminders = DynamoReminderRepository(users.table)
     return ScheduledGreetingHandler(
