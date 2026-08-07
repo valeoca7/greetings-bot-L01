@@ -212,6 +212,12 @@ crossed; they do not block work or claim to represent a currency charge. Configu
 them with `WEATHER_DAILY_BUDGET`, `INFORMATION_DAILY_BUDGET`, and
 `QUEUE_DAILY_BUDGET`.
 
+Lambda startup validates shared feature flags and numeric limits before constructing
+service adapters. Invalid values identify the environment variable and expected
+range without repeating its value. Startup logs include only feature states and
+numeric limits; secrets, model names, resource identifiers, locations, and user data
+are excluded.
+
 ## Weather provider
 
 Weather locations store a display name and validated latitude/longitude pair on the
