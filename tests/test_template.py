@@ -9,7 +9,8 @@ class SamTemplateTest(unittest.TestCase):
 
     def test_defines_python_webhook_function(self):
         self.assertIn("Type: AWS::Serverless::Function", self.template)
-        self.assertIn("Runtime: python3.9", self.template)
+        self.assertEqual(self.template.count("Runtime: python3.13"), 5)
+        self.assertNotIn("Runtime: python3.9", self.template)
         self.assertIn("greetings_bot.lambda_handler.handle_event", self.template)
 
     def test_exposes_post_webhook(self):

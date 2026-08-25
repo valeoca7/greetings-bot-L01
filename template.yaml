@@ -129,7 +129,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: greetings_bot.lambda_handler.handle_event
-      Runtime: python3.9
+      Runtime: python3.13
       Timeout: 30
       MemorySize: 128
       Environment:
@@ -184,7 +184,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: greetings_bot.admin_handler.handle_event
-      Runtime: python3.9
+      Runtime: python3.13
       Timeout: 10
       MemorySize: 128
       Environment:
@@ -342,7 +342,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: greetings_bot.scheduled_handler.handle_event
-      Runtime: python3.9
+      Runtime: python3.13
       Timeout: 30
       MemorySize: 128
       Environment:
@@ -385,7 +385,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: greetings_bot.reminder_handler.handle_event
-      Runtime: python3.9
+      Runtime: python3.13
       Timeout: 10
       MemorySize: 128
       Environment:
@@ -433,7 +433,7 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: greetings_bot.queue_worker.handle_event
-      Runtime: python3.9
+      Runtime: python3.13
       Timeout: 20
       MemorySize: 128
       Environment:
