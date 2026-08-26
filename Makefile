@@ -1,7 +1,7 @@
 PYTHON ?= python3
 EVENT ?= events/delivery_batch.json
 
-.PHONY: help run test test-unit check check-syntax check-template package replay-plan
+.PHONY: help run test test-unit check check-runtime check-syntax check-template package replay-plan
 
 help:
 	@echo "make check    run syntax, unit, and template checks"
@@ -17,7 +17,10 @@ test: test-unit
 test-unit:
 	PYTHONPATH=src $(PYTHON) -m unittest discover -v
 
-check: check-syntax test-unit check-template
+check: check-runtime check-syntax test-unit check-template
+
+check-runtime:
+	PYTHONPATH=src $(PYTHON) -m greetings_bot.runtime_compat
 
 check-syntax:
 	$(PYTHON) -m compileall -q src tests

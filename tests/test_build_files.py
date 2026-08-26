@@ -10,7 +10,11 @@ class BuildFilesTest(unittest.TestCase):
 
     def test_makefile_has_check_and_package_targets(self):
         self.assertIn("help:", self.makefile)
-        self.assertIn("check: check-syntax test-unit check-template", self.makefile)
+        self.assertIn(
+            "check: check-runtime check-syntax test-unit check-template",
+            self.makefile,
+        )
+        self.assertIn("greetings_bot.runtime_compat", self.makefile)
         self.assertIn("package:", self.makefile)
         self.assertIn("greetings-bot-src.tar.gz", self.makefile)
         self.assertIn("git archive", self.makefile)
