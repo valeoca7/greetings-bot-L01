@@ -18,6 +18,8 @@ class BuildFilesTest(unittest.TestCase):
         self.assertIn("package:", self.makefile)
         self.assertIn("greetings-bot-src.tar.gz", self.makefile)
         self.assertIn("git archive", self.makefile)
+        self.assertIn("check-package: package", self.makefile)
+        self.assertIn("scripts/check_archive.py", self.makefile)
 
     def test_makefile_can_inspect_a_saved_replay(self):
         self.assertIn("replay-plan:", self.makefile)
@@ -25,7 +27,7 @@ class BuildFilesTest(unittest.TestCase):
 
     def test_pipeline_runs_the_local_workflow(self):
         self.assertIn("sh 'make check'", self.jenkinsfile)
-        self.assertIn("sh 'make package'", self.jenkinsfile)
+        self.assertIn("sh 'make check-package'", self.jenkinsfile)
 
     def test_pipeline_bounds_and_archives_builds(self):
         self.assertIn("disableConcurrentBuilds()", self.jenkinsfile)

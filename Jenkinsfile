@@ -26,7 +26,7 @@ pipeline {
 
         stage('Package') {
             steps {
-                sh 'make package'
+                sh 'make check-package'
             }
         }
     }

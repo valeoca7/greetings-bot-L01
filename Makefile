@@ -1,11 +1,13 @@
 PYTHON ?= python3
 EVENT ?= events/delivery_batch.json
+SOURCE_ARCHIVE ?= dist/greetings-bot-src.tar.gz
 
-.PHONY: help run test test-unit check check-runtime check-syntax check-template package replay-plan
+.PHONY: help run test test-unit check check-runtime check-syntax check-template package check-package replay-plan
 
 help:
 	@echo "make check    run syntax, unit, and template checks"
 	@echo "make package  create the tracked source archive"
+	@echo "make check-package  create and verify the source archive"
 	@echo "make run      start the local command line app"
 	@echo "make replay-plan EVENT=path  inspect a saved delivery batch"
 
@@ -33,4 +35,7 @@ replay-plan:
 
 package:
 	mkdir -p dist
-	git archive --format=tar.gz --output=dist/greetings-bot-src.tar.gz HEAD
+	git archive --format=tar.gz --output=$(SOURCE_ARCHIVE) HEAD
+
+check-package: package
+	PYTHONPATH=. $(PYTHON) scripts/check_archive.py $(SOURCE_ARCHIVE)
