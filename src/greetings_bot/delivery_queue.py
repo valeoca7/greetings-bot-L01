@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass
 from typing import Iterable, Mapping, Optional, Protocol
 
+from greetings_bot.aws_runtime import aws_client
 from greetings_bot.clock import Clock, SystemClock
 from greetings_bot.usage import UsageMeter
 
@@ -143,7 +144,5 @@ def queue_from_env(
     if not queue_url:
         return None
     if client is None:
-        import boto3
-
-        client = boto3.client("sqs")
+        client = aws_client("sqs")
     return SqsDeliveryQueue(client, queue_url, usage_meter, clock)

@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, Iterable, Mapping, Optional, Protocol, Sequence
 
+from greetings_bot.aws_runtime import aws_resource
 from greetings_bot.observability import emit_metric
 from greetings_bot.users import User, user_from_dict, user_to_dict
 
@@ -114,7 +115,5 @@ def repository_for_table(
     table_name: str, resource: Optional[DynamoResource] = None
 ) -> DynamoUserRepository:
     if resource is None:
-        import boto3
-
-        resource = boto3.resource("dynamodb")
+        resource = aws_resource("dynamodb")
     return DynamoUserRepository(resource.Table(table_name))

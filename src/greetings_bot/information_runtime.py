@@ -5,6 +5,7 @@ from greetings_bot.bedrock_information import (
     BedrockClient,
     BedrockInformationProvider,
 )
+from greetings_bot.aws_runtime import aws_client
 from greetings_bot.clock import Clock
 from greetings_bot.config_values import integer_value, nonblank_value
 from greetings_bot.information import InformationService
@@ -68,7 +69,6 @@ def information_service_from_env(
 
 
 def _default_bedrock_client(timeout: int) -> BedrockClient:
-    import boto3
     from botocore.config import Config
 
     config = Config(
@@ -76,4 +76,4 @@ def _default_bedrock_client(timeout: int) -> BedrockClient:
         read_timeout=timeout,
         retries={"max_attempts": 1, "mode": "standard"},
     )
-    return boto3.client("bedrock-runtime", config=config)
+    return aws_client("bedrock-runtime", config=config)

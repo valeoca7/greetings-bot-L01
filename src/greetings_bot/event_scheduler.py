@@ -2,6 +2,7 @@ import json
 from dataclasses import dataclass
 from typing import Dict, Mapping, Optional, Protocol
 
+from greetings_bot.aws_runtime import aws_client
 from greetings_bot.reminders import Reminder
 
 
@@ -113,9 +114,7 @@ def scheduler_from_env(
     if not target_arn or not role_arn:
         return NoopReminderScheduler()
     if client is None:
-        import boto3
-
-        client = boto3.client("scheduler")
+        client = aws_client("scheduler")
     return EventBridgeReminderScheduler(
         client,
         ScheduleTarget(target_arn, role_arn),

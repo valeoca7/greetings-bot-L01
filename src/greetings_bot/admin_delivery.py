@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Mapping, Optional, Protocol
 
+from greetings_bot.aws_runtime import aws_client
 
 class DeliveryAdminError(RuntimeError):
     pass
@@ -173,7 +174,5 @@ def delivery_admin_from_env(
     if not all(values):
         raise ValueError("delivery admin queue configuration is incomplete")
     if client is None:
-        import boto3
-
-        client = boto3.client("sqs")
+        client = aws_client("sqs")
     return SqsDeliveryAdmin(client, *values)
