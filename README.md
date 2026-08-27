@@ -4,7 +4,7 @@ A small Telegram bot for personal greetings.
 
 ## Setup
 
-The project requires Python 3.9 or newer. Create a virtual environment and install the
+The project requires Python 3.11 or newer. Create a virtual environment and install the
 package in editable mode:
 
 ```sh
@@ -96,15 +96,17 @@ Run the complete local verification or build a tracked-source archive with:
 
 ```sh
 make check
-make package
+make check-package
 ```
 
-The `Jenkinsfile` uses those same targets, limits concurrent and stalled builds, and
-archives the resulting tarball. It does not deploy infrastructure or contact AWS.
+The package check confirms required files, matching versions, and the absence of
+private build paths in the archive. The `Jenkinsfile` uses the same checks, limits
+concurrent and stalled builds, and archives the resulting tarball. It does not deploy
+infrastructure or contact AWS.
 
 ## Lambda webhook
 
-`template.yaml` contains the first SAM definition for the webhook function. A saved
+`template.yaml` runs all functions on Python 3.13. A saved
 API Gateway event is available for local invocation:
 
 ```sh
