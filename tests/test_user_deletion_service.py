@@ -131,6 +131,55 @@ class UserDeletionServiceTest(unittest.TestCase):
 
         self.assertEqual(self.requests.get(42).status, "confirmed")
 
+    def test_retries_an_interrupted_cleanup_until_it_is_complete(self):
+        class InterruptedCleaner:
+            def __init__(self):
+                self.calls = 0
+
+            def erase_batch(self, telegram_id, limit=100):
+                self.calls += 1
+                return CleanupBatch(1, self.calls > 1)
+
+        class IdempotentScheduler:
+            def __init__(self):
+                self.deleted = set()
+
+            def delete(self, reminder):
+                self.deleted.add(reminder.id)
+
+        reminders = InMemoryReminderRepository()
+        reminders.save(
+            Reminder(
+                "once",
+                42,
+                4200,
+                "Call home",
+                self.clock.now(),
+                self.clock.now(),
+            )
+        )
+        cleaner = InterruptedCleaner()
+        scheduler = IdempotentScheduler()
+        service = UserDeletionService(
+            self.users,
+            self.requests,
+            self.clock,
+            lambda: "deletion-token-number-one",
+            cleaner,
+            reminders,
+            scheduler,
+        )
+        token = service.request(42)
+        service.confirm(42, token)
+
+        with self.assertRaisesRegex(UserDeletionError, "another pass"):
+            service.execute(42, max_batches=1)
+        completed = service.execute(42, max_batches=1)
+
+        self.assertEqual(completed.status, "completed")
+        self.assertEqual(cleaner.calls, 2)
+        self.assertEqual(scheduler.deleted, {"once"})
+
 
 if __name__ == "__main__":
     unittest.main()
