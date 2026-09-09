@@ -2,12 +2,13 @@ PYTHON ?= python3
 EVENT ?= events/delivery_batch.json
 SOURCE_ARCHIVE ?= dist/greetings-bot-src.tar.gz
 
-.PHONY: help run test test-unit check check-runtime check-syntax check-template package check-package replay-plan
+.PHONY: help run test test-unit test-scenarios check check-runtime check-syntax check-template package check-package replay-plan
 
 help:
 	@echo "make check    run syntax, unit, and template checks"
 	@echo "make package  create the tracked source archive"
 	@echo "make check-package  create and verify the source archive"
+	@echo "make test-scenarios  run the bounded offline flows"
 	@echo "make run      start the local command line app"
 	@echo "make replay-plan EVENT=path  inspect a saved delivery batch"
 
@@ -18,6 +19,9 @@ test: test-unit
 
 test-unit:
 	PYTHONPATH=src $(PYTHON) -m unittest discover -v
+
+test-scenarios:
+	PYTHONPATH=src $(PYTHON) -m unittest -v tests.test_offline_scenarios tests.test_legacy_records
 
 check: check-runtime check-syntax test-unit check-template
 

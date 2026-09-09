@@ -24,6 +24,12 @@ pipeline {
             }
         }
 
+        stage('Offline scenarios') {
+            steps {
+                sh 'make test-scenarios'
+            }
+        }
+
         stage('Package') {
             steps {
                 sh 'make check-package'

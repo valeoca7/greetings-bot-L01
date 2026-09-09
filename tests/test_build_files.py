@@ -25,6 +25,12 @@ class BuildFilesTest(unittest.TestCase):
         self.assertIn("replay-plan:", self.makefile)
         self.assertIn("greetings_bot.replay $(EVENT)", self.makefile)
 
+    def test_build_can_run_bounded_offline_scenarios(self):
+        self.assertIn("test-scenarios:", self.makefile)
+        self.assertIn("tests.test_offline_scenarios", self.makefile)
+        self.assertIn("tests.test_legacy_records", self.makefile)
+        self.assertIn("sh 'make test-scenarios'", self.jenkinsfile)
+
     def test_pipeline_runs_the_local_workflow(self):
         self.assertIn("sh 'make check'", self.jenkinsfile)
         self.assertIn("sh 'make check-package'", self.jenkinsfile)
