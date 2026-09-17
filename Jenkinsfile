@@ -35,6 +35,12 @@ pipeline {
                 sh 'make check-package'
             }
         }
+
+        stage('Release audit') {
+            steps {
+                sh 'make audit-release'
+            }
+        }
     }
 
     post {

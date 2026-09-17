@@ -31,6 +31,14 @@ class BuildFilesTest(unittest.TestCase):
         self.assertIn("tests.test_legacy_records", self.makefile)
         self.assertIn("sh 'make test-scenarios'", self.jenkinsfile)
 
+    def test_build_has_one_complete_release_gate(self):
+        self.assertIn(
+            "check-release: check test-scenarios check-package audit-release",
+            self.makefile,
+        )
+        self.assertIn("scripts/release_audit.py", self.makefile)
+        self.assertIn("sh 'make audit-release'", self.jenkinsfile)
+
     def test_pipeline_runs_the_local_workflow(self):
         self.assertIn("sh 'make check'", self.jenkinsfile)
         self.assertIn("sh 'make check-package'", self.jenkinsfile)
