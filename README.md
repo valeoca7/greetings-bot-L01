@@ -98,6 +98,7 @@ Run the complete local verification or build a tracked-source archive with:
 make check
 make test-scenarios
 make check-package
+make check-release
 ```
 
 The scenario target follows representative user data through command, scheduling,
@@ -106,6 +107,9 @@ matching versions, and the absence of
 private build paths in the archive. The `Jenkinsfile` uses the same checks, limits
 concurrent and stalled builds, and archives the resulting tarball. It does not deploy
 infrastructure or contact AWS.
+
+`make check-release` combines the runtime, unit, template, scenario, archive-import,
+and metadata consistency checks used before a tag.
 
 ## Lambda webhook
 
