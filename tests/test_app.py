@@ -285,6 +285,7 @@ class AppTest(unittest.TestCase):
             "/language [en|uk] - show or change language\n"
             "/style [friendly|brief|cheerful] - choose greeting style\n"
             "/preview - preview the scheduled greeting\n"
+            "/greetings [on|off] - pause or resume daily greetings\n"
             "/time [HH:MM] - show or change greeting time\n"
             "/days [daily|weekdays|days...] - choose greeting days\n"
             "/digest [daily|off] - manage the daily digest\n"
@@ -471,6 +472,35 @@ class AppTest(unittest.TestCase):
             reply.text,
             "Попередній перегляд:\nДобрий день, Mira!",
         )
+
+    def test_pauses_and_resumes_daily_greetings(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        paused = handle_update(text_update("/greetings off"), users)
+        current = handle_update(text_update("/greetings"), users)
+        resumed = handle_update(text_update("/greetings on"), users)
+
+        self.assertEqual(paused.text, "Daily greetings are now off.")
+        self.assertEqual(current.text, "Daily greetings are off.")
+        self.assertEqual(resumed.text, "Daily greetings are now on.")
+        self.assertTrue(users.get(42).enabled)
+
+    def test_rejects_unknown_greeting_state(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        reply = handle_update(text_update("/greetings sometimes"), users)
+
+        self.assertEqual(reply.text, "Use /greetings on or /greetings off.")
+
+    def test_localizes_greeting_pause_feedback(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register", "uk"), users)
+
+        reply = handle_update(text_update("/greetings off"), users)
+
+        self.assertEqual(reply.text, "Щоденні привітання тепер вимкнено.")
 
     def test_reports_missing_profile(self):
         reply = handle_update(text_update("/me"), InMemoryUserRepository())

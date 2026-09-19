@@ -42,6 +42,7 @@ from greetings_bot.preferences import (
     set_digest_mode,
     set_first_name,
     set_greeting_days,
+    set_greetings_enabled,
     set_greeting_template_category,
     set_greeting_time,
     set_locale,
@@ -586,6 +587,42 @@ class Application:
                 update.message.chat_id,
                 self.messages.text(
                     "greeting_preview", user.locale, greeting=greeting
+                ),
+            )
+        if command.name == "greetings":
+            user = self.users.get(update.message.sender.id)
+            if user is None:
+                return self._registration_required(update)
+            if not command.arguments:
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text(
+                        "greetings_current",
+                        user.locale,
+                        state=self.messages.text(
+                            "state_on" if user.enabled else "state_off",
+                            user.locale,
+                        ),
+                    ),
+                )
+            if len(command.arguments) != 1 or command.arguments[0] not in (
+                "on",
+                "off",
+            ):
+                return Reply(
+                    update.message.chat_id,
+                    self.messages.text("greetings_usage", user.locale),
+                )
+            user = set_greetings_enabled(user, command.arguments[0] == "on")
+            self.users.save(user)
+            return Reply(
+                update.message.chat_id,
+                self.messages.text(
+                    "greetings_changed",
+                    user.locale,
+                    state=self.messages.text(
+                        "state_on" if user.enabled else "state_off", user.locale
+                    ),
                 ),
             )
         if command.name == "time":

@@ -15,6 +15,9 @@ ENGLISH_MESSAGES = {
     "style_usage": "Use /style friendly, /style brief, or /style cheerful.",
     "greeting_preview": "Preview:\n{greeting}",
     "greeting_preview_usage": "Use /preview without arguments.",
+    "greetings_current": "Daily greetings are {state}.",
+    "greetings_changed": "Daily greetings are now {state}.",
+    "greetings_usage": "Use /greetings on or /greetings off.",
     "state_on": "on",
     "state_off": "off",
     "state_daily": "daily",
@@ -105,6 +108,7 @@ ENGLISH_MESSAGES = {
         "/language [en|uk] - show or change language\n"
         "/style [friendly|brief|cheerful] - choose greeting style\n"
         "/preview - preview the scheduled greeting\n"
+        "/greetings [on|off] - pause or resume daily greetings\n"
         "/time [HH:MM] - show or change greeting time\n"
         "/days [daily|weekdays|days...] - choose greeting days\n"
         "/digest [daily|off] - manage the daily digest\n"
@@ -141,6 +145,9 @@ UKRAINIAN_MESSAGES = {
     ),
     "greeting_preview": "Попередній перегляд:\n{greeting}",
     "greeting_preview_usage": "Використайте /preview без аргументів.",
+    "greetings_current": "Щоденні привітання {state}.",
+    "greetings_changed": "Щоденні привітання тепер {state}.",
+    "greetings_usage": "Використайте /greetings on або /greetings off.",
     "state_on": "увімкнено",
     "state_off": "вимкнено",
     "state_daily": "щодня",
@@ -240,6 +247,7 @@ UKRAINIAN_MESSAGES = {
         "/language [en|uk] - переглянути або змінити мову\n"
         "/style [friendly|brief|cheerful] - вибрати стиль привітання\n"
         "/preview - переглянути заплановане привітання\n"
+        "/greetings [on|off] - призупинити або відновити привітання\n"
         "/time [HH:MM] - переглянути або змінити час привітання\n"
         "/days [daily|weekdays|days...] - вибрати дні привітань\n"
         "/digest [daily|off] - керувати щоденним оглядом\n"
