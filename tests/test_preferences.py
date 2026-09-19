@@ -5,6 +5,7 @@ from greetings_bot.preferences import (
     set_first_name,
     set_digest_mode,
     set_greeting_days,
+    set_greetings_enabled,
     set_greeting_template_category,
     set_greeting_time,
     set_quiet_hours,
@@ -36,6 +37,16 @@ class GreetingTimeTest(unittest.TestCase):
 
         self.assertEqual(updated.greeting_time, "18:30")
         self.assertEqual(user.greeting_time, "09:00")
+
+    def test_pauses_and_resumes_greetings_without_other_changes(self):
+        user = User(telegram_id=42, chat_id=42, first_name="Mira")
+
+        paused = set_greetings_enabled(user, False)
+        resumed = set_greetings_enabled(paused, True)
+
+        self.assertFalse(paused.enabled)
+        self.assertEqual(paused.first_name, "Mira")
+        self.assertTrue(resumed.enabled)
 
     def test_updates_greeting_name(self):
         user = User(telegram_id=42, chat_id=42, first_name="Mira")

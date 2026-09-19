@@ -37,6 +37,10 @@ def set_greeting_time(user: User, value: str) -> User:
     return replace(user, greeting_time=validate_greeting_time(value))
 
 
+def set_greetings_enabled(user: User, enabled: bool) -> User:
+    return replace(user, enabled=enabled)
+
+
 def set_first_name(user: User, value: str) -> User:
     first_name = normalize_first_name(value)
     if len(first_name) > MAX_NAME_LENGTH:
