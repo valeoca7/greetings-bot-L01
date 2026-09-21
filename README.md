@@ -55,6 +55,7 @@ does not send them to Telegram.
 - `/language [en|uk]` shows or changes the message language
 - `/style [friendly|brief|cheerful]` shows or changes the scheduled greeting style
 - `/preview` renders the selected greeting without scheduling a delivery
+- `/greetings [on|off]` pauses or resumes daily greetings without deleting data
 - `/timezone [area/name]` shows or changes the user's timezone
 - `/days [daily|weekdays|days...]` chooses local greeting weekdays
 - `/quiet [start end]` sets local quiet hours; `/quiet off` removes them
@@ -353,3 +354,12 @@ leaving the profile until the remaining records are gone.
 Daily delivery markers expire after 90 days and opaque delivery receipts after 14
 days by default. `DeliveryHistoryDays` and `DeliveryReceiptDays` set bounded retention
 periods in the SAM template. Receipt records contain no message text or user ID.
+
+## Known limits
+
+The bot supports English and Ukrainian, one weather location per profile, and short
+stateless information requests rather than conversation history. The admin dashboard
+uses one deployment-managed bearer token and is intended for a private operator, not
+as a multi-tenant identity system. Deployment, webhook registration, alarm actions,
+provider credentials, and actual AWS resources remain outside this repository's
+offline workflow.
