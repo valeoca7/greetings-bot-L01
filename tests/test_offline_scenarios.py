@@ -128,6 +128,28 @@ class OfflineScenarioTest(unittest.TestCase):
         self.assertEqual(information.calls, 1)
         self.assertEqual(notes.all_for(42)[0].text, "keep this text")
 
+    def test_pausing_greetings_does_not_pause_reminders(self):
+        users = InMemoryUserRepository()
+        reminders = InMemoryReminderRepository()
+        app = Application(
+            users,
+            reminders=reminders,
+            clock=FixedClock(datetime(2026, 9, 20, 9, 0, tzinfo=timezone.utc)),
+        )
+        self._command(app, "/register")
+        self._command(app, "/time 10:00")
+        self._command(app, "/remind 2026-09-20 10:00 stretch")
+        self._command(app, "/greetings off")
+        queue = CollectingQueue()
+
+        ScheduledGreetingHandler(
+            users, reminders=reminders, queue=queue
+        ).handle({"time": "2026-09-20T10:00:00Z"})
+
+        self.assertEqual(len(queue.messages), 1)
+        self.assertEqual(queue.messages[0].kind, "reminder")
+        self.assertEqual(queue.messages[0].text, "Reminder: stretch")
+
     @staticmethod
     def _command(app, text):
         return app.handle(
