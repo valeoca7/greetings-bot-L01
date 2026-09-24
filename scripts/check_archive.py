@@ -12,6 +12,7 @@ from pathlib import Path
 REQUIRED_FILES = (
     "README.md",
     "setup.cfg",
+    "setup.py",
     "template.yaml",
     "src/greetings_bot/__init__.py",
 )

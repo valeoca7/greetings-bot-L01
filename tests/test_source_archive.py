@@ -25,14 +25,20 @@ class SourceArchiveTest(unittest.TestCase):
                     )
                 )
 
+    def test_requires_the_installation_entry_point(self):
+        with self.assertRaisesRegex(ValueError, "setup.py"):
+            check_archive(self._archive({"setup.py": None}))
+
     def _archive(self, changes=None):
         files = {
             "README.md": "# Greetings Bot\n",
             "setup.cfg": "[metadata]\nversion = 0.43.0\n",
+            "setup.py": "from setuptools import setup\nsetup()\n",
             "template.yaml": "Resources: {}\n",
             "src/greetings_bot/__init__.py": '__version__ = "0.43.0"\n',
         }
         files.update(changes or {})
+        files = {name: text for name, text in files.items() if text is not None}
         temporary = tempfile.NamedTemporaryFile(suffix=".tar.gz", delete=False)
         temporary.close()
         path = Path(temporary.name)
