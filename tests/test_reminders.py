@@ -224,6 +224,17 @@ class ReminderTest(unittest.TestCase):
             datetime(2023, 4, 24, 17, 0, tzinfo=timezone.utc),
         )
 
+    def test_daily_creation_skips_a_spring_clock_gap(self):
+        user = User(42, 84, "Mira", timezone="America/Vancouver")
+        now = datetime(2023, 3, 11, 18, 0, tzinfo=timezone.utc)
+
+        reminder = create_daily_reminder(user, "02:30", "Sleep", now)
+
+        self.assertEqual(
+            reminder.due_at,
+            datetime(2023, 3, 13, 9, 30, tzinfo=timezone.utc),
+        )
+
     def test_creates_next_weekly_occurrence(self):
         user = User(42, 84, "Mira", timezone="America/Vancouver")
         now = datetime(2023, 4, 25, 18, 0, tzinfo=timezone.utc)
@@ -249,6 +260,19 @@ class ReminderTest(unittest.TestCase):
         self.assertEqual(
             reminder.due_at,
             datetime(2023, 5, 22, 17, 0, tzinfo=timezone.utc),
+        )
+
+    def test_weekly_creation_skips_a_spring_clock_gap(self):
+        user = User(42, 84, "Mira", timezone="America/Vancouver")
+        now = datetime(2023, 3, 6, 18, 0, tzinfo=timezone.utc)
+
+        reminder = create_weekly_reminder(
+            user, "sunday", "02:30", "Sleep", now
+        )
+
+        self.assertEqual(
+            reminder.due_at,
+            datetime(2023, 3, 19, 9, 30, tzinfo=timezone.utc),
         )
 
     def test_daily_occurrence_keeps_wall_time_across_fall_change(self):

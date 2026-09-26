@@ -95,10 +95,17 @@ def next_occurrence(reminder: Reminder) -> datetime:
     zone = ZoneInfo(reminder.timezone)
     local_due = reminder.due_at.astimezone(zone).replace(tzinfo=None)
     interval = timedelta(days=1 if reminder.recurrence == "daily" else 7)
-    candidate = local_due + interval
+    return _next_valid_local_time(
+        local_due + interval, reminder.timezone, interval
+    )
+
+
+def _next_valid_local_time(
+    candidate: datetime, timezone_name: str, interval: timedelta
+) -> datetime:
     while True:
         try:
-            return local_to_utc(candidate, reminder.timezone)
+            return local_to_utc(candidate, timezone_name)
         except ValueError:
             candidate += interval
 
@@ -167,7 +174,9 @@ def create_daily_reminder(
     local_due = datetime.combine(local_now.date(), parsed_time)
     if local_due <= local_now.replace(tzinfo=None):
         local_due += timedelta(days=1)
-    due_at = local_to_utc(local_due, user.timezone)
+    due_at = _next_valid_local_time(
+        local_due, user.timezone, timedelta(days=1)
+    )
     return Reminder(
         id=uuid4().hex[:8],
         owner_id=user.telegram_id,
@@ -208,7 +217,9 @@ def create_weekly_reminder(
         owner_id=user.telegram_id,
         chat_id=user.chat_id,
         text=clean_text,
-        due_at=local_to_utc(local_due, user.timezone),
+        due_at=_next_valid_local_time(
+            local_due, user.timezone, timedelta(days=7)
+        ),
         created_at=now.astimezone(timezone.utc),
         recurrence="weekly",
         timezone=user.timezone,
