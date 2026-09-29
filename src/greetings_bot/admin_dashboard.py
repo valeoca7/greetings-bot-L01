@@ -32,8 +32,8 @@ def render_dashboard(
       <h2 id="users-heading">Users</h2>
       <div class="grid">
         <div class="card"><strong data-metric="users">{snapshot.users}</strong>Total</div>
-        <div class="card"><strong data-metric="active-users">{snapshot.active_users}</strong>Active</div>
-        <div class="card"><strong data-metric="disabled-users">{snapshot.disabled_users}</strong>Disabled</div>
+        <div class="card"><strong data-metric="active-users">{snapshot.active_users}</strong>Greetings on</div>
+        <div class="card"><strong data-metric="disabled-users">{snapshot.disabled_users}</strong>Greetings paused</div>
       </div>
     </section>
     <section class="panel" aria-labelledby="delivery-heading">
@@ -234,7 +234,7 @@ def _user_row(item) -> str:
     </tr>""".format(
         id=user_id,
         name=escape(str(item["name"])),
-        status=escape(str(item["status"])),
+        status=_user_status_label(str(item["status"])),
         timezone=escape(str(item["timezone"])),
         greeting=escape(str(item["greeting_time"])),
     )
@@ -268,7 +268,7 @@ def render_user_detail(version: str, detail: Mapping[str, object]) -> str:
       </dl>
     </section>""".format(
         id=int(detail["id"]),
-        status=escape(str(detail["status"]).title()),
+        status=_user_status_label(str(detail["status"])),
         locale=escape(str(preferences["locale"])),
         timezone=escape(str(preferences["timezone"])),
         greeting_time=escape(str(preferences["greeting_time"])),
@@ -291,6 +291,10 @@ def render_user_detail(version: str, detail: Mapping[str, object]) -> str:
         version,
         content,
     )
+
+
+def _user_status_label(status: str) -> str:
+    return "Greetings on" if status == "active" else "Greetings paused"
 
 
 def render_config(version: str, config: DashboardConfig) -> str:

@@ -59,6 +59,8 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('data-metric="users">18<', page)
         self.assertIn('data-metric="active-users">15<', page)
         self.assertIn('data-metric="disabled-users">3<', page)
+        self.assertIn("Greetings on", page)
+        self.assertIn("Greetings paused", page)
         self.assertIn('data-metric="pending">7<', page)
         self.assertIn('data-metric="failed">1<', page)
 
@@ -96,6 +98,7 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn('<option value="active" selected>', page)
         self.assertIn("cursor=next-page-token", page)
         self.assertIn('/admin/dashboard/users/42', page)
+        self.assertIn("Greetings on", page)
         self.assertIn('<caption class="visually-hidden">Matching users</caption>', page)
         self.assertIn('<th scope="col">ID</th>', page)
         self.assertIn('class="table-region"', page)
@@ -132,7 +135,32 @@ class AdminDashboardTest(unittest.TestCase):
         self.assertIn("22:00–07:00", page)
         self.assertIn("Daily", page)
         self.assertIn("Enabled", page)
+        self.assertIn("<dt>Status</dt><dd>Greetings on</dd>", page)
         self.assertNotIn("chat_id", page)
+
+    def test_describes_a_paused_greeting_without_disabling_the_user(self):
+        detail = {
+            "id": 7,
+            "name": "Sam",
+            "status": "disabled",
+            "preferences": {
+                "locale": "en",
+                "timezone": "UTC",
+                "greeting_time": "09:00",
+                "greeting_template_category": "friendly",
+                "greeting_days": ["mon"],
+                "quiet_hours": None,
+                "digest_mode": "off",
+                "weather_units": "metric",
+                "weather_summary": False,
+                "weather_location": None,
+            },
+        }
+
+        page = render_user_detail("0.47.2", detail)
+
+        self.assertIn("<dt>Status</dt><dd>Greetings paused</dd>", page)
+        self.assertNotIn("<dt>Status</dt><dd>Disabled</dd>", page)
 
     def test_renders_safe_deployment_configuration(self):
         config = DashboardConfig(
