@@ -6,7 +6,7 @@ from greetings_bot import __version__
 
 class PackageTest(unittest.TestCase):
     def test_has_package_version(self):
-        self.assertEqual(__version__, "0.47.2")
+        self.assertEqual(__version__, "0.47.3")
 
     def test_declares_the_supported_python_range(self):
         config = ConfigParser()

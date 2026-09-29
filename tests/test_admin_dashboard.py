@@ -157,7 +157,7 @@ class AdminDashboardTest(unittest.TestCase):
             },
         }
 
-        page = render_user_detail("0.47.2", detail)
+        page = render_user_detail("0.47.3", detail)
 
         self.assertIn("<dt>Status</dt><dd>Greetings paused</dd>", page)
         self.assertNotIn("<dt>Status</dt><dd>Disabled</dd>", page)
