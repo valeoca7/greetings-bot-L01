@@ -494,6 +494,17 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual(reply.text, "Use /greetings on or /greetings off.")
 
+    def test_accepts_a_mixed_case_greeting_state(self):
+        users = InMemoryUserRepository()
+        handle_update(text_update("/register"), users)
+
+        paused = handle_update(text_update("/greetings OFF"), users)
+        resumed = handle_update(text_update("/greetings On"), users)
+
+        self.assertEqual(paused.text, "Daily greetings are now off.")
+        self.assertEqual(resumed.text, "Daily greetings are now on.")
+        self.assertTrue(users.get(42).enabled)
+
     def test_localizes_greeting_pause_feedback(self):
         users = InMemoryUserRepository()
         handle_update(text_update("/register", "uk"), users)

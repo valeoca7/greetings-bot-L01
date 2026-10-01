@@ -605,15 +605,13 @@ class Application:
                         ),
                     ),
                 )
-            if len(command.arguments) != 1 or command.arguments[0] not in (
-                "on",
-                "off",
-            ):
+            state = command.arguments[0].lower() if command.arguments else ""
+            if len(command.arguments) != 1 or state not in ("on", "off"):
                 return Reply(
                     update.message.chat_id,
                     self.messages.text("greetings_usage", user.locale),
                 )
-            user = set_greetings_enabled(user, command.arguments[0] == "on")
+            user = set_greetings_enabled(user, state == "on")
             self.users.save(user)
             return Reply(
                 update.message.chat_id,
